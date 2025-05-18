@@ -18,7 +18,8 @@
             "preload.js",
             "backend/**/*",
             "frontend/web/**/*",
-            "node_modules/**/*",
+            "database/notaryconnect.sqlite",
+            "node_modules/sqlite3/**/*",
             "package.json"
         ],
         "directories": {
@@ -36,7 +37,7 @@
         },
         "asar": true,
         "asarUnpack": [
-            "node_modules/node-firebird/**/*"
+            "node_modules/sqlite3/build/Release/node_sqlite3.node"
         ],
         "publish": {
             "provider": "github",
@@ -53,14 +54,15 @@
         "notary",
         "cartorio",
         "atendimento",
-        "electron"
+        "electron",
+        "sqlite"
     ],
     "dependencies": {
         "@hapi/boom": "^10.0.1",
         "baileys": "^6.7.17",
         "bcryptjs": "^2.4.3",
         "express": "^4.19.2",
-        "node-firebird": "^1.1.9",
+        "sqlite3": "^5.1.7",
         "pino": "^9.6.0",
         "qrcode": "^1.5.3",
         "ws": "^8.18.0"
