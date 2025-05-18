@@ -1,0 +1,72 @@
+{
+    "name": "notary-connect-electron",
+    "version": "1.0.0",
+    "description": "Sistema de atendimento para Cartórios via Web e WhatsApp com Electron",
+    "author": "Emanuel da Costa Pereira",
+    "license": "Proprietary",
+    "main": "electronMain.js",
+    "scripts": {
+        "start": "electron .",
+        "build": "electron-builder",
+        "dev": "electron . --inspect"
+    },
+    "build": {
+        "appId": "com.notaryconnect.electronapp",
+        "productName": "Notary Connect",
+        "files": [
+            "electronMain.js",
+            "preload.js",
+            "backend/**/*",
+            "frontend/web/**/*",
+            "node_modules/**/*",
+            "package.json"
+        ],
+        "directories": {
+            "buildResources": "assets"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "frontend/web/img/icons/logo.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "perMachine": false,
+            "createDesktopShortcut": true
+        },
+        "asar": true,
+        "asarUnpack": [
+            "node_modules/node-firebird/**/*"
+        ],
+        "publish": {
+            "provider": "github",
+            "owner": "EmanuProds",
+            "repo": "Notary Connect"
+        }
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "keywords": [
+        "whatsapp",
+        "chatbot",
+        "notary",
+        "cartorio",
+        "atendimento",
+        "electron"
+    ],
+    "dependencies": {
+        "@hapi/boom": "^10.0.1",
+        "baileys": "^6.7.17",
+        "bcryptjs": "^2.4.3",
+        "express": "^4.19.2",
+        "node-firebird": "^1.1.9",
+        "pino": "^9.6.0",
+        "qrcode": "^1.5.3",
+        "ws": "^8.18.0"
+    },
+    "devDependencies": {
+        "electron": "^31.0.2",
+        "electron-builder": "^24.13.3"
+    }
+}

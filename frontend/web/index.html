@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notary Connect - Entre</title>
+    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./img/icons/logo.svg" type="image/svg+xml">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/indexStyles.css">
+    <style>
+        /* Estilos que permanecem inline para garantir a janela transparente */
+        body {
+            background-color: transparent !important;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .close-button { /* Mantido aqui para referência, mas idealmente no CSS externo */
+            background-color: #718096;
+            color: white;
+            margin-top: 0.75rem; /* Espaçamento entre botão Entrar e Fechar */
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            letter-spacing: 0.5px;
+        }
+        .close-button:hover {
+            background-color: #4A5568;
+        }
+        .close-button:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="./img/icons/logo.svg" alt="Ícone do Notary Connect" class="project-icon" onerror="this.style.display='none'; console.error('Erro ao carregar o ícone: ./img/icons/logo.svg')">
+        
+        <h2>Notary Connect</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuário:</label>
+                <input type="text" id="username" name="username" required class="rounded-md">
+            </div>
+            <div class="form-group">
+                <label for="password">Senha:</label>
+                <input type="password" id="password" name="password" required class="rounded-md">
+            </div>
+            <button type="submit" class="rounded-md">Entrar</button>
+            <button type="button" id="closeAppBtn" class="close-button">Fechar</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+        <div class="app-footer-internal">
+            Perains On Tecnologia ©
+        </div>
+    </div>
+
+    <script src="./js/indexScript.js"></script>
+</body>
+</html>

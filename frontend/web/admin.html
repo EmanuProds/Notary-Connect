@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notary Connect - Admin</title>
+    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./img/icons/logo.svg" type="image/svg+xml">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/qrStyles.css">
+    <style>
+        /* Estilos adicionais se necessário, ou mova tudo para qrStyles.css */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Azul acinzentado claro */
+        }
+        .btn-electron {
+            background-color: #4A5568; /* Cinza escuro */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* medium */
+            transition: background-color 0.2s ease-in-out;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-electron:hover {
+            background-color: #2D3748; /* Cinza mais escuro */
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4">
+    <div class="qr-page-container w-full max-w-4xl">
+        <header class="page-header flex flex-col sm:flex-row items-center justify-between mb-8 w-full">
+            <div class="flex items-center">
+                <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="header-logo w-12 h-12 mr-3">
+                <h1 class="text-2xl font-bold text-blue-800">Status da Autenticação - WhatsApp</h1>
+            </div>
+            <div class="electron-actions mt-4 sm:mt-0 space-x-2">
+                <button id="viewLogsBtn" class="btn-electron">Ver Logs</button>
+                <button id="openDevToolsBtnAdmin" class="btn-electron">DevTools</button>
+                 <button onclick="if(window.electronAPI && window.electronAPI.navigate) window.electronAPI.navigate('login'); else console.error('ElectronAPI não disponível');" class="btn-electron bg-red-600 hover:bg-red-700">Sair (Login)</button>
+            </div>
+        </header>
+
+        <div class="qr-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow-lg w-full" id="qrContainer">
+            <div class="qr-block initial-loading flex flex-col items-center text-center bg-gray-50 p-4 rounded-md border border-gray-200 shadow">
+                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Carregando Status...</h3>
+                 <div class="qr-code-placeholder flex justify-center items-center w-40 h-40 bg-white border border-gray-300 rounded-md mb-2">
+                    <svg class="animate-spin h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                 </div>
+                 <div class="qr-status mt-2 text-sm text-gray-600">Conectando ao servidor...</div>
+            </div>
+        </div>
+
+        <div id="connectionStatus" class="connection-status-bar fixed bottom-0 left-0 w-full p-2 text-center text-sm font-medium z-50 transition-colors duration-300 bg-yellow-400 text-yellow-800">
+            Conectando ao servidor WebSocket...
+        </div>
+    </div>
+
+    <script src="./js/adminScript.js"></script>
+</body>
+</html>

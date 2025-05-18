@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notary Connect - Logs do Sistema</title>
+    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .toolbar {
+            background-color: #333;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #444;
+        }
+        .toolbar button {
+            background-color: #555;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif; /* Fonte mais legível para botões */
+        }
+        .toolbar button:hover {
+            background-color: #666;
+        }
+        #logContainer {
+            flex-grow: 1;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #2a2a2a;
+            line-height: 1.4;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-entry.error { color: #f48771; font-weight: bold; }
+        .log-entry.warn { color: #ffd700; /* Amarelo mais brilhante */ }
+        .log-entry.info { color: #4ec9b0; }
+        .log-entry.debug { color: #9cdcfe; /* Azul claro */ }
+        .log-entry .timestamp { color: #6a9955; margin-right: 10px; } /* Verde para timestamp */
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="toolbar">
+        <button id="clearLogsBtn">Limpar Logs</button>
+        <button id="openDevToolsLogsBtn">DevTools</button>
+        <button onclick="if(window.electronAPI && window.electronAPI.navigate) window.electronAPI.navigate('admin'); else console.error('ElectronAPI não disponível');">Voltar para Admin</button>
+    </div>
+    <div id="logContainer"></div>
+    <script>
+        const logContainer = document.getElementById('logContainer');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        const openDevToolsLogsBtn = document.getElementById('openDevToolsLogsBtn');
+        let unsubscribeFromLogs;
+
+        function getLogLevelClass(logString) {
+            if (logString.includes('[ERROR]')) return 'error';
+            if (logString.includes('[WARN]')) return 'warn';
+            if (logString.includes('[INFO]')) return 'info';
+            if (logString.includes('[DEBUG]')) return 'debug';
+            if (logString.startsWith('ERRO:') || logString.includes('Falha')) return 'error';
+            return 'info'; // Default para info se não especificado
+        }
+
+        function formatLogMessage(logString) {
+            // Tenta extrair timestamp se não estiver formatado
+            let timestamp = new Date().toLocaleTimeString(); // Default timestamp
+            const isoTimestampMatch = logString.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)/);
+            if (isoTimestampMatch) {
+                timestamp = new Date(isoTimestampMatch[1]).toLocaleTimeString();
+                logString = logString.replace(isoTimestampMatch[0], '').trim();
+            } else {
+                 // Adiciona um timestamp se a mensagem não o tiver no formato esperado
+                 const firstWord = logString.split(' ')[0];
+                 if (!firstWord.match(/^\d{2}:\d{2}:\d{2}$/) && !logString.toLowerCase().includes('timestamp:')) {
+                     // logString = `[${new Date().toLocaleTimeString()}] ${logString}`;
+                 }
+            }
+            
+            // Remove prefixos de nível se já estiverem sendo tratados pela classe CSS
+            logString = logString.replace(/^\[(INFO|WARN|ERROR|DEBUG)\]\s*/i, '');
+
+
+            return `<span class="timestamp">${timestamp}</span>${logString}`;
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.electronAPI && typeof window.electronAPI.onLogData === 'function') {
+                unsubscribeFromLogs = window.electronAPI.onLogData((logString) => {
+                    const logEntry = document.createElement('div');
+                    logEntry.classList.add('log-entry');
+                    const levelClass = getLogLevelClass(logString);
+                    logEntry.classList.add(levelClass);
+                    
+                    logEntry.innerHTML = formatLogMessage(logString); // Usa innerHTML para o span
+                    
+                    const shouldScroll = logContainer.scrollTop + logContainer.clientHeight >= logContainer.scrollHeight - 20;
+                    logContainer.appendChild(logEntry);
+                    if (shouldScroll) {
+                        logContainer.scrollTop = logContainer.scrollHeight;
+                    }
+                });
+            } else {
+                console.error("electronAPI.onLogData não está disponível.");
+                const errorEntry = document.createElement('div');
+                errorEntry.className = 'log-entry error';
+                errorEntry.textContent = "Erro: API de logs do Electron não disponível.";
+                logContainer.appendChild(errorEntry);
+            }
+
+            if (window.electronAPI && typeof window.electronAPI.requestInitialLogs === 'function') {
+                window.electronAPI.requestInitialLogs();
+            }
+
+            if (clearLogsBtn) {
+                clearLogsBtn.addEventListener('click', () => {
+                    logContainer.innerHTML = '';
+                    if (window.electronAPI && typeof window.electronAPI.sendLog === 'function') { // Supondo que exista
+                        window.electronAPI.sendLog("Logs da interface limpos pelo usuário.", "info");
+                    }
+                });
+            }
+
+            if (openDevToolsLogsBtn && window.electronAPI && typeof window.electronAPI.openDevTools === 'function') {
+                openDevToolsLogsBtn.addEventListener('click', () => {
+                    window.electronAPI.openDevTools();
+                });
+            }
+        });
+
+        // Limpar listener ao descarregar para evitar memory leaks
+        window.addEventListener('unload', () => {
+            if (unsubscribeFromLogs && typeof unsubscribeFromLogs === 'function') {
+                unsubscribeFromLogs();
+            }
+        });
+    </script>
+</body>
+</html>
