@@ -3,64 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notary Connect - Admin</title>
+    <title>Notary Connect - Administração</title>
     <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
     <link rel="icon" href="./img/icons/logo.svg" type="image/svg+xml">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/qrStyles.css">
-    <style>
-        /* Estilos adicionais se necessário, ou mova tudo para qrStyles.css */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Azul acinzentado claro */
-        }
-        .btn-electron {
-            background-color: #4A5568; /* Cinza escuro */
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem; /* rounded-md */
-            font-size: 0.875rem; /* text-sm */
-            font-weight: 500; /* medium */
-            transition: background-color 0.2s ease-in-out;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-electron:hover {
-            background-color: #2D3748; /* Cinza mais escuro */
-        }
-    </style>
+    <link rel="stylesheet" href="./css/adminStyles.css">
 </head>
-<body class="flex flex-col items-center min-h-screen p-4">
-    <div class="qr-page-container w-full max-w-4xl">
-        <header class="page-header flex flex-col sm:flex-row items-center justify-between mb-8 w-full">
+<body class="flex flex-col items-center min-h-screen p-4 bg-gray-100">
+    <div class="page-container w-full max-w-5xl">
+        <header class="page-header flex flex-col sm:flex-row items-center justify-between mb-6 w-full">
             <div class="flex items-center">
-                <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="header-logo w-12 h-12 mr-3">
-                <h1 class="text-2xl font-bold text-blue-800">Status da Autenticação - WhatsApp</h1>
+                <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="header-logo w-10 h-10 mr-3">
+                <h1 class="text-2xl font-bold text-gray-700">Administração</h1>
             </div>
             <div class="electron-actions mt-4 sm:mt-0 space-x-2">
-                <button id="viewLogsBtn" class="btn-electron">Ver Logs</button>
-                <button id="openDevToolsBtnAdmin" class="btn-electron">DevTools</button>
-                 <button onclick="if(window.electronAPI && window.electronAPI.navigate) window.electronAPI.navigate('login'); else console.error('ElectronAPI não disponível');" class="btn-electron bg-red-600 hover:bg-red-700">Sair (Login)</button>
+                <button id="viewLogsBtn" class="btn-electron-secondary">Ver Logs</button>
+                <button id="openDevToolsBtnAdmin" class="btn-electron-secondary">DevTools</button>
+                <button id="logoutBtn" class="btn-electron-danger">Sair</button>
             </div>
         </header>
 
-        <div class="qr-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow-lg w-full" id="qrContainer">
-            <div class="qr-block initial-loading flex flex-col items-center text-center bg-gray-50 p-4 rounded-md border border-gray-200 shadow">
-                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Carregando Status...</h3>
-                 <div class="qr-code-placeholder flex justify-center items-center w-40 h-40 bg-white border border-gray-300 rounded-md mb-2">
-                    <svg class="animate-spin h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                 </div>
-                 <div class="qr-status mt-2 text-sm text-gray-600">Conectando ao servidor...</div>
+        <nav class="mb-6 w-full bg-white p-3 sm:p-4 rounded-lg shadow-md">
+            <div class="flex flex-col sm:flex-row justify-around space-y-2 sm:space-y-0 sm:space-x-2">
+                <button id="navRoboBtn" data-section="roboSection" class="nav-button flex-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" /></svg>Robô (WhatsApp)
+                </button>
+                <button id="navRespostasBtn" data-section="respostasSection" class="nav-button flex-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7s-8-3.134-8-7c0-3.866 3.582-7 8-7s8 3.134 8 7zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>Respostas
+                </button>
+                <button id="navFuncionariosBtn" data-section="funcionariosSection" class="nav-button flex-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zm-2 0a1 1 0 11-2 0 1 1 0 012 0zm8 3a1 1 0 100-2 1 1 0 000 2zm2 0a3 3 0 11-6 0 3 3 0 016 0zM3.496 14.327A5.023 5.023 0 018 12.5c1.398 0 2.68.56 3.604 1.468A5.006 5.006 0 0117 17.5a.5.5 0 01-.5.5H3a.5.5 0 01-.5-.5c0-.002.001-.004.001-.007a5.008 5.008 0 01.495-2.166z" /></svg>Funcionários
+                </button>
+                <button id="navConfiguracoesBtn" data-section="configuracoesSection" class="nav-button flex-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.566.379-1.566 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.566 2.6 1.566 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.566-.379 1.566-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106A1.532 1.532 0 0111.49 3.17zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>Configurações
+                </button>
             </div>
-        </div>
+        </nav>
 
-        <div id="connectionStatus" class="connection-status-bar fixed bottom-0 left-0 w-full p-2 text-center text-sm font-medium z-50 transition-colors duration-300 bg-yellow-400 text-yellow-800">
+        <main id="adminContentArea" class="w-full">
+            <section id="roboSection" class="content-section w-full">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">Status da Conexão do Robô</h2>
+                <div id="qrStatusContainer" class="flex flex-col items-center">
+                    <div id="qrDisplay" class="qr-code-area bg-white p-3 border border-gray-300 rounded-md shadow-sm mb-3" style="min-height: 180px; width: 180px; display: flex; justify-content: center; align-items: center;">
+                        <div class="qr-code-placeholder">
+                            <svg class="animate-spin h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="qrStatusText" class="qr-status-text text-sm text-gray-600 mb-4 text-center">Aguardando conexão...</div>
+                    
+                    <div id="botActions" class="flex justify-center space-x-3 mt-3" style="display: none;">
+                        <button id="pauseBotBtn" class="action-button pause-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            Pausar Robô
+                        </button>
+                        <button id="restartBotBtn" class="action-button restart-button">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.966H17.5a.5.5 0 01.5.5v1.5a.5.5 0 01-.5.5h-2.268A7.002 7.002 0 014.268 10.5H1.5a.5.5 0 01-.5-.5v-1.5a.5.5 0 01.5-.5h2.101A7.002 7.002 0 0112.899 5.5H17.5a.5.5 0 01.5.5v1.5a.5.5 0 01-.5.5h-2.268A7.002 7.002 0 014.268 13.5H1.5a.5.5 0 01-.5-.5v-1.5a.5.5 0 01.5-.5H4V3a1 1 0 01-1-1zm10.268 10.5A5.002 5.002 0 006.732 7.5H4.5a.5.5 0 00-.5.5v1.5a.5.5 0 00.5.5h2.232A5.002 5.002 0 0013.268 15.5H15.5a.5.5 0 00.5-.5v-1.5a.5.5 0 00-.5-.5h-2.232z" clip-rule="evenodd" /></svg>
+                            Reiniciar Robô
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="respostasSection" class="content-section w-full">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">Gerenciamento de Respostas</h2>
+                <p class="text-gray-600 text-center">Funcionalidade para configurar respostas automáticas e fluxos de conversa (a ser implementada).</p>
+            </section>
+
+            <section id="funcionariosSection" class="content-section w-full">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">Gerenciamento de Funcionários</h2>
+                <p class="text-gray-600 text-center">Funcionalidade para adicionar, editar e remover funcionários/atendentes (a ser implementada).</p>
+            </section>
+
+            <section id="configuracoesSection" class="content-section w-full">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">Configurações Gerais</h2>
+                <p class="text-gray-600 text-center">Funcionalidade para configurações gerais do sistema de atendimento (a ser implementada).</p>
+            </section>
+        </main>
+
+        <div id="connectionStatus" class="connection-status-bar">
             Conectando ao servidor WebSocket...
         </div>
     </div>

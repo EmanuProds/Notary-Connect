@@ -1,25 +1,22 @@
 // backend/services/sqliteService.js
-const sqlite3Node = require('sqlite3'); // Renomeado para evitar conflito com a instância db
+const sqlite3Node = require('sqlite3'); 
 const path = require('path');
 const fs = require('fs');
-const dbConfig = require('../config/dbConfigSqlite'); // Usa a nova configuração
+const dbConfig = require('../config/dbConfigSqlite'); 
+const { initAuthCreds } = require('baileys'); 
 
-// Habilita stack traces mais detalhadas para erros do SQLite
-// Deve ser chamado uma vez no módulo.
 const sqlite3 = sqlite3Node.verbose();
 
 let globalSendLog = (msg, level) => console[level || 'log'](msg);
-let db; // Instância do banco de dados
+let db; 
 
-// Função para conectar ao banco de dados SQLite
 async function connect() {
     return new Promise((resolve, reject) => {
-        if (db && db.open) {
+        if (db && db.open) { 
             globalSendLog('[SQLite] Usando conexão existente.', 'debug');
             resolve(db);
             return;
         }
-
         const dbDir = path.dirname(dbConfig.databasePath);
         if (!fs.existsSync(dbDir)) {
             try {
@@ -30,9 +27,7 @@ async function connect() {
                 return reject(mkdirErr);
             }
         }
-
         globalSendLog(`[SQLite] Conectando ao banco de dados em: ${dbConfig.databasePath}`, 'info');
-        // Usa o construtor sqlite3.Database obtido do sqlite3.verbose()
         const newDb = new sqlite3.Database(dbConfig.databasePath, (err) => {
             if (err) {
                 globalSendLog(`[SQLite] Erro ao conectar ao banco: ${err.message}`, 'error');
@@ -47,13 +42,11 @@ async function connect() {
                     globalSendLog('[SQLite] PRAGMA foreign_keys habilitado.', 'debug');
                 }
             });
-            // db.verbose(); // REMOVIDO - Esta linha causava o erro.
             resolve(db);
         });
     });
 }
 
-// Função para fechar a conexão (chamar ao encerrar o app)
 async function close() {
     return new Promise((resolve, reject) => {
         if (db) {
@@ -63,7 +56,7 @@ async function close() {
                     return reject(err);
                 }
                 globalSendLog('[SQLite] Conexão com o banco de dados SQLite fechada.', 'info');
-                db = null; // Limpa a instância
+                db = null; 
                 resolve();
             });
         } else {
@@ -72,7 +65,6 @@ async function close() {
     });
 }
 
-// Executa uma única query (SELECT)
 async function get(sql, params = []) {
     await connect(); 
     return new Promise((resolve, reject) => {
@@ -87,7 +79,6 @@ async function get(sql, params = []) {
     });
 }
 
-// Executa uma query que retorna múltiplas linhas (SELECT)
 async function all(sql, params = []) {
     await connect();
     return new Promise((resolve, reject) => {
@@ -102,7 +93,6 @@ async function all(sql, params = []) {
     });
 }
 
-// Executa uma query que não retorna dados (INSERT, UPDATE, DELETE, CREATE)
 async function run(sql, params = []) {
     await connect();
     return new Promise((resolve, reject) => {
@@ -117,7 +107,6 @@ async function run(sql, params = []) {
     });
 }
 
-// Executa múltiplas queries em uma transação
 async function executeTransaction(callback) {
     await connect();
     return new Promise((resolve, reject) => {
@@ -144,6 +133,7 @@ async function executeTransaction(callback) {
                     });
                 } catch (error) {
                     globalSendLog(`[SQLite] Erro durante a execução da transação (callback): ${error.message}`, 'error');
+                    globalSendLog(error.stack, 'debug'); // Log stack do erro do callback
                     db.run("ROLLBACK;", (rollbackErr) => {
                         if (rollbackErr) globalSendLog(`[SQLite] Erro crítico ao tentar rollback após erro no callback: ${rollbackErr.message}`, 'error');
                         else globalSendLog('[SQLite] Transação rollbackada com sucesso após erro no callback.', 'debug');
@@ -157,6 +147,7 @@ async function executeTransaction(callback) {
 
 
 async function createTablesIfNotExists() {
+    // ... (definições das tabelas como antes, sem alterações)
     globalSendLog('[SQLite] Verificando e criando tabelas se não existirem...', 'info');
     const createAttendantsTable = `
         CREATE TABLE IF NOT EXISTS ATTENDANTS (
@@ -201,7 +192,8 @@ async function createTablesIfNotExists() {
         CREATE TABLE IF NOT EXISTS CONVERSATIONS (
             ID INTEGER PRIMARY KEY AUTOINCREMENT,
             CLIENT_WHATSAPP_ID TEXT NOT NULL,
-            ATTENDANT_ID INTEGER,
+            ATTENDANT_ID INTEGER, 
+            ATTENDANT_USERNAME TEXT, 
             STATUS TEXT DEFAULT 'PENDING' NOT NULL,
             CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
             LAST_MESSAGE_TIMESTAMP DATETIME,
@@ -238,8 +230,7 @@ async function createTablesIfNotExists() {
     }
 }
 
-// --- Funções para Atendentes (ATTENDANTS) ---
-async function getAttendantByUsername(username) {
+async function getAttendantByUsername(username) { /* ... (como antes) ... */ 
     const sql = "SELECT ID, USERNAME, PASSWORD_HASH, NAME, IS_ADMIN, SECTOR, DIRECT_CONTACT_NUMBER FROM ATTENDANTS WHERE UPPER(USERNAME) = UPPER(?)";
     try {
         const attendant = await get(sql, [username]);
@@ -257,8 +248,26 @@ async function getAttendantByUsername(username) {
         throw error;
     }
 }
+async function getAttendantById(id) { /* ... (como antes) ... */ 
+    const sql = "SELECT ID, USERNAME, NAME, IS_ADMIN, SECTOR, DIRECT_CONTACT_NUMBER FROM ATTENDANTS WHERE ID = ?";
+    try {
+        const attendant = await get(sql, [id]);
+        if (attendant) {
+            attendant.IS_ADMIN = attendant.IS_ADMIN === 1;
+            if (attendant.SECTOR && typeof attendant.SECTOR === 'string') {
+                attendant.SECTOR = attendant.SECTOR.split(',').map(s => s.trim());
+            } else if (!attendant.SECTOR) {
+                attendant.SECTOR = [];
+            }
+        }
+        return attendant;
+    } catch (error) {
+        globalSendLog(`[SQLite] Erro ao buscar atendente por ID '${id}': ${error.message}`, 'error');
+        return null; 
+    }
+}
 
-async function createAttendant(attendantData, dbInstance) { 
+async function createAttendant(attendantData, dbInstance) { /* ... (como antes) ... */ 
     const { USERNAME, PASSWORD_HASH, NAME, IS_ADMIN, SECTOR, DIRECT_CONTACT_NUMBER } = attendantData;
     const sectorString = Array.isArray(SECTOR) ? SECTOR.join(',') : (SECTOR || null);
     const sql = "INSERT INTO ATTENDANTS (USERNAME, PASSWORD_HASH, NAME, IS_ADMIN, SECTOR, DIRECT_CONTACT_NUMBER) VALUES (?, ?, ?, ?, ?, ?)";
@@ -274,8 +283,7 @@ async function createAttendant(attendantData, dbInstance) {
         });
     });
 }
-
-async function initializeDefaultAttendants() {
+async function initializeDefaultAttendants() { /* ... (como antes) ... */ 
     globalSendLog('[SQLite] Verificando e inicializando atendentes padrão...', 'info');
     const defaultAttendants = [
         { USERNAME: "admin", NAME: "Administrador", PASSWORD_HASH: "$2b$10$lrxuqCVgRxuFs1NkkXs81ur0AIk6U6pjPfggt6gHdAbVF9PFf9vxu", IS_ADMIN: true, SECTOR: null, DIRECT_CONTACT_NUMBER: null },
@@ -313,46 +321,45 @@ async function initializeDefaultAttendants() {
 }
 
 // --- Funções para Sessão Baileys (WHATSAPP_SESSIONS e WHATSAPP_AUTH_STORE) ---
-function bufferToBase64(buffer) { if (!buffer) return null; return buffer.toString('base64'); }
-function base64ToBuffer(base64) { if (!base64) return null; return Buffer.from(base64, 'base64'); }
+function bufferToBase64(buffer) { 
+    if (!buffer) return null;
+    return Buffer.isBuffer(buffer) ? buffer.toString('base64') : buffer; // Retorna string se já for string
+}
+function base64ToBuffer(base64) { 
+    if (!base64 || typeof base64 !== 'string') return null; // Verifica se é string
+    return Buffer.from(base64, 'base64');
+}
 
 function serializeData(data) {
     if (data === undefined || data === null) return null;
-    if (Buffer.isBuffer(data)) return JSON.stringify({ __buffer__: bufferToBase64(data) });
-    if (typeof data === 'object') {
-        const serialized = Array.isArray(data) ? [] : {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                const value = data[key];
-                if (Buffer.isBuffer(value)) {
-                    serialized[key] = { __buffer__: bufferToBase64(value) };
-                } else if (value instanceof Uint8Array) {
-                     serialized[key] = { __buffer__: bufferToBase64(Buffer.from(value)) };
-                } else if (typeof value === 'object' && value !== null) {
-                    serialized[key] = serializeData(value);
-                } else {
-                    serialized[key] = value;
-                }
-            }
+    // Percorre o objeto recursivamente para encontrar Buffers
+    const replacer = (key, value) => {
+        if (value instanceof Uint8Array || (typeof value === 'object' && value !== null && value.type === 'Buffer' && Array.isArray(value.data))) {
+            // Converte Uint8Array ou objeto Buffer do Baileys para Buffer Node.js e depois para Base64
+            return { __buffer__: Buffer.from(value.data || value).toString('base64') };
         }
-        return JSON.stringify(serialized);
-    }
-    return JSON.stringify(data);
+        if (Buffer.isBuffer(value)) {
+            return { __buffer__: value.toString('base64') };
+        }
+        return value;
+    };
+    return JSON.stringify(data, replacer);
 }
 
 function deserializeData(jsonString) {
     if (!jsonString) return null;
-    const parsed = JSON.parse(jsonString);
-    function revive(key, value) {
-        if (typeof value === 'object' && value !== null && value.__buffer__ !== undefined) {
-            return base64ToBuffer(value.__buffer__);
+    const reviver = (key, value) => {
+        if (typeof value === 'object' && value !== null && value.__buffer__ !== undefined && typeof value.__buffer__ === 'string') {
+            return Buffer.from(value.__buffer__, 'base64');
         }
         return value;
+    };
+    try {
+        return JSON.parse(jsonString, reviver);
+    } catch (e) {
+        globalSendLog(`[SQLiteAuth] Erro ao desserializar JSON: ${e.message}. String: ${jsonString.substring(0,100)}...`, "error");
+        return null; // Retorna null se houver erro de parse
     }
-     if (typeof parsed === 'object' && parsed !== null && parsed.__buffer__ !== undefined) {
-        return base64ToBuffer(parsed.__buffer__);
-    }
-    return JSON.parse(jsonString, revive);
 }
 
 async function sqliteAuthStore(sessionId) {
@@ -365,7 +372,9 @@ async function sqliteAuthStore(sessionId) {
             const row = await get(sql, [sessionId, key]);
             if (row && row.KEY_VALUE) {
                 globalSendLog(`[SQLiteAuth] Lendo dados para chave '${key}' (session: ${sessionId})`, 'debug');
-                return deserializeData(row.KEY_VALUE);
+                const deserialized = deserializeData(row.KEY_VALUE);
+                // globalSendLog(`[SQLiteAuth] Dados desserializados para '${key}': ${JSON.stringify(deserialized, null, 2).substring(0, 300)}`, 'debug');
+                return deserialized;
             }
             globalSendLog(`[SQLiteAuth] Chave '${key}' não encontrada para session: ${sessionId}`, 'debug');
             return null;
@@ -377,6 +386,7 @@ async function sqliteAuthStore(sessionId) {
 
     const writeData = async (key, value) => {
         if (value === undefined || value === null) {
+            globalSendLog(`[SQLiteAuth] Valor para chave '${key}' é undefined/null. Removendo...`, 'debug');
             return removeData(key);
         }
         const serializedValue = serializeData(value);
@@ -384,15 +394,15 @@ async function sqliteAuthStore(sessionId) {
              globalSendLog(`[SQLiteAuth] Valor serializado é nulo para a chave '${key}', não escrevendo.`, 'warn');
              return;
         }
+        // globalSendLog(`[SQLiteAuth] Escrevendo dados serializados para chave '${key}': ${serializedValue.substring(0,300)}...`, 'debug');
         const sql = `
             INSERT INTO WHATSAPP_AUTH_STORE (SESSION_ID, AUTH_KEY, KEY_VALUE, LAST_UPDATED)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, datetime('now'))
             ON CONFLICT(SESSION_ID, AUTH_KEY) DO UPDATE SET
             KEY_VALUE = excluded.KEY_VALUE,
-            LAST_UPDATED = excluded.LAST_UPDATED;
+            LAST_UPDATED = datetime('now');
         `;
         try {
-            globalSendLog(`[SQLiteAuth] Escrevendo dados para chave '${key}' (session: ${sessionId})`, 'debug');
             await run(sql, [sessionId, key, serializedValue]);
         } catch (error) {
             globalSendLog(`[SQLiteAuth] Erro ao escrever dados para chave '${key}': ${error.message}`, 'error');
@@ -408,8 +418,25 @@ async function sqliteAuthStore(sessionId) {
             globalSendLog(`[SQLiteAuth] Erro ao remover dados para chave '${key}': ${error.message}`, 'error');
         }
     };
+
+    const clearAllData = async () => {
+        const sql = "DELETE FROM WHATSAPP_AUTH_STORE WHERE SESSION_ID = ?";
+        try {
+            globalSendLog(`[SQLiteAuth] Limpando todos os dados de autenticação para session: ${sessionId}`, 'info');
+            await run(sql, [sessionId]);
+        } catch (error) {
+            globalSendLog(`[SQLiteAuth] Erro ao limpar todos os dados de autenticação para session '${sessionId}': ${error.message}`, 'error');
+        }
+    };
     
-    const creds = (await readData('creds')) || {};
+    let creds = await readData('creds');
+    if (!creds) {
+        globalSendLog(`[SQLiteAuth] Nenhuma credencial encontrada para session '${sessionId}', inicializando com initAuthCreds().`, 'info');
+        creds = initAuthCreds();
+    } else {
+        globalSendLog(`[SQLiteAuth] Credenciais encontradas para session '${sessionId}'.`, 'info');
+    }
+    
     const keys = {
         get: async (type, ids) => {
             const data = {};
@@ -417,9 +444,11 @@ async function sqliteAuthStore(sessionId) {
                 const value = await readData(`${type}-${id}`);
                 if (value) { data[id] = value; }
             }
+            // globalSendLog(`[SQLiteAuth Keys GET] type: ${type}, ids: ${ids.join(',')}, data found: ${Object.keys(data).length > 0}`, 'debug');
             return data;
         },
         set: async (data) => {
+            // globalSendLog(`[SQLiteAuth Keys SET] data: ${JSON.stringify(Object.keys(data))}`, 'debug');
             for (const category in data) {
                 for (const id in data[category]) {
                     const value = data[category][id];
@@ -431,31 +460,51 @@ async function sqliteAuthStore(sessionId) {
         }
     };
     
-    return { state: { creds, keys }, saveCreds: async () => { await writeData('creds', creds); globalSendLog(`[SQLiteAuth] Credenciais salvas para session: ${sessionId}`, 'info'); }};
+    return { 
+        state: { creds, keys }, 
+        saveCreds: async () => { 
+            // globalSendLog(`[SQLiteAuth] Tentando salvar creds: ${JSON.stringify(creds, null, 2).substring(0,300)}`, 'debug');
+            await writeData('creds', creds); 
+            globalSendLog(`[SQLiteAuth] Credenciais salvas para session: ${sessionId}`, 'info'); 
+        },
+        clearAllData 
+    };
 }
 
-async function updateWhatsappSessionStatus(sessionId, status, jid = null, lastQrCode = null) {
+async function updateWhatsappSessionStatus(sessionId, status, jid = null, lastQrCode = null) { /* ... (como antes) ... */ 
     const sql = `
         INSERT INTO WHATSAPP_SESSIONS (SESSION_ID, STATUS, JID, LAST_QR_CODE, LAST_UPDATED)
-        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, datetime('now'))
         ON CONFLICT(SESSION_ID) DO UPDATE SET
         STATUS = excluded.STATUS,
         JID = excluded.JID,
         LAST_QR_CODE = excluded.LAST_QR_CODE,
-        LAST_UPDATED = excluded.LAST_UPDATED;
+        LAST_UPDATED = datetime('now');
     `;
     try { await run(sql, [sessionId, status, jid, lastQrCode]); globalSendLog(`[SQLite] Status da sessão Baileys '${sessionId}' atualizado para: ${status}`, 'info'); } catch (error) { globalSendLog(`[SQLite] Erro ao atualizar status da sessão Baileys '${sessionId}': ${error.message}`, 'error'); }
 }
-
-async function getWhatsappSession(sessionId) {
+async function getWhatsappSession(sessionId) { /* ... (como antes) ... */ 
     const sql = "SELECT SESSION_ID, STATUS, JID, LAST_QR_CODE, LAST_UPDATED FROM WHATSAPP_SESSIONS WHERE SESSION_ID = ?";
     try { return await get(sql, [sessionId]); } catch (error) { globalSendLog(`[SQLite] Erro ao buscar sessão Baileys '${sessionId}': ${error.message}`, 'error'); return null; }
 }
+async function getClientByWhatsappId(whatsappId) { /* ... (como antes) ... */ 
+    const sql = "SELECT ID, WHATSAPP_ID, NAME, PROFILE_PIC_URL FROM CLIENTS WHERE WHATSAPP_ID = ?";
+    try {
+        return await get(sql, [whatsappId]);
+    } catch (error) {
+        globalSendLog(`[SQLite] Erro ao buscar cliente por WhatsApp ID '${whatsappId}': ${error.message}`, 'error');
+        return null;
+    }
+}
+async function findOrCreateConversation(clientJid, attendantUsername = null) { /* ... (como antes) ... */ 
+    let attendantId = null;
+    if (attendantUsername) {
+        const attendant = await getAttendantByUsername(attendantUsername);
+        if (attendant) attendantId = attendant.ID;
+    }
 
-// --- Funções para Conversas e Mensagens ---
-async function findOrCreateConversation(clientJid, attendantId = null) {
     let sql = `
-        SELECT c.ID, c.CLIENT_WHATSAPP_ID, c.ATTENDANT_ID, att.NAME as ATTENDANT_NAME, c.STATUS, 
+        SELECT c.ID, c.CLIENT_WHATSAPP_ID, c.ATTENDANT_ID, att.USERNAME as ATTENDANT_USERNAME, att.NAME as ATTENDANT_NAME, c.STATUS, 
                STRFTIME('%Y-%m-%dT%H:%M:%fZ', c.LAST_MESSAGE_TIMESTAMP) as LAST_MESSAGE_TIMESTAMP, 
                c.UNREAD_MESSAGES 
         FROM CONVERSATIONS c
@@ -464,11 +513,8 @@ async function findOrCreateConversation(clientJid, attendantId = null) {
     `;
     const params = [clientJid];
     if (attendantId) { 
-        const attendantUser = await getAttendantByUsername(attendantId); 
-        if (attendantUser) {
-            sql += " AND (c.ATTENDANT_ID = ? OR c.ATTENDANT_ID IS NULL)"; 
-            params.push(attendantUser.ID);
-        }
+        sql += " AND (c.ATTENDANT_ID = ? OR c.ATTENDANT_ID IS NULL)"; 
+        params.push(attendantId);
     }
     sql += " ORDER BY c.LAST_MESSAGE_TIMESTAMP DESC LIMIT 1";
 
@@ -479,23 +525,21 @@ async function findOrCreateConversation(clientJid, attendantId = null) {
     }
 
     globalSendLog(`[SQLite] Nenhuma conversa ativa/pendente para ${clientJid}. Criando nova...`, 'info');
-    const insertSql = "INSERT INTO CONVERSATIONS (CLIENT_WHATSAPP_ID, STATUS, CREATED_AT, LAST_MESSAGE_TIMESTAMP) VALUES (?, 'PENDING', datetime('now'), datetime('now'))";
+    const insertSql = "INSERT INTO CONVERSATIONS (CLIENT_WHATSAPP_ID, STATUS, CREATED_AT, LAST_MESSAGE_TIMESTAMP, ATTENDANT_USERNAME) VALUES (?, 'PENDING', datetime('now'), datetime('now'), ?)";
     try {
-        const result = await run(insertSql, [clientJid]);
+        const result = await run(insertSql, [clientJid, attendantUsername]); 
         return await get("SELECT c.*, att.NAME as ATTENDANT_NAME FROM CONVERSATIONS c LEFT JOIN ATTENDANTS att ON c.ATTENDANT_ID = att.ID WHERE c.ID = ?", [result.lastID]);
     } catch (error) {
         globalSendLog(`[SQLite] Erro ao criar nova conversa para ${clientJid}: ${error.message}`, 'error');
         throw error;
     }
 }
-
-async function saveMessage(messageData) {
+async function saveMessage(messageData) { /* ... (como antes) ... */ 
     const { conversation_id, baileys_msg_id, sender_type, sender_jid, message_content, message_type, timestamp, is_read_by_agent } = messageData;
     const sql = `
         INSERT INTO MESSAGES (CONVERSATION_ID, BAILEYS_MSG_ID, SENDER_TYPE, SENDER_JID, MESSAGE_CONTENT, MESSAGE_TYPE, TIMESTAMP, IS_READ_BY_AGENT)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    // Garante que o timestamp seja uma string ISO para SQLite DATETIME
     const messageTimestamp = timestamp instanceof Date ? timestamp.toISOString() : (timestamp || new Date().toISOString());
     
     try {
@@ -506,13 +550,13 @@ async function saveMessage(messageData) {
         ]);
         globalSendLog(`[SQLite] Mensagem salva para conversa ${conversation_id}. ID da mensagem no DB: ${result.lastID}`, 'info');
         
-        const unreadIncrement = (sender_type === 'CLIENT' && !(is_read_by_agent ? 1 : 0)) ? 1 : 0; // Incrementa se for do cliente e não lida
+        const unreadIncrement = (sender_type === 'CLIENT' && !(is_read_by_agent ? 1 : 0)) ? 1 : 0; 
         const updateConvSql = `
             UPDATE CONVERSATIONS 
             SET LAST_MESSAGE_TIMESTAMP = ?, 
-                UNREAD_MESSAGES = UNREAD_MESSAGES + ?
+                UNREAD_MESSAGES = UNREAD_MESSAGES + ? 
             WHERE ID = ?
-        `;
+        `; 
         await run(updateConvSql, [messageTimestamp, unreadIncrement, conversation_id]);
 
         return { ...messageData, ID: result.lastID, TIMESTAMP: messageTimestamp };
@@ -524,8 +568,7 @@ async function saveMessage(messageData) {
         throw error;
     }
 }
-
-async function getConversationHistory(conversationId, limit = 50, offset = 0) {
+async function getConversationHistory(conversationId, limit = 50, offset = 0) { /* ... (como antes) ... */ 
     const sql = `
         SELECT ID, CONVERSATION_ID, BAILEYS_MSG_ID, SENDER_TYPE, SENDER_JID, MESSAGE_CONTENT, MESSAGE_TYPE, 
                STRFTIME('%Y-%m-%dT%H:%M:%fZ', TIMESTAMP) as TIMESTAMP, 
@@ -546,8 +589,7 @@ async function getConversationHistory(conversationId, limit = 50, offset = 0) {
         return [];
     }
 }
-
-async function getConversationsForAttendant(agentUsername, tabType = 'active', searchTerm = null) {
+async function getConversationsForAttendant(agentUsername, tabType = 'active', searchTerm = null) { /* ... (como antes) ... */ 
     globalSendLog(`[SQLite] Buscando conversas para atendente ${agentUsername}, aba: ${tabType}, busca: ${searchTerm || 'Nenhuma'}`, 'info');
     let sql = `
         SELECT c.ID, c.CLIENT_WHATSAPP_ID, c.ATTENDANT_ID, att.NAME as ATTENDANT_NAME, c.STATUS, 
@@ -606,17 +648,16 @@ async function getConversationsForAttendant(agentUsername, tabType = 'active', s
         return [];
     }
 }
-
-async function assignConversationToAttendant(conversationId, agentUsername, agentName) {
+async function assignConversationToAttendant(conversationId, agentUsername, agentName) { /* ... (como antes) ... */ 
     globalSendLog(`[SQLite] Atribuindo conversa ${conversationId} para atendente ${agentName} (${agentUsername})`, 'info');
     const attendant = await getAttendantByUsername(agentUsername);
     if (!attendant) {
         globalSendLog(`[SQLite] Atendente ${agentUsername} não encontrado para atribuição.`, 'error');
         return null;
     }
-    const sql = `UPDATE CONVERSATIONS SET ATTENDANT_ID = ?, STATUS = 'ACTIVE', UNREAD_MESSAGES = 0 WHERE ID = ? AND (STATUS = 'PENDING' OR STATUS = 'ACTIVE')`;
+    const sql = `UPDATE CONVERSATIONS SET ATTENDANT_ID = ?, ATTENDANT_USERNAME = ?, STATUS = 'ACTIVE', UNREAD_MESSAGES = 0 WHERE ID = ? AND (STATUS = 'PENDING' OR STATUS = 'ACTIVE')`;
     try {
-        const result = await run(sql, [attendant.ID, conversationId]);
+        const result = await run(sql, [attendant.ID, agentUsername, conversationId]);
         if (result.changes > 0) {
             return await get("SELECT c.*, att.NAME as ATTENDANT_NAME FROM CONVERSATIONS c LEFT JOIN ATTENDANTS att ON c.ATTENDANT_ID = att.ID WHERE c.ID = ?", [conversationId]);
         }
@@ -627,8 +668,7 @@ async function assignConversationToAttendant(conversationId, agentUsername, agen
         return null;
     }
 }
-
-async function closeConversation(conversationId, agentUsername) {
+async function closeConversation(conversationId, agentUsername) { /* ... (como antes) ... */ 
     globalSendLog(`[SQLite] Fechando conversa ${conversationId} pelo atendente ${agentUsername}`, 'info');
     const attendant = await getAttendantByUsername(agentUsername);
     if (!attendant) {
@@ -648,8 +688,7 @@ async function closeConversation(conversationId, agentUsername) {
         return null;
     }
 }
-
-async function markMessagesAsReadByAgent(conversationId, agentUsername) {
+async function markMessagesAsReadByAgent(conversationId, agentUsername) { /* ... (como antes) ... */ 
     globalSendLog(`[SQLite] Marcando mensagens como lidas para conversa ${conversationId} pelo atendente ${agentUsername}`, 'info');
     const attendant = await getAttendantByUsername(agentUsername);
     if (!attendant) {
@@ -683,10 +722,12 @@ module.exports = {
     run,
     executeTransaction,
     getAttendantByUsername,
+    getAttendantById, 
     initializeDefaultAttendants,
     sqliteAuthStore,
     updateWhatsappSessionStatus,
     getWhatsappSession,
+    getClientByWhatsappId, 
     findOrCreateConversation,
     saveMessage,
     getConversationHistory,

@@ -16,6 +16,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden; /* Evita scroll no body */
         }
         .toolbar {
             background-color: #333;
@@ -24,6 +25,7 @@
             align-items: center;
             gap: 10px;
             border-bottom: 1px solid #444;
+            flex-shrink: 0; 
         }
         .toolbar button {
             background-color: #555;
@@ -32,7 +34,7 @@
             padding: 5px 10px;
             border-radius: 3px;
             cursor: pointer;
-            font-family: 'Inter', sans-serif; /* Fonte mais legível para botões */
+            font-family: 'Inter', sans-serif; 
         }
         .toolbar button:hover {
             background-color: #666;
@@ -54,92 +56,116 @@
             border-bottom: none;
         }
         .log-entry.error { color: #f48771; font-weight: bold; }
-        .log-entry.warn { color: #ffd700; /* Amarelo mais brilhante */ }
+        .log-entry.warn { color: #ffd700; }
         .log-entry.info { color: #4ec9b0; }
-        .log-entry.debug { color: #9cdcfe; /* Azul claro */ }
-        .log-entry .timestamp { color: #6a9955; margin-right: 10px; } /* Verde para timestamp */
+        .log-entry.debug { color: #9cdcfe; }
+        .log-entry .timestamp-prefix { color: #6a9955; margin-right: 5px; } /* Para [LEVEL] HH:MM:SS */
+        .log-entry .message-content { /* O restante da mensagem */ }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="toolbar">
-        <button id="clearLogsBtn">Limpar Logs</button>
+        <button id="clearLogsBtn">Limpar Logs (Interface)</button>
         <button id="openDevToolsLogsBtn">DevTools</button>
-        <button onclick="if(window.electronAPI && window.electronAPI.navigate) window.electronAPI.navigate('admin'); else console.error('ElectronAPI não disponível');">Voltar para Admin</button>
+        <button id="backToAdminBtn">Voltar para Admin</button>
     </div>
     <div id="logContainer"></div>
     <script>
         const logContainer = document.getElementById('logContainer');
         const clearLogsBtn = document.getElementById('clearLogsBtn');
         const openDevToolsLogsBtn = document.getElementById('openDevToolsLogsBtn');
-        let unsubscribeFromLogs;
+        const backToAdminBtn = document.getElementById('backToAdminBtn');
 
-        function getLogLevelClass(logString) {
-            if (logString.includes('[ERROR]')) return 'error';
-            if (logString.includes('[WARN]')) return 'warn';
-            if (logString.includes('[INFO]')) return 'info';
-            if (logString.includes('[DEBUG]')) return 'debug';
-            if (logString.startsWith('ERRO:') || logString.includes('Falha')) return 'error';
-            return 'info'; // Default para info se não especificado
-        }
+        let unsubscribeFromRealtimeLogs;
+        let unsubscribeFromInitialLogs;
 
-        function formatLogMessage(logString) {
-            // Tenta extrair timestamp se não estiver formatado
-            let timestamp = new Date().toLocaleTimeString(); // Default timestamp
-            const isoTimestampMatch = logString.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)/);
-            if (isoTimestampMatch) {
-                timestamp = new Date(isoTimestampMatch[1]).toLocaleTimeString();
-                logString = logString.replace(isoTimestampMatch[0], '').trim();
-            } else {
-                 // Adiciona um timestamp se a mensagem não o tiver no formato esperado
-                 const firstWord = logString.split(' ')[0];
-                 if (!firstWord.match(/^\d{2}:\d{2}:\d{2}$/) && !logString.toLowerCase().includes('timestamp:')) {
-                     // logString = `[${new Date().toLocaleTimeString()}] ${logString}`;
-                 }
-            }
+        function getLogLevelAndRest(logString) {
+            if (!logString || typeof logString !== 'string') return { levelClass: 'info', message: logString || '' };
             
-            // Remove prefixos de nível se já estiverem sendo tratados pela classe CSS
-            logString = logString.replace(/^\[(INFO|WARN|ERROR|DEBUG)\]\s*/i, '');
+            const errorMatch = logString.match(/^\[ERROR\]\s(.*)$/s);
+            if (errorMatch) return { levelClass: 'error', message: errorMatch[1] };
+            
+            const warnMatch = logString.match(/^\[WARN\]\s(.*)$/s);
+            if (warnMatch) return { levelClass: 'warn', message: warnMatch[1] };
 
+            const infoMatch = logString.match(/^\[INFO\]\s(.*)$/s);
+            if (infoMatch) return { levelClass: 'info', message: infoMatch[1] };
 
-            return `<span class="timestamp">${timestamp}</span>${logString}`;
+            const debugMatch = logString.match(/^\[DEBUG\]\s(.*)$/s);
+            if (debugMatch) return { levelClass: 'debug', message: debugMatch[1] };
+            
+            return { levelClass: 'info', message: logString }; // Default
         }
 
+        function formatLogForDisplay(fullLogString) {
+            // Formato esperado do main process: `[LEVEL] ISO_TIMESTAMP - Mensagem`
+            const parts = fullLogString.match(/^(\[[A-Z]+\])\s(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)\s-\s(.*)$/s);
+            if (parts && parts.length === 4) {
+                const levelPrefix = parts[1]; // ex: [INFO]
+                const timestamp = new Date(parts[2]).toLocaleTimeString('pt-BR', { hour12: false });
+                const messageContent = parts[3];
+                return `<span class="timestamp-prefix">${levelPrefix} ${timestamp}</span><span class="message-content"> - ${messageContent}</span>`;
+            }
+            return fullLogString; // Retorna original se não conseguir parsear
+        }
+
+        function appendLogToContainer(logString, isBatch = false) {
+            const logEntry = document.createElement('div');
+            const { levelClass } = getLogLevelAndRest(logString); // Usa a string completa para determinar a classe
+            
+            logEntry.classList.add('log-entry', levelClass);
+            logEntry.innerHTML = formatLogForDisplay(logString);
+            
+            logContainer.appendChild(logEntry);
+
+            if (!isBatch) {
+                 const shouldScroll = logContainer.scrollTop + logContainer.clientHeight >= logContainer.scrollHeight - 30;
+                 if (shouldScroll) {
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                }
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("[LogsViewer] DOMContentLoaded. Configurando listeners...");
+
             if (window.electronAPI && typeof window.electronAPI.onLogData === 'function') {
-                unsubscribeFromLogs = window.electronAPI.onLogData((logString) => {
-                    const logEntry = document.createElement('div');
-                    logEntry.classList.add('log-entry');
-                    const levelClass = getLogLevelClass(logString);
-                    logEntry.classList.add(levelClass);
-                    
-                    logEntry.innerHTML = formatLogMessage(logString); // Usa innerHTML para o span
-                    
-                    const shouldScroll = logContainer.scrollTop + logContainer.clientHeight >= logContainer.scrollHeight - 20;
-                    logContainer.appendChild(logEntry);
-                    if (shouldScroll) {
-                        logContainer.scrollTop = logContainer.scrollHeight;
-                    }
+                unsubscribeFromRealtimeLogs = window.electronAPI.onLogData((logString) => {
+                    appendLogToContainer(logString);
                 });
+                console.log("[LogsViewer] Listener para 'onLogData' (logs em tempo real) configurado.");
             } else {
-                console.error("electronAPI.onLogData não está disponível.");
-                const errorEntry = document.createElement('div');
-                errorEntry.className = 'log-entry error';
-                errorEntry.textContent = "Erro: API de logs do Electron não disponível.";
-                logContainer.appendChild(errorEntry);
+                console.error("[LogsViewer] electronAPI.onLogData não está disponível.");
+                appendLogToContainer("[ERROR] API de logs em tempo real não disponível.", true);
             }
 
+            if (window.electronAPI && typeof window.electronAPI.onInitialLogsData === 'function') {
+                unsubscribeFromInitialLogs = window.electronAPI.onInitialLogsData((logsArray) => {
+                    console.log(`[LogsViewer] Histórico de ${logsArray.length} logs recebido via 'onInitialLogsData'.`);
+                    logContainer.innerHTML = ''; 
+                    logsArray.forEach(logString => {
+                        appendLogToContainer(logString, true); 
+                    });
+                    logContainer.scrollTop = logContainer.scrollHeight; 
+                });
+                console.log("[LogsViewer] Listener para 'onInitialLogsData' (histórico) configurado.");
+            } else {
+                 console.error("[LogsViewer] electronAPI.onInitialLogsData não está disponível.");
+                 appendLogToContainer("[ERROR] API de histórico de logs não disponível.", true);
+            }
+            
             if (window.electronAPI && typeof window.electronAPI.requestInitialLogs === 'function') {
+                console.log("[LogsViewer] Solicitando logs iniciais...");
                 window.electronAPI.requestInitialLogs();
+            } else {
+                 console.error("[LogsViewer] electronAPI.requestInitialLogs não está disponível.");
             }
 
             if (clearLogsBtn) {
                 clearLogsBtn.addEventListener('click', () => {
                     logContainer.innerHTML = '';
-                    if (window.electronAPI && typeof window.electronAPI.sendLog === 'function') { // Supondo que exista
-                        window.electronAPI.sendLog("Logs da interface limpos pelo usuário.", "info");
-                    }
+                    console.log("[LogsViewer] Logs da interface limpos.");
                 });
             }
 
@@ -148,13 +174,19 @@
                     window.electronAPI.openDevTools();
                 });
             }
+            
+            if (backToAdminBtn && window.electronAPI && typeof window.electronAPI.navigate === 'function') {
+                backToAdminBtn.addEventListener('click', () => {
+                    console.log("[LogsViewer] Navegando de volta para Admin.");
+                    window.electronAPI.navigate('admin');
+                });
+            }
         });
 
-        // Limpar listener ao descarregar para evitar memory leaks
         window.addEventListener('unload', () => {
-            if (unsubscribeFromLogs && typeof unsubscribeFromLogs === 'function') {
-                unsubscribeFromLogs();
-            }
+            console.log("[LogsViewer] Janela descarregando. Removendo listeners.");
+            if (typeof unsubscribeFromRealtimeLogs === 'function') unsubscribeFromRealtimeLogs();
+            if (typeof unsubscribeFromInitialLogs === 'function') unsubscribeFromInitialLogs();
         });
     </script>
 </body>
