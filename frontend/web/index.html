@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-BR" style="background-color: transparent !important; margin: 0 !important; padding: 0 !important;">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notary Connect - Entre</title>
+    <title>Notary Connect - Login</title>
     <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
     <link rel="icon" href="./img/icons/logo.svg" type="image/svg+xml">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/indexStyles.css">
     <style>
         /* Estilos para garantir a janela transparente e sem bordas */
@@ -51,24 +49,51 @@
 </head>
 <body>
     <div class="login-container">
-        <img src="./img/icons/logo.svg" alt="Ícone do Notary Connect" class="project-icon" onerror="this.style.display='none'; console.error('Erro ao carregar o ícone: ./img/icons/logo.svg')">
+        <div class="login-header">
+            <img src="./img/icons/logo.svg" alt="Notary Connect" class="logo">
+            <h1>Notary Connect</h1>
+            <p class="subtitle">Sistema de Atendimento Digital</p>
+        </div>
         
-        <h2>Notary Connect</h2>
-        <form id="loginForm">
+        <form id="loginForm" class="login-form">
             <div class="form-group">
-                <label for="username">Usuário:</label>
-                <input type="text" id="username" name="username" required class="rounded-md">
+                <label for="username">Usuário</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
+                </div>
             </div>
+            
             <div class="form-group">
-                <label for="password">Senha:</label>
-                <input type="password" id="password" name="password" required class="rounded-md">
+                <label for="password">Senha</label>
+                <div class="input-wrapper">
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+                    <button type="button" id="togglePassword" class="toggle-password">
+                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <button type="submit" class="rounded-md">Entrar</button>
-            <button type="button" id="closeAppBtn" class="close-button">Fechar</button>
+            
             <div id="errorMessage" class="error-message"></div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Entrar</button>
+                <button type="button" id="closeAppBtn" class="btn btn-secondary">Fechar</button>
+            </div>
         </form>
-        <div class="app-footer-internal">
-            Perains On Tecnologia ©
+        
+        <div class="app-footer">
+            <p>Perains On Tecnologia © <span id="currentYear"></span></p>
         </div>
     </div>
 
