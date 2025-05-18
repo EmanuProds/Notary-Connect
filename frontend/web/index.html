@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" style="background-color: transparent !important; margin: 0 !important; padding: 0 !important;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,21 +11,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/indexStyles.css">
     <style>
-        /* Estilos que permanecem inline para garantir a janela transparente */
-        body {
+        /* Estilos para garantir a janela transparente e sem bordas */
+        html, body {
             background-color: transparent !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100vh; /* Garante que o corpo ocupe toda a altura da viewport */
+            width: 100vw;  /* Garante que o corpo ocupe toda a largura da viewport */
+            overflow: hidden; /* Evita barras de rolagem se o conteúdo exceder um pouco */
+        }
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 1rem;
             font-family: 'Inter', sans-serif;
         }
-        .close-button { /* Mantido aqui para referência, mas idealmente no CSS externo */
+        /* Estilos do botão fechar e outros podem permanecer no indexStyles.css ou aqui */
+        .close-button {
             background-color: #718096;
             color: white;
-            margin-top: 0.75rem; /* Espaçamento entre botão Entrar e Fechar */
+            margin-top: 0.75rem;
             width: 100%;
             padding: 0.9rem;
             border: none;

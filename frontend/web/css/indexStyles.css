@@ -1,26 +1,36 @@
 /* frontend/web/css/indexStyles.css */
-body {
+
+html, body {
     font-family: 'Inter', sans-serif;
-    display: flex;
-    /* flex-direction: column; /* Não mais necessário aqui se o rodapé está dentro do container */
+    min-height: 100vh; 
+    height: 100%;      
+    width: 100%;       
+    margin: 0 !important; 
+    padding: 0 !important; 
+    background-color: #ffffff !important; /* Alterado para branco sólido */
+    overflow: hidden !important; 
+    box-sizing: border-box; 
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+body {
+    display: flex; 
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 1rem;
-    /* position: relative; /* Não mais necessário para o rodapé global */
-    background-color: transparent !important;
 }
 
 .login-container {
-    background-color: #ffffff;
-    padding: 2rem 2.5rem 1.5rem; /* Reduzido padding-bottom para acomodar o rodapé interno */
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff; /* O container já é branco, o que é bom */
+    padding: 2rem 2.5rem 1.5rem; 
+    border-radius: 0.75rem; /* 12px */
+    /* box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); */ /* Removido completamente */
     width: 100%;
     max-width: 420px;
     text-align: center;
-    position: relative; /* Para posicionar o rodapé interno se necessário, mas tentaremos sem por agora */
+    border: 1px solid #e2e8f0; /* Borda sutil para delimitar o container */
 }
 .project-icon {
     width: 80px;
@@ -58,7 +68,7 @@ body {
 .form-group input:focus {
     outline: none;
     border-color: #3498db;
-    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.2);
+    /* box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.2); */ 
 }
 button[type="submit"] {
     width: 100%;
@@ -80,11 +90,10 @@ button[type="submit"]:active {
     transform: translateY(1px);
 }
 
-/* Estilo para o botão Fechar (movido do inline para cá) */
 .close-button {
-    background-color: #718096; /* Cinza (Tailwind gray-600) */
+    background-color: #718096; 
     color: white;
-    margin-top: 0.75rem; /* Espaçamento entre botão Entrar e Fechar */
+    margin-top: 0.75rem; 
     width: 100%;
     padding: 0.9rem;
     border: none;
@@ -96,7 +105,7 @@ button[type="submit"]:active {
     letter-spacing: 0.5px;
 }
 .close-button:hover {
-    background-color: #4A5568; /* Cinza mais escuro (Tailwind gray-700) */
+    background-color: #4A5568; 
 }
 .close-button:active {
     transform: translateY(1px);
@@ -107,20 +116,18 @@ button[type="submit"]:active {
     margin-top: 1.25rem;
     font-size: 0.875rem;
     font-weight: 500;
-    min-height: 1.25rem; /* Para evitar que o layout salte */
-    margin-bottom: 1rem; /* Espaço antes do rodapé interno */
+    min-height: 1.25rem; 
+    margin-bottom: 1rem; 
 }
 
-/* Novo estilo para o rodapé dentro do login-container */
 .app-footer-internal {
     width: 100%;
     text-align: center;
     font-size: 0.8rem;
-    color: #A0AEC0; /* Cinza (Tailwind gray-500) */
-    padding-top: 1rem; /* Espaço acima do texto do rodapé */
-    /* padding-bottom: 0.5rem; /* Pequeno espaço abaixo do texto do rodapé, dentro do container */
-    border-top: 1px solid #E2E8F0; /* Linha separadora sutil (Tailwind gray-300) */
-    margin-top: 1.5rem; /* Espaço entre a mensagem de erro (ou botões) e o rodapé */
+    color: #A0AEC0; 
+    padding-top: 1rem; 
+    border-top: 1px solid #E2E8F0; 
+    margin-top: 1.5rem; 
 }
 
 
