@@ -120,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
           qrDisplay.innerHTML = ""
 
           // Create new QR code
+          const QRCode = window.QRCode // Declare QRCode variable
           new QRCode(qrDisplay, {
             text: clientData.qrCode,
             width: 180,
@@ -448,6 +449,34 @@ document.addEventListener("DOMContentLoaded", () => {
     connectWebSocket()
 
     console.log("[AdminScript] Initialization complete")
+
+    // Carregar scripts adicionais para as abas
+    const scriptsToLoad = [
+      { id: "adminResponsesScript", src: "./js/adminResponses.js" },
+      { id: "adminAttendantsScript", src: "./js/adminAttendants.js" },
+      { id: "adminConfigScript", src: "./js/adminConfig.js" },
+    ]
+
+    scriptsToLoad.forEach((script) => {
+      if (!document.getElementById(script.id)) {
+        const scriptElement = document.createElement("script")
+        scriptElement.id = script.id
+        scriptElement.src = script.src
+
+        // Verifique se o arquivo existe e tem conteúdo.
+        fetch(scriptElement.src, { method: "HEAD" })
+          .then((response) => {
+            if (response.ok) {
+              document.body.appendChild(scriptElement)
+            } else {
+              console.warn(`Script ${script.src} not found or is empty.`)
+            }
+          })
+          .catch((error) => {
+            console.error(`Error checking script ${script.src}:`, error)
+          })
+      }
+    })
   }
 
   // Start initialization

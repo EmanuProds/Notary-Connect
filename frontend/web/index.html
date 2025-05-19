@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:3000; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notary Connect - Login</title>
-    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="./img/icons/logo.svg" type="image/svg+xml">
+    <link rel="icon" href="/img/icons/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/img/icons/logo.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/indexStyles.css">
+    <link rel="stylesheet" href="/css/indexStyles.css">
     <style>
         /* Estilos para garantir a janela transparente e sem bordas */
         html, body {
@@ -50,7 +51,7 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <img src="./img/icons/logo.svg" alt="Notary Connect" class="logo">
+            <img src="/img/icons/logo.svg" alt="Notary Connect" class="logo">
             <h1>Notary Connect</h1>
             <p class="subtitle">Sistema de Atendimento Digital</p>
         </div>
@@ -97,6 +98,6 @@
         </div>
     </div>
 
-    <script src="./js/indexScript.js"></script>
+    <script src="/js/indexScript.js"></script>
 </body>
 </html>

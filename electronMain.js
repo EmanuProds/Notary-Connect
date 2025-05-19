@@ -1,5 +1,5 @@
 // electronMain.js
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron")
+const { app, BrowserWindow, ipcMain, dialog, Menu, session } = require("electron") // Adicionado session
 const path = require("path")
 const httpServer = require("http")
 const express = require("express")
@@ -9,6 +9,7 @@ let sqliteService
 let whatsappService
 let websocketService
 let authRoutesModule
+let adminRoutesModule
 
 const PORT = process.env.ELECTRON_PORT || 3000
 
@@ -38,10 +39,13 @@ function sendLogToViewer(logString, level = "info") {
 }
 
 try {
+  sendLogToViewer("[ElectronMain] Iniciando carregamento dos módulos de backend...", "debug");
   sqliteService = require("./backend/services/sqliteService")
   whatsappService = require("./backend/services/whatsappService")
   websocketService = require("./backend/services/websocketService")
   authRoutesModule = require("./backend/routes/authRoutes")
+  adminRoutesModule = require("./backend/routes/adminRoutes")
+  sendLogToViewer("[ElectronMain] Módulos de backend carregados.", "debug");
 
   if (
     !sqliteService ||
@@ -49,14 +53,19 @@ try {
     !websocketService ||
     !authRoutesModule ||
     !authRoutesModule.router ||
-    !authRoutesModule.setLogger
+    !authRoutesModule.setLogger ||
+    !adminRoutesModule ||
+    !adminRoutesModule.router ||
+    !adminRoutesModule.setLogger
   ) {
     throw new Error(
       "Um ou mais módulos de backend ou suas exportações essenciais (router, setLogger) não foram encontrados.",
     )
   }
+  sendLogToViewer("[ElectronMain] Verificação de exportações dos módulos de backend OK.", "debug");
 } catch (e) {
   console.error("Erro CRÍTICO ao carregar módulos de backend:", e)
+  sendLogToViewer(`Erro CRÍTICO ao carregar módulos de backend: ${e.message}\n${e.stack}`, "error");
   if (app.isReady()) {
     dialog.showErrorBox(
       "Erro de Módulo Crítico",
@@ -247,9 +256,11 @@ function setupMenu() {
 async function initializeDatabase() {
   try {
     if (sqliteService && typeof sqliteService.connect === "function") {
-      await sqliteService.connect()
+      const dbConfig = require("./backend/config/dbConfigSqlite")
+      await sqliteService.connect(dbConfig.databasePath)
       await sqliteService.createTablesIfNotExists()
       await sqliteService.initializeDefaultAttendants()
+      await sqliteService.initializeDefaultConfigs()
       sendLogToViewer("[DB Init] Banco de dados SQLite inicializado com sucesso.", "info")
     } else {
       throw new Error("sqliteService ou sua função connect não está definida.")
@@ -266,11 +277,32 @@ async function initializeDatabase() {
 }
 
 app.whenReady().then(async () => {
+  sendLogToViewer("[AppReady] Evento 'whenReady' disparado.", "info");
+
+  // Configurar CSP
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          `default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:${PORT}; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';`
+        ]
+      }
+    })
+  });
+  sendLogToViewer("[AppReady] Content Security Policy configurada via onHeadersReceived.", "info");
+
   if (sqliteService && typeof sqliteService.setLogger === "function") {
     sqliteService.setLogger(sendLogToViewer)
+    sendLogToViewer("[AppReady] Logger injetado no sqliteService.", "debug");
   }
   if (authRoutesModule && typeof authRoutesModule.setLogger === "function") {
     authRoutesModule.setLogger(sendLogToViewer)
+    sendLogToViewer("[AppReady] Logger injetado no authRoutesModule.", "debug");
+  }
+  if (adminRoutesModule && typeof adminRoutesModule.setLogger === "function") {
+    adminRoutesModule.setLogger(sendLogToViewer)
+    sendLogToViewer("[AppReady] Logger injetado no adminRoutesModule.", "debug");
   }
   setupMenu()
 
@@ -281,6 +313,7 @@ app.whenReady().then(async () => {
   const staticPath = path.join(__dirname, "frontend/web")
   expressApp.use(express.static(staticPath))
   expressApp.use("/api/auth", authRoutesModule.router)
+  expressApp.use("/api/admin", adminRoutesModule.router)
 
   expressApp.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(staticPath, "index.html")))
   expressApp.get("/chat.html", (req, res) => res.sendFile(path.join(staticPath, "chat.html")))
@@ -289,16 +322,31 @@ app.whenReady().then(async () => {
 
   const internalServer = httpServer.createServer(expressApp)
 
+  // Logs de depuração antes de inicializar o WebSocketService
+  sendLogToViewer(`[AppReady] Verificando serviços para WebSocket:`, "debug");
+  sendLogToViewer(`[AppReady] typeof websocketService: ${typeof websocketService}`, "debug");
+  if (websocketService) {
+    sendLogToViewer(`[AppReady] typeof websocketService.initializeWebSocketServer: ${typeof websocketService.initializeWebSocketServer}`, "debug");
+  }
+  sendLogToViewer(`[AppReady] typeof whatsappService: ${typeof whatsappService}`, "debug");
+  sendLogToViewer(`[AppReady] typeof sqliteService: ${typeof sqliteService}`, "debug");
+
+
   if (
     websocketService &&
     typeof websocketService.initializeWebSocketServer === "function" &&
-    whatsappService &&
-    sqliteService
+    whatsappService && // Verificando se whatsappService está definido
+    sqliteService     // Verificando se sqliteService está definido
   ) {
     websocketService.initializeWebSocketServer(internalServer, sendLogToViewer, whatsappService, sqliteService)
-    sendLogToViewer("Servidor WebSocket inicializado.")
+    sendLogToViewer("Servidor WebSocket inicializado com sucesso.", "info")
   } else {
-    sendLogToViewer("Falha ao inicializar o servidor WebSocket: um ou mais serviços não estão definidos.", "error")
+    sendLogToViewer("Falha ao inicializar o servidor WebSocket: um ou mais serviços críticos ou a função initializeWebSocketServer não estão definidos.", "error")
+    // Log detalhado de qual condição falhou:
+    if (!websocketService) sendLogToViewer("[AppReady_WS_Error] websocketService não está definido.", "error");
+    if (websocketService && typeof websocketService.initializeWebSocketServer !== "function") sendLogToViewer("[AppReady_WS_Error] websocketService.initializeWebSocketServer não é uma função.", "error");
+    if (!whatsappService) sendLogToViewer("[AppReady_WS_Error] whatsappService não está definido.", "error");
+    if (!sqliteService) sendLogToViewer("[AppReady_WS_Error] sqliteService não está definido.", "error");
   }
 
   try {
@@ -308,15 +356,15 @@ app.whenReady().then(async () => {
       websocketService &&
       sqliteService
     ) {
-      const appUserDataPath = app.getPath("userData") // Obtém o caminho da pasta de dados do usuário
-      sendLogToViewer(`[electronMain] Caminho de dados do usuário para Baileys: ${appUserDataPath}`, "info")
-      await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath) // Passa o caminho
-      sendLogToViewer("Serviço Baileys iniciado e tentando conectar ao WhatsApp.")
+      const appUserDataPath = app.getPath("userData")
+      sendLogToViewer(`[electronMain] Caminho de dados do usuário para WhatsApp Service: ${appUserDataPath}`, "info")
+      await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath)
+      sendLogToViewer("Serviço WhatsApp (Baileys/WWJS) iniciado e tentando conectar ao WhatsApp.")
     } else {
-      sendLogToViewer("Falha ao iniciar Baileys: um ou mais serviços não estão definidos.", "error")
+      sendLogToViewer("Falha ao iniciar WhatsApp Service: um ou mais serviços não estão definidos ou connectToWhatsApp não é uma função.", "error")
     }
   } catch (err) {
-    sendLogToViewer(`Falha CRÍTICA ao iniciar o serviço Baileys: ${err.message}.`, "error")
+    sendLogToViewer(`Falha CRÍTICA ao iniciar o serviço WhatsApp (Baileys/WWJS): ${err.message}.`, "error")
   }
 
   internalServer
@@ -342,18 +390,37 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", async () => {
   sendLogToViewer("Todas as janelas foram fechadas.")
   if (process.platform !== "darwin") {
-    if (whatsappService && typeof whatsappService.getSocket === "function") {
-      const baileySock = whatsappService.getSocket()
-      if (baileySock && typeof baileySock.logout === "function") {
-        sendLogToViewer("Desconectando Baileys...")
+    if (whatsappService && typeof whatsappService.getClient === "function") { // Ajustado para getClient
+      const whatsClient = whatsappService.getClient() // Ajustado para getClient
+      // A lógica de logout pode variar entre whatsapp-web.js e Baileys
+      // Para whatsapp-web.js, pode ser client.logout() ou client.destroy()
+      // Para Baileys, sock.logout()
+      if (whatsClient && typeof whatsClient.logout === "function") {
+        sendLogToViewer("Desconectando WhatsApp Service...")
         try {
-          await baileySock.logout()
-          sendLogToViewer("Baileys desconectado com sucesso.")
+          await whatsClient.logout()
+          sendLogToViewer("WhatsApp Service desconectado com sucesso.")
         } catch (e) {
-          sendLogToViewer(`Erro ao desconectar Baileys: ${e.message}`, "error")
+          sendLogToViewer(`Erro ao desconectar WhatsApp Service: ${e.message}`, "error")
+          if (typeof whatsClient.destroy === 'function') {
+            try {
+              await whatsClient.destroy();
+              sendLogToViewer("WhatsApp Service (client) destruído após falha no logout.", "warn");
+            } catch (destroyErr) {
+              sendLogToViewer(`Erro ao destruir WhatsApp Service (client): ${destroyErr.message}`, "error");
+            }
+          }
         }
+      } else if (whatsClient && typeof whatsClient.destroy === 'function') {
+         sendLogToViewer("Método logout não encontrado, tentando destruir o cliente WhatsApp...", "warn");
+         try {
+            await whatsClient.destroy();
+            sendLogToViewer("Cliente WhatsApp destruído com sucesso.", "info");
+         } catch (e) {
+            sendLogToViewer(`Erro ao destruir cliente WhatsApp: ${e.message}`, "error");
+         }
       } else {
-        sendLogToViewer("Baileys socket não disponível ou logout não é função.", "info")
+        sendLogToViewer("Cliente WhatsApp não disponível ou método logout/destroy não é função.", "info")
       }
     }
 
@@ -372,15 +439,15 @@ app.on("window-all-closed", async () => {
 
 ipcMain.on("control-bot", async (event, data) => {
   const { action, sessionId: targetSessionIdReceived } = data
-  const currentBaileysSessionId =
-    whatsappService && whatsappService.sessionId
+  const currentSessionId = // whatsappService.sessionId é para Baileys, WWJS pode não ter um sessionId igual
+    (whatsappService && whatsappService.sessionId) // Adapte se whatsappService tiver uma propriedade similar
       ? whatsappService.sessionId
-      : targetSessionIdReceived || "whatsapp-bot-session"
+      : targetSessionIdReceived || "whatsapp-bot-session" // Fallback
 
-  sendLogToViewer(`[IPC control-bot] Ação recebida: ${action} para sessão: ${currentBaileysSessionId}`, "info")
+  sendLogToViewer(`[IPC control-bot] Ação recebida: ${action} para sessão: ${currentSessionId}`, "info")
 
   if (!whatsappService || !websocketService) {
-    sendLogToViewer("[IPC control-bot] Erro: Um ou mais serviços (Baileys, WebSocket) não estão disponíveis.", "error")
+    sendLogToViewer("[IPC control-bot] Erro: Um ou mais serviços (WhatsApp, WebSocket) não estão disponíveis.", "error")
     return
   }
 
@@ -390,38 +457,23 @@ ipcMain.on("control-bot", async (event, data) => {
       sendLogToViewer(`[IPC control-bot] Bot ${isNowPaused ? "pausado" : "retomado"}.`, "info")
     } else if (action === "restart") {
       sendLogToViewer("[IPC control-bot] Iniciando reinício do bot...", "info")
-
       try {
-        // Primeiro, tenta o logout e limpeza normal
-        await whatsappService.fullLogoutAndCleanup()
-
-        // Limpa também o diretório de autenticação manualmente
+        await whatsappService.fullLogoutAndCleanup() // Esta função deve lidar com a limpeza da sessão
+        
+        sendLogToViewer("[IPC control-bot] Tentando reconectar WhatsApp Service após limpeza completa...", "info")
         const appUserDataPath = app.getPath("userData")
-        const authPath = path.join(appUserDataPath, "Auth", currentBaileysSessionId)
-
-        if (fs.existsSync(authPath)) {
-          try {
-            fs.rmSync(authPath, { recursive: true, force: true })
-            fs.mkdirSync(authPath, { recursive: true })
-            sendLogToViewer(`[IPC control-bot] Pasta de autenticação limpa e recriada: ${authPath}`, "info")
-          } catch (cleanupErr) {
-            sendLogToViewer(`[IPC control-bot] Erro ao limpar pasta de autenticação: ${cleanupErr.message}`, "error")
-          }
-        }
-
-        sendLogToViewer("[IPC control-bot] Tentando reconectar Baileys após limpeza completa...", "info")
         await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath)
 
         websocketService.broadcastToAdmins({
           type: "status_update",
-          clientId: currentBaileysSessionId,
+          clientId: currentSessionId, 
           payload: { status: "RESTARTING", reason: "Solicitado pelo administrador" },
         })
       } catch (restartError) {
         sendLogToViewer(`[IPC control-bot] Erro durante o reinício do bot: ${restartError.message}`, "error")
         websocketService.broadcastToAdmins({
           type: "status_update",
-          clientId: currentBaileysSessionId,
+          clientId: currentSessionId,
           payload: { status: "FATAL_ERROR", reason: `Erro durante reinício: ${restartError.message}` },
         })
       }
@@ -543,7 +595,7 @@ process.on("uncaughtException", (error, origin) => {
       )
     }
   } catch (e) {
-    /* ignore */
+    // ignore
   }
 })
 

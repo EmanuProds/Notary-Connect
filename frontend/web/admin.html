@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:3000; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notary Connect - Administração</title>
@@ -14,7 +15,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="./img/icons/logo.svg" alt="Notary Connect" class="logo">
+                <img src="/img/icons/logo.svg" alt="Notary Connect" class="logo">
                 <h1>Notary Connect</h1>
             </div>
             
@@ -85,6 +86,7 @@
         </aside>
         
         <main class="main-content">
+            <!-- Seção do WhatsApp Bot (mantida como estava) -->
             <section id="roboSection" class="content-section active">
                 <div class="section-header">
                     <h2>Status do WhatsApp Bot</h2>
@@ -147,38 +149,267 @@
                 </div>
             </section>
             
+            <!-- Seção de Respostas Automáticas (nova) -->
             <section id="respostasSection" class="content-section">
                 <div class="section-header">
                     <h2>Gerenciamento de Respostas</h2>
+                    <div class="section-actions">
+                        <div class="search-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="responseSearchInput" placeholder="Buscar respostas...">
+                        </div>
+                        <button id="addResponseBtn" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span>Nova Resposta</span>
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="card">
-                    <div class="card-body">
-                        <p class="placeholder-text">Funcionalidade para configurar respostas automáticas e fluxos de conversa (a ser implementada).</p>
+                <div id="responseList" class="response-list">
+                    <!-- Lista de respostas será carregada dinamicamente -->
+                    <div class="loading-state">
+                        <svg class="spinner" viewBox="0 0 50 50">
+                            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                        </svg>
+                        <span>Carregando respostas...</span>
+                    </div>
+                </div>
+                
+                <!-- Modal para adicionar/editar resposta -->
+                <div id="responseModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="responseModalTitle">Nova Resposta Automática</h3>
+                            <button id="closeResponseModal" class="close-modal">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="responseForm">
+                                <input type="hidden" id="responseId">
+                                
+                                <div class="form-group">
+                                    <label for="responseKey">Chave da Resposta</label>
+                                    <input type="text" id="responseKey" placeholder="Ex: greeting, help, info_services" required>
+                                    <small>Identificador único para esta resposta</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="responseName">Nome da Resposta</label>
+                                    <input type="text" id="responseName" placeholder="Ex: Saudação, Ajuda, Informações" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="responsePattern">Padrão Regex</label>
+                                    <input type="text" id="responsePattern" placeholder="Ex: (?:^|\W)(oi|olá)(?:$|\W)" required>
+                                    <small>Expressão regular para identificar mensagens do cliente</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="responseText">Texto da Resposta</label>
+                                    <textarea id="responseText" rows="6" placeholder="Digite a resposta que o robô enviará..." required></textarea>
+                                    <small>Use {client_name} para incluir o nome do cliente</small>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="responsePriority">Prioridade</label>
+                                        <input type="number" id="responsePriority" min="0" max="100" value="0">
+                                        <small>Maior número = maior prioridade</small>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="responseActive" checked>
+                                            <span>Ativo</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="responseStartTime">Horário Início</label>
+                                        <input type="time" id="responseStartTime" value="00:00">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="responseEndTime">Horário Fim</label>
+                                        <input type="time" id="responseEndTime" value="23:59">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="responseAllowedDays">Dias Permitidos</label>
+                                    <input type="text" id="responseAllowedDays" value="1,2,3,4,5,6,0">
+                                    <small>0=Domingo, 1=Segunda, 2=Terça, etc. Separados por vírgula.</small>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="saveResponseBtn" class="btn btn-primary">Salvar</button>
+                        </div>
                     </div>
                 </div>
             </section>
             
+            <!-- Seção de Funcionários (nova) -->
             <section id="funcionariosSection" class="content-section">
                 <div class="section-header">
                     <h2>Gerenciamento de Funcionários</h2>
+                    <div class="section-actions">
+                        <div class="search-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                            <input type="text" id="attendantSearchInput" placeholder="Buscar funcionários...">
+                        </div>
+                        <button id="addAttendantBtn" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span>Novo Funcionário</span>
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="card">
-                    <div class="card-body">
-                        <p class="placeholder-text">Funcionalidade para adicionar, editar e remover funcionários/atendentes (a ser implementada).</p>
+                <div id="attendantList" class="attendant-list">
+                    <!-- Lista de funcionários será carregada dinamicamente -->
+                    <div class="loading-state">
+                        <svg class="spinner" viewBox="0 0 50 50">
+                            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                        </svg>
+                        <span>Carregando funcionários...</span>
+                    </div>
+                </div>
+                
+                <!-- Modal para adicionar/editar funcionário -->
+                <div id="attendantModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="attendantModalTitle">Novo Funcionário</h3>
+                            <button id="closeAttendantModal" class="close-modal">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="attendantForm">
+                                <input type="hidden" id="attendantId">
+                                
+                                <div class="form-group">
+                                    <label for="attendantUsername">Nome de Usuário</label>
+                                    <input type="text" id="attendantUsername" placeholder="Ex: joao.silva" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="attendantName">Nome Completo</label>
+                                    <input type="text" id="attendantName" placeholder="Ex: João Silva" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="attendantPassword">Senha</label>
+                                    <input type="password" id="attendantPassword" placeholder="Digite a senha">
+                                    <small id="passwordNote" style="display: none;">Deixe em branco para manter a senha atual</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="attendantPhone">Número de Telefone</label>
+                                    <input type="text" id="attendantPhone" placeholder="Ex: 5521999999999">
+                                    <small>Formato internacional com código do país (55 para Brasil)</small>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="attendantIsAdmin">
+                                        <span>Administrador</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Setores</label>
+                                    <div id="sectorCheckboxes" class="checkbox-group">
+                                        <!-- Checkboxes de setores serão carregados dinamicamente -->
+                                        <div class="loading-state">
+                                            <span>Carregando setores...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="saveAttendantBtn" class="btn btn-primary">Salvar</button>
+                        </div>
                     </div>
                 </div>
             </section>
             
+            <!-- Seção de Configurações (nova) -->
             <section id="configuracoesSection" class="content-section">
                 <div class="section-header">
                     <h2>Configurações Gerais</h2>
                 </div>
                 
                 <div class="card">
+                    <div class="card-header">
+                        <h3>Configurações do Robô</h3>
+                    </div>
                     <div class="card-body">
-                        <p class="placeholder-text">Funcionalidade para configurações gerais do sistema de atendimento (a ser implementada).</p>
+                        <form id="configForm">
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="config_bot_active" checked>
+                                    <span>Robô Ativo</span>
+                                </label>
+                                <small>Ativa ou desativa o robô de respostas automáticas</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="config_bot_response_delay">Delay de Resposta (ms)</label>
+                                <input type="number" id="config_bot_response_delay" min="0" max="10000" value="1500">
+                                <small>Tempo em milissegundos antes de enviar uma resposta automática</small>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="config_bot_working_hours_start">Horário de Início</label>
+                                    <input type="time" id="config_bot_working_hours_start" value="08:00">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="config_bot_working_hours_end">Horário de Término</label>
+                                    <input type="time" id="config_bot_working_hours_end" value="18:00">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="config_bot_working_days">Dias de Funcionamento</label>
+                                <input type="text" id="config_bot_working_days" value="1,2,3,4,5">
+                                <small>0=Domingo, 1=Segunda, 2=Terça, etc. Separados por vírgula.</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="config_bot_out_of_hours_message">Mensagem Fora do Horário</label>
+                                <textarea id="config_bot_out_of_hours_message" rows="4">Olá! Nosso horário de atendimento é de segunda a sexta, das 8h às 18h. Por favor, retorne durante nosso horário comercial.</textarea>
+                                <small>Mensagem enviada quando o cliente entra em contato fora do horário de funcionamento</small>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button id="saveConfigBtn" class="btn btn-primary">Salvar Configurações</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </section>
@@ -188,7 +419,42 @@
     <div id="connectionStatus" class="connection-status">
         Conectando ao servidor WebSocket...
     </div>
+    
+    <div id="alertContainer"></div>
 
     <script src="./js/adminScript.js"></script>
+    <script>
+        // Verificar se os recursos foram carregados corretamente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar CSS
+            const styles = document.styleSheets;
+            let cssLoaded = false;
+            
+            for (let i = 0; i < styles.length; i++) {
+                if (styles[i].href && styles[i].href.includes('adminStyles.css')) {
+                    cssLoaded = true;
+                    break;
+                }
+            }
+            
+            if (!cssLoaded) {
+                console.error('Erro: adminStyles.css não foi carregado corretamente!');
+                // Tentar carregar novamente
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = './css/adminStyles.css';
+                document.head.appendChild(link);
+            }
+            
+            // Verificar JS
+            if (typeof QRCode === 'undefined') {
+                console.error('Erro: QRCode não foi carregado corretamente!');
+                // Tentar carregar novamente
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+                document.body.appendChild(script);
+            }
+        });
+    </script>
 </body>
 </html>
