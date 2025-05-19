@@ -60,12 +60,16 @@
     ],
     "dependencies": {
         "@hapi/boom": "^10.0.1",
-        "baileys": "^6.7.17",
         "bcryptjs": "^3.0.2",
         "express": "^5.1.0",
+        "install": "^0.13.0",
+        "npm": "^11.4.0",
         "pino": "^9.6.0",
+        "puppeteer": "^24.8.2",
         "qrcode": "^1.5.4",
+        "qrcode-terminal": "^0.12.0",
         "sqlite3": "^5.1.7",
+        "whatsapp-web.js": "^1.28.0",
         "ws": "^8.18.2"
     },
     "devDependencies": {

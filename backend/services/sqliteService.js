@@ -3,7 +3,7 @@ const sqlite3Node = require("sqlite3")
 const path = require("path")
 const fs = require("fs")
 const dbConfig = require("../config/dbConfigSqlite")
-const { initAuthCreds } = require("baileys")
+const { initAuthCreds } = require("whatsapp-web.js")
 
 const sqlite3 = sqlite3Node.verbose()
 

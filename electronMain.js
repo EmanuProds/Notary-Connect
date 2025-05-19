@@ -1,5 +1,4 @@
 // electronMain.js
-require('./crypto-polyfill');
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron")
 const path = require("path")
 const httpServer = require("http")
@@ -7,7 +6,7 @@ const express = require("express")
 const fs = require("fs")
 
 let sqliteService
-let baileysService
+let whatsappService
 let websocketService
 let authRoutesModule
 
@@ -40,13 +39,13 @@ function sendLogToViewer(logString, level = "info") {
 
 try {
   sqliteService = require("./backend/services/sqliteService")
-  baileysService = require("./backend/services/baileysService")
+  whatsappService = require("./backend/services/whatsappService")
   websocketService = require("./backend/services/websocketService")
   authRoutesModule = require("./backend/routes/authRoutes")
 
   if (
     !sqliteService ||
-    !baileysService ||
+    !whatsappService ||
     !websocketService ||
     !authRoutesModule ||
     !authRoutesModule.router ||
@@ -293,20 +292,25 @@ app.whenReady().then(async () => {
   if (
     websocketService &&
     typeof websocketService.initializeWebSocketServer === "function" &&
-    baileysService &&
+    whatsappService &&
     sqliteService
   ) {
-    websocketService.initializeWebSocketServer(internalServer, sendLogToViewer, baileysService, sqliteService)
+    websocketService.initializeWebSocketServer(internalServer, sendLogToViewer, whatsappService, sqliteService)
     sendLogToViewer("Servidor WebSocket inicializado.")
   } else {
     sendLogToViewer("Falha ao inicializar o servidor WebSocket: um ou mais serviços não estão definidos.", "error")
   }
 
   try {
-    if (baileysService && typeof baileysService.connectToWhatsApp === "function" && websocketService && sqliteService) {
+    if (
+      whatsappService &&
+      typeof whatsappService.connectToWhatsApp === "function" &&
+      websocketService &&
+      sqliteService
+    ) {
       const appUserDataPath = app.getPath("userData") // Obtém o caminho da pasta de dados do usuário
       sendLogToViewer(`[electronMain] Caminho de dados do usuário para Baileys: ${appUserDataPath}`, "info")
-      await baileysService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath) // Passa o caminho
+      await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath) // Passa o caminho
       sendLogToViewer("Serviço Baileys iniciado e tentando conectar ao WhatsApp.")
     } else {
       sendLogToViewer("Falha ao iniciar Baileys: um ou mais serviços não estão definidos.", "error")
@@ -338,8 +342,8 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", async () => {
   sendLogToViewer("Todas as janelas foram fechadas.")
   if (process.platform !== "darwin") {
-    if (baileysService && typeof baileysService.getSocket === "function") {
-      const baileySock = baileysService.getSocket()
+    if (whatsappService && typeof whatsappService.getSocket === "function") {
+      const baileySock = whatsappService.getSocket()
       if (baileySock && typeof baileySock.logout === "function") {
         sendLogToViewer("Desconectando Baileys...")
         try {
@@ -369,27 +373,27 @@ app.on("window-all-closed", async () => {
 ipcMain.on("control-bot", async (event, data) => {
   const { action, sessionId: targetSessionIdReceived } = data
   const currentBaileysSessionId =
-    baileysService && baileysService.sessionId
-      ? baileysService.sessionId
+    whatsappService && whatsappService.sessionId
+      ? whatsappService.sessionId
       : targetSessionIdReceived || "whatsapp-bot-session"
 
   sendLogToViewer(`[IPC control-bot] Ação recebida: ${action} para sessão: ${currentBaileysSessionId}`, "info")
 
-  if (!baileysService || !websocketService) {
+  if (!whatsappService || !websocketService) {
     sendLogToViewer("[IPC control-bot] Erro: Um ou mais serviços (Baileys, WebSocket) não estão disponíveis.", "error")
     return
   }
 
   try {
     if (action === "pause") {
-      const isNowPaused = await baileysService.togglePauseBot()
+      const isNowPaused = await whatsappService.togglePauseBot()
       sendLogToViewer(`[IPC control-bot] Bot ${isNowPaused ? "pausado" : "retomado"}.`, "info")
     } else if (action === "restart") {
       sendLogToViewer("[IPC control-bot] Iniciando reinício do bot...", "info")
 
       try {
         // Primeiro, tenta o logout e limpeza normal
-        await baileysService.fullLogoutAndCleanup()
+        await whatsappService.fullLogoutAndCleanup()
 
         // Limpa também o diretório de autenticação manualmente
         const appUserDataPath = app.getPath("userData")
@@ -406,7 +410,7 @@ ipcMain.on("control-bot", async (event, data) => {
         }
 
         sendLogToViewer("[IPC control-bot] Tentando reconectar Baileys após limpeza completa...", "info")
-        await baileysService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath)
+        await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath)
 
         websocketService.broadcastToAdmins({
           type: "status_update",
