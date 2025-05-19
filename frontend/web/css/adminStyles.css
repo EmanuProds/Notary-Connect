@@ -1,170 +1,187 @@
 /* frontend/web/css/adminStyles.css */
 
-/* Variáveis Globais de Estilo (opcional, mas bom para consistência) */
+/* Variáveis Globais de Estilo Modernizadas */
 :root {
-    --admin-primary-color: #3b82f6; /* Azul Tailwind blue-500 */
-    --admin-primary-hover: #2563eb; /* Azul Tailwind blue-600 */
-    --admin-secondary-color: #6b7280; /* Cinza Tailwind gray-500 */
-    --admin-secondary-hover: #4b5563; /* Cinza Tailwind gray-600 */
-    --admin-danger-color: #ef4444; /* Vermelho Tailwind red-500 */
-    --admin-danger-hover: #dc2626; /* Vermelho Tailwind red-600 */
-    --admin-warning-color: #f59e0b; /* Amarelo Tailwind amber-500 */
-    --admin-warning-hover: #d97706; /* Amarelo Tailwind amber-600 */
-    --admin-success-color: #10b981; /* Verde Tailwind green-500 */
-    --admin-success-hover: #059669; /* Verde Tailwind green-600 */
+    --admin-primary-color: #3b82f6; /* Azul (Tailwind blue-500) */
+    --admin-primary-hover: #2563eb; /* Azul mais escuro (Tailwind blue-600) */
+    --admin-secondary-color: #64748b; /* Cinza ardósia (Tailwind slate-500) */
+    --admin-secondary-hover: #475569; /* Cinza ardósia mais escuro (Tailwind slate-600) */
+    --admin-danger-color: #ef4444; /* Vermelho (Tailwind red-500) */
+    --admin-danger-hover: #dc2626; /* Vermelho mais escuro (Tailwind red-600) */
+    --admin-warning-color: #f59e0b; /* Âmbar (Tailwind amber-500) */
+    --admin-warning-hover: #d97706; /* Âmbar mais escuro (Tailwind amber-600) */
+    --admin-success-color: #10b981; /* Verde (Tailwind emerald-500) */
+    --admin-success-hover: #059669; /* Verde mais escuro (Tailwind emerald-600) */
 
-    --admin-text-light: #f9fafb; /* Cinza Tailwind gray-50 */
-    --admin-text-dark: #1f2937; /* Cinza Tailwind gray-800 */
-    --admin-text-muted: #6b7280; /* Cinza Tailwind gray-500 */
+    --admin-text-light: #f8fafc; /* Cinza muito claro (Tailwind slate-50) */
+    --admin-text-dark: #0f172a; /* Cinza muito escuro (Tailwind slate-900) */
+    --admin-text-muted: #64748b; /* Cinza ardósia (Tailwind slate-500) */
     
-    --admin-bg-light: #f3f4f6; /* Cinza Tailwind gray-100 (fundo da página) */
+    --admin-bg-page: #f1f5f9; /* Fundo da página (Tailwind slate-100) */
+    --admin-bg-sidebar: #1e293b; /* Fundo da sidebar (Tailwind slate-800) */
     --admin-bg-card: #ffffff; /* Branco para cards */
-    --admin-border-color: #e5e7eb; /* Cinza Tailwind gray-200 */
-    --admin-border-radius: 0.5rem; /* rounded-lg */
-    --admin-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    --admin-font-family: "Inter", sans-serif;
+    --admin-border-color: #e2e8f0; /* Cor da borda (Tailwind slate-200) */
+    --admin-border-strong-color: #cbd5e1; /* Borda mais forte (Tailwind slate-300) */
+    --admin-border-radius: 0.375rem; /* rounded-md (6px) */
+    --admin-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+    --admin-box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* Sombra maior */
+    --admin-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     --admin-transition: all 0.2s ease-in-out;
 }
 
 body {
     font-family: var(--admin-font-family);
-    background-color: var(--admin-bg-light);
+    background-color: var(--admin-bg-page);
     margin: 0;
-    display: flex;
-    flex-direction: column; /* Para centralizar o app-container */
-    align-items: center; /* Centraliza horizontalmente */
+    display: flex; /* Mantido para centralizar o .app-container se necessário */
+    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     color: var(--admin-text-dark);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.app-container { /* Container principal da página admin.html */
+.app-container {
     display: flex;
     width: 100%;
-    height: 100vh; /* Ocupa toda a altura da viewport */
-    max-width: 100vw; /* Ocupa toda a largura */
-    overflow: hidden; /* Evita barras de rolagem no container principal */
+    height: 100vh;
+    max-width: 100vw; 
+    overflow: hidden;
 }
 
-.sidebar { /* Barra lateral */
-    width: 280px; /* Largura fixa para a sidebar */
-    background-color: #1f2937; /* Um cinza escuro, exemplo */
+.sidebar {
+    width: 260px; /* Ligeiramente mais estreita */
+    background-color: var(--admin-bg-sidebar);
     color: var(--admin-text-light);
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    border-right: 1px solid #374151; /* Borda sutil */
-    flex-shrink: 0; /* Impede que a sidebar encolha */
+    padding: 1.25rem; /* Aumentado o padding interno */
+    border-right: 1px solid #334155; /* slate-700, borda mais escura */
+    flex-shrink: 0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1); /* Sombra sutil na sidebar */
 }
 
 .sidebar-header {
     display: flex;
     align-items: center;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #4b5563; /* Separador */
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid #475569; /* slate-600 */
 }
 
 .sidebar-header .logo {
-    width: 40px; /* Ajustado */
-    height: 40px;
+    width: 36px; /* Ligeiramente menor */
+    height: 36px;
     margin-right: 0.75rem;
-    /* filter: brightness(0) invert(1); Se o logo for escuro e o fundo também */
+    /* Adicionar um filtro para o logo se for SVG e precisar de cor invertida */
+    /* filter: invert(1) brightness(2); */
 }
 
 .sidebar-header h1 {
-    font-size: 1.25rem; /* text-xl */
-    font-weight: 600; /* semibold */
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 700; /* bold */
+    color: white;
 }
 
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem; /* Espaço entre os botões de navegação */
-    flex-grow: 1; /* Faz a navegação ocupar o espaço disponível */
+    gap: 0.375rem; /* Espaçamento menor entre itens */
+    flex-grow: 1;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 0.875rem; /* py-2.5 px-3.5 */
     border-radius: var(--admin-border-radius);
-    color: #d1d5db; /* Cinza claro para texto do item não ativo */
+    color: #94a3b8; /* slate-400, texto mais claro para não ativo */
     text-decoration: none;
-    font-weight: 500; /* medium */
+    font-weight: 500;
     transition: var(--admin-transition);
     cursor: pointer;
 }
 
 .nav-item:hover {
-    background-color: #374151; /* Cinza um pouco mais claro ao passar o mouse */
+    background-color: #334155; /* slate-700 */
     color: white;
 }
 
 .nav-item.active {
     background-color: var(--admin-primary-color);
     color: white;
-    font-weight: 600; /* semibold */
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .nav-item svg {
-    width: 20px;
-    height: 20px;
-    margin-right: 0.75rem;
+    width: 18px; /* Ícones um pouco menores */
+    height: 18px;
+    margin-right: 0.625rem; /* Espaço ligeiramente menor */
+    opacity: 0.8; /* Suaviza o ícone */
+}
+.nav-item.active svg {
+    opacity: 1;
 }
 
+
 .sidebar-footer {
-    margin-top: auto; /* Empurra para o final */
-    padding-top: 1rem;
-    border-top: 1px solid #4b5563;
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid #475569; /* slate-600 */
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.375rem;
 }
 
 .footer-btn {
     display: flex;
     align-items: center;
-    padding: 0.6rem 0.8rem;
+    padding: 0.625rem 0.875rem;
     border-radius: var(--admin-border-radius);
-    color: #d1d5db;
+    color: #94a3b8; /* slate-400 */
     text-decoration: none;
-    font-size: 0.875rem; /* text-sm */
+    font-size: 0.875rem;
     transition: var(--admin-transition);
     background-color: transparent;
-    border: 1px solid transparent; /* Para manter o tamanho ao adicionar borda no hover */
+    border: none; /* Removida borda transparente */
     cursor: pointer;
     text-align: left;
 }
 .footer-btn:hover {
-    background-color: #374151;
+    background-color: #334155; /* slate-700 */
     color: white;
 }
 .footer-btn.logout-btn:hover {
     background-color: var(--admin-danger-color);
-    border-color: var(--admin-danger-hover);
+    /* border-color: var(--admin-danger-hover); */ /* Removido, pois não há borda base */
     color: white;
 }
 .footer-btn svg {
-    width: 18px;
-    height: 18px;
-    margin-right: 0.5rem;
+    width: 16px;
+    height: 16px;
+    margin-right: 0.625rem;
+    opacity: 0.8;
+}
+.footer-btn:hover svg {
+    opacity: 1;
 }
 
-
-.main-content { /* Área principal do conteúdo */
-    flex-grow: 1; /* Ocupa o restante do espaço */
-    padding: 1.5rem; /* p-6 */
-    overflow-y: auto; /* Permite scroll se o conteúdo exceder */
-    background-color: var(--admin-bg-light); /* Fundo da área de conteúdo */
+.main-content {
+    flex-grow: 1;
+    padding: 2rem; /* Aumentado o padding */
+    overflow-y: auto;
+    background-color: var(--admin-bg-page);
 }
 
 .content-section {
-    display: none; /* Escondido por padrão, ativado por JS */
+    display: none;
     background-color: var(--admin-bg-card);
-    padding: 1.5rem; /* p-6 */
+    padding: 2rem; /* Aumentado o padding */
     border-radius: var(--admin-border-radius);
     box-shadow: var(--admin-box-shadow);
-    margin-bottom: 1.5rem; /* Espaço entre seções, se várias ativas (não usual) */
+    margin-bottom: 2rem; /* Aumentado o espaçamento */
 }
 .content-section.active {
     display: block;
@@ -174,13 +191,13 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
+    margin-bottom: 1.5rem; /* Mantido */
+    padding-bottom: 1rem; /* Mantido */
     border-bottom: 1px solid var(--admin-border-color);
 }
 .section-header h2 {
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: 600; /* semibold */
+    font-size: 1.25rem; /* text-xl, ligeiramente menor para um look mais clean */
+    font-weight: 700; /* bold */
     color: var(--admin-text-dark);
 }
 
@@ -188,19 +205,20 @@ body {
     background-color: var(--admin-bg-card);
     border-radius: var(--admin-border-radius);
     box-shadow: var(--admin-box-shadow);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem; /* Mantido */
 }
 .card-header {
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.5rem; /* Mantido */
     border-bottom: 1px solid var(--admin-border-color);
 }
 .card-header h3 {
-    font-size: 1.125rem; /* text-lg */
-    font-weight: 600;
+    font-size: 1.125rem; /* text-lg, mantido */
+    font-weight: 600; /* semibold */
     margin: 0;
+    color: var(--admin-text-dark);
 }
 .card-body {
-    padding: 1.5rem;
+    padding: 1.5rem; /* Mantido */
 }
 
 /* Estilos para a Seção Robô (QR Code, etc.) */
@@ -210,106 +228,89 @@ body {
     align-items: center;
 }
 .qr-display {
-    width: 200px; /* Tamanho do QR Code */
-    height: 200px;
+    width: 180px; /* QR Code um pouco menor */
+    height: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--admin-border-color);
+    border: 1px solid var(--admin-border-strong-color); /* Borda mais visível */
     border-radius: var(--admin-border-radius);
     margin-bottom: 1rem;
-    background-color: #f9fafb; /* Fundo para o QR Code */
+    background-color: white; /* Fundo branco para melhor contraste do QR */
+    padding: 0.5rem; /* Pequeno padding interno */
 }
-.qr-display img { /* Se o QRCode.js gerar uma tag img */
+.qr-display img {
     max-width: 100%;
     max-height: 100%;
+    border-radius: calc(var(--admin-border-radius) - 0.25rem); /* Arredondar imagem se houver padding */
 }
 .qr-placeholder .spinner {
-    width: 50px;
-    height: 50px;
+    width: 40px; /* Spinner menor */
+    height: 40px;
 }
 .qr-placeholder .spinner .path {
     stroke: var(--admin-primary-color);
     stroke-linecap: round;
     animation: admin-dash 1.5s ease-in-out infinite;
 }
-@keyframes admin-dash { /* Evita conflito com animação do chat */
-  0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
-  50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
-  100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
-}
+/* @keyframes admin-dash já definido */
 
 .qr-status {
-    font-size: 0.875rem; /* text-sm */
+    font-size: 0.875rem;
     color: var(--admin-text-muted);
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem; /* Mais espaço abaixo do status */
     text-align: center;
-    min-height: 1.25rem; /* Para evitar pulos no layout */
+    min-height: 1.25rem;
+    font-weight: 500;
 }
-.qr-status.ready { color: var(--admin-success-color); font-weight: 500; }
-.qr-status.error { color: var(--admin-danger-color); font-weight: 500; }
+.qr-status.ready { color: var(--admin-success-color); font-weight: 600; }
+.qr-status.error { color: var(--admin-danger-color); font-weight: 600; }
 
 .bot-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem; /* Espaço menor entre botões de ação */
     margin-top: 1rem;
 }
-.btn {
-    padding: 0.625rem 1.25rem;
-    border-radius: var(--admin-border-radius);
-    font-weight: 500;
-    transition: var(--admin-transition);
-    color: white;
-    font-size: 0.875rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    cursor: pointer;
-    gap: 0.5rem;
+.btn { /* Estilo base para botões, já definido, mas pode ser ajustado aqui */
+    padding: 0.5rem 1rem; /* Botões um pouco menores */
+    font-size: 0.875rem; 
+    box-shadow: var(--admin-box-shadow);
 }
-.btn-primary { background-color: var(--admin-primary-color); }
-.btn-primary:hover { background-color: var(--admin-primary-hover); }
-.btn-warning { background-color: var(--admin-warning-color); }
-.btn-warning:hover { background-color: var(--admin-warning-hover); }
-.btn-danger { background-color: var(--admin-danger-color); }
-.btn-danger:hover { background-color: var(--admin-danger-hover); }
-.btn-secondary { background-color: var(--admin-secondary-color); }
-.btn-secondary:hover { background-color: var(--admin-secondary-hover); }
+.btn:hover {
+    transform: translateY(-1px); /* Efeito sutil de elevação */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.btn:active {
+    transform: translateY(0px);
+    box-shadow: var(--admin-box-shadow);
+}
+/* Cores específicas já definidas em :root e aplicadas por classes como .btn-primary */
 
 .btn svg {
-    width: 18px;
-    height: 18px;
+    width: 16px; /* Ícones dos botões um pouco menores */
+    height: 16px;
 }
 
 /* Informações do Sistema */
 .info-card .info-item {
     display: flex;
     justify-content: space-between;
-    padding: 0.5rem 0;
+    padding: 0.625rem 0; /* py-2.5 */
     border-bottom: 1px solid var(--admin-border-color);
 }
-.info-card .info-item:last-child {
-    border-bottom: none;
-}
-.info-label {
-    font-weight: 500;
-    color: var(--admin-text-muted);
-}
-.info-value {
-    font-weight: 600;
-}
-#systemStatus.Online { color: var(--admin-success-color); }
-#systemStatus.Offline { color: var(--admin-danger-color); }
-#systemStatus.Aguardando { color: var(--admin-warning-color); }
+.info-card .info-item:last-child { border-bottom: none; }
+.info-label { font-weight: 500; color: var(--admin-text-muted); }
+.info-value { font-weight: 600; color: var(--admin-text-dark); }
+/* Classes de status já definidas */
 
 
 /* Estilos para a seção de Respostas, Funcionários, Configurações */
 .section-actions {
   display: flex;
+  justify-content: space-between; /* Alinha itens nas extremidades */
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem; /* Aumentado */
 }
 
 .search-box {
@@ -317,33 +318,34 @@ body {
   align-items: center;
   background-color: white;
   border-radius: var(--admin-border-radius);
-  padding: 0.5rem 0.75rem;
-  flex: 1;
-  max-width: 400px;
-  border: 1px solid var(--admin-border-color);
+  padding: 0.625rem 0.875rem; /* Aumentado padding */
+  flex-grow: 1; /* Permite que cresça, mas com max-width */
+  max-width: 320px; /* Limitado */
+  border: 1px solid var(--admin-border-strong-color); /* Borda mais forte */
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
+}
+.search-box:focus-within {
+    border-color: var(--admin-primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .search-box svg {
-  width: 18px;
-  height: 18px;
+  width: 16px; /* Menor */
+  height: 16px;
   color: var(--admin-text-muted);
-  margin-right: 0.5rem;
+  margin-right: 0.625rem;
 }
-
 .search-box input {
-  flex: 1;
-  border: none;
-  background: none;
-  font-size: 0.875rem;
-  color: var(--admin-text-dark);
+  flex: 1; border: none; background: none; font-size: 0.875rem; color: var(--admin-text-dark);
 }
+.search-box input::placeholder { color: var(--admin-text-muted); opacity: 0.8; }
 .search-box input:focus { outline: none; }
 
 .response-list,
 .attendant-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid; /* Usar grid para melhor responsividade dos cards */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Colunas responsivas */
+  gap: 1.5rem; /* Espaçamento entre cards */
 }
 
 .response-item,
@@ -352,160 +354,184 @@ body {
   border-radius: var(--admin-border-radius);
   box-shadow: var(--admin-box-shadow);
   overflow: hidden;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
+.response-item:hover,
+.attendant-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--admin-box-shadow-lg);
+}
+
 
 .response-header,
 .attendant-header {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: 1rem 1.25rem; /* Ajustado */
   border-bottom: 1px solid var(--admin-border-color);
 }
 
 .response-name,
 .attendant-name {
-  font-size: 1.125rem;
+  font-size: 1.05rem; /* Ligeiramente menor */
   font-weight: 600;
   margin: 0;
   flex: 1;
   color: var(--admin-text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .response-actions,
-.attendant-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
+.attendant-actions { display: flex; align-items: center; gap: 0.25rem; /* Menor gap */ }
 
 .response-status {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem; /* Menor */
+  font-weight: 700; /* Mais forte */
+  padding: 0.2rem 0.4rem; /* Ajustado */
   border-radius: 9999px;
   margin-right: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
-
-.response-status.active { background-color: var(--admin-success-color); color: white; }
-.response-status.inactive { background-color: var(--admin-secondary-color); color: white; }
+/* Cores já definidas */
 
 .btn-edit,
 .btn-delete {
-  width: 32px;
-  height: 32px;
+  width: 30px; /* Menor */
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
+  background: transparent;
   border: none;
   cursor: pointer;
   transition: var(--admin-transition);
 }
+.btn-edit svg, .btn-delete svg { width: 14px; height: 14px; color: var(--admin-text-muted); }
+/* Efeitos hover já definidos */
 
-.btn-edit svg,
-.btn-delete svg { width: 16px; height: 16px; color: var(--admin-text-muted); }
-.btn-edit:hover { background-color: rgba(59, 130, 246, 0.1); /* primary-color com alpha */ }
-.btn-edit:hover svg { color: var(--admin-primary-color); }
-.btn-delete:hover { background-color: rgba(239, 68, 68, 0.1); /* danger-color com alpha */ }
-.btn-delete:hover svg { color: var(--admin-danger-color); }
-
-.response-details,
-.attendant-details { padding: 1rem; }
-.response-detail,
-.attendant-detail { margin-bottom: 0.75rem; }
-.detail-label { font-size: 0.75rem; font-weight: 600; color: var(--admin-text-muted); display: block; margin-bottom: 0.25rem; }
+.response-details, .attendant-details { padding: 1.25rem; } /* Aumentado padding */
+.response-detail, .attendant-detail { margin-bottom: 0.625rem; }
+.detail-label { font-size: 0.7rem; font-weight: 600; color: var(--admin-text-muted); display: block; margin-bottom: 0.125rem; text-transform: uppercase; letter-spacing: 0.05em;}
 .detail-value { font-size: 0.875rem; color: var(--admin-text-dark); }
-.detail-value.code { font-family: monospace; background-color: #f8f9fa; padding: 0.25rem 0.5rem; border-radius: 4px; word-break: break-all; }
+.detail-value.code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace; background-color: var(--admin-bg-page); padding: 0.25rem 0.5rem; border-radius: 4px; word-break: break-all; font-size: 0.8rem; }
 .response-preview { margin-top: 1rem; }
-.preview-text { background-color: #f8f9fa; padding: 0.75rem; border-radius: var(--admin-border-radius); font-size: 0.875rem; white-space: pre-wrap; }
+.preview-text { background-color: var(--admin-bg-page); padding: 0.75rem; border-radius: var(--admin-border-radius); font-size: 0.875rem; white-space: pre-wrap; max-height: 100px; overflow-y: auto; }
 
 /* Modal */
 .modal {
   display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.6); z-index: 1000;
+  background-color: rgba(15, 23, 42, 0.7); /* slate-900 com alpha */
+  z-index: 1000;
   align-items: center; justify-content: center;
+  padding: 1rem; /* Espaço para telas menores */
 }
 .modal.show { display: flex; }
 .modal-content {
   background-color: white; border-radius: var(--admin-border-radius);
-  width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  width: 100%; max-width: 560px; /* Ligeiramente menor */
+  max-height: 90vh; 
+  display: flex; /* Para permitir que o body do modal cresça */
+  flex-direction: column;
+  box-shadow: var(--admin-box-shadow-lg);
 }
-.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-border-color); }
-.modal-header h3 { margin: 0; font-size: 1.25rem; color: var(--admin-text-dark); }
-.close-modal { background: none; border: none; cursor: pointer; display: flex; padding: 0.25rem; }
-.close-modal svg { width: 20px; height: 20px; color: var(--admin-text-muted); }
-.modal-body { padding: 1.5rem; }
-.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--admin-border-color); display: flex; justify-content: flex-end; }
+.modal-header { 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 1rem 1.5rem; border-bottom: 1px solid var(--admin-border-color);
+    flex-shrink: 0; /* Impede que o header encolha */
+}
+.modal-header h3 { margin: 0; font-size: 1.125rem; font-weight: 600; color: var(--admin-text-dark); }
+.close-modal { background: none; border: none; cursor: pointer; display: flex; padding: 0.25rem; color: var(--admin-text-muted); }
+.close-modal:hover { color: var(--admin-text-dark); }
+.close-modal svg { width: 18px; height: 18px; }
+
+.modal-body { 
+    padding: 1.5rem; 
+    overflow-y: auto; /* Scroll apenas no body */
+    flex-grow: 1; /* Permite que o body cresça */
+}
+.modal-footer { 
+    padding: 1rem 1.5rem; border-top: 1px solid var(--admin-border-color); 
+    display: flex; justify-content: flex-end; gap: 0.75rem;
+    flex-shrink: 0; /* Impede que o footer encolha */
+    background-color: #f9fafb; /* slate-50, fundo sutil para o footer */
+}
 
 /* Form */
-.form-group { margin-bottom: 1.25rem; }
-.form-row { display: flex; gap: 1rem; margin-bottom: 1.25rem; }
-.form-row .form-group { flex: 1; margin-bottom: 0; }
-label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: var(--admin-text-dark); }
+.form-group { margin-bottom: 1rem; } /* Espaçamento ligeiramente menor */
+.form-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem; }
+.form-row .form-group { flex: 1 1 calc(50% - 0.5rem); margin-bottom: 0; min-width: 200px; } /* Responsividade para form-row */
+label { display: block; font-weight: 500; margin-bottom: 0.375rem; font-size: 0.875rem; color: var(--admin-text-dark); }
 input[type="text"], input[type="password"], input[type="number"], input[type="time"], textarea, select {
-  width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--admin-border-color);
-  border-radius: var(--admin-border-radius); font-size: 0.9375rem; transition: var(--admin-transition);
-  background-color: #f9fafb;
+  width: 100%; padding: 0.5rem 0.75rem; /* Inputs ligeiramente menores */
+  border: 1px solid var(--admin-border-strong-color);
+  border-radius: var(--admin-border-radius); font-size: 0.875rem; transition: var(--admin-transition);
+  background-color: white; /* Fundo branco para inputs */
 }
 input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, input[type="time"]:focus, textarea:focus, select:focus {
   outline: none; border-color: var(--admin-primary-color);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); background-color: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Sombra de foco mais pronunciada */
 }
-textarea { resize: vertical; min-height: 100px; }
+textarea { resize: vertical; min-height: 80px; }
 small { display: block; font-size: 0.75rem; color: var(--admin-text-muted); margin-top: 0.25rem; }
-.checkbox-label { display: flex; align-items: center; cursor: pointer; }
-.checkbox-label input { margin-right: 0.5rem; width: auto; } /* Ajuste para checkbox */
+.checkbox-label { display: flex; align-items: center; cursor: pointer; font-weight: normal; font-size: 0.875rem; }
+.checkbox-label input[type="checkbox"] { margin-right: 0.5rem; width: auto; height: 1em; accent-color: var(--admin-primary-color); }
 .checkbox-group { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
-.checkbox-item { display: flex; align-items: center; }
-.checkbox-item input { margin-right: 0.5rem; width: auto; }
+.checkbox-item { display: flex; align-items: center; font-size: 0.875rem; }
+.checkbox-item input[type="checkbox"] { margin-right: 0.5rem; width: auto; height: 1em; accent-color: var(--admin-primary-color); }
 .form-actions { margin-top: 1.5rem; display: flex; justify-content: flex-end; }
 
 /* Attendant styles */
 .attendant-avatar {
-  width: 48px; height: 48px; border-radius: 50%;
+  width: 40px; height: 40px; border-radius: 50%;
   background-color: var(--admin-primary-color); color: white;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.25rem; font-weight: 600; margin-right: 1rem;
+  font-size: 1.125rem; font-weight: 600; margin-right: 0.75rem; flex-shrink: 0;
 }
-.attendant-info { flex: 1; }
-.attendant-username { font-size: 0.875rem; color: var(--admin-text-muted); margin: 0; }
-.badge { font-size: 0.6875rem; font-weight: 600; padding: 0.125rem 0.375rem; border-radius: 9999px; margin-left: 0.5rem; text-transform: uppercase; }
-.admin-badge { background-color: var(--admin-primary-color); color: white; }
-.sector-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
-.sector-tag { font-size: 0.75rem; background-color: #e9ecef; color: var(--admin-text-dark); padding: 0.25rem 0.5rem; border-radius: 9999px; }
+.attendant-info { flex: 1; min-width: 0; /* Para text-overflow funcionar */ }
+.attendant-username { font-size: 0.8rem; color: var(--admin-text-muted); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge { font-size: 0.625rem; font-weight: 700; padding: 0.1rem 0.3rem; border-radius: 9999px; margin-left: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;}
+.admin-badge { background-color: var(--admin-warning-color); color: var(--admin-text-dark); } /* Destaque diferente para admin */
+.sector-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.25rem; }
+.sector-tag { font-size: 0.7rem; background-color: #e2e8f0; /* slate-200 */ color: #475569; /* slate-600 */ padding: 0.125rem 0.375rem; border-radius: 4px; }
 
 /* Loading state */
-.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; color: var(--admin-text-muted); }
-.empty-state { text-align: center; padding: 2rem; color: var(--admin-text-muted); font-style: italic; }
+.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; color: var(--admin-text-muted); font-size: 0.875rem; }
+.loading-state .spinner { margin-bottom: 0.75rem; }
+.empty-state { text-align: center; padding: 2rem; color: var(--admin-text-muted); font-style: italic; background-color: #f9fafb; border-radius: var(--admin-border-radius); }
 
 /* Alert */
-#alertContainer { position: fixed; top: 1rem; right: 1rem; z-index: 1100; display: flex; flex-direction: column; gap: 0.5rem; }
+#alertContainer { position: fixed; top: 1.5rem; right: 1.5rem; z-index: 1100; display: flex; flex-direction: column; gap: 0.75rem; max-width: 350px; }
 .alert {
-  padding: 0.75rem 1rem; border-radius: var(--admin-border-radius);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); font-size: 0.875rem; font-weight: 500;
-  opacity: 0; transform: translateY(-10px); transition: opacity 0.3s ease, transform 0.3s ease;
+  padding: 0.875rem 1.25rem; border-radius: var(--admin-border-radius);
+  box-shadow: var(--admin-box-shadow-lg); font-size: 0.875rem; font-weight: 500;
+  opacity: 0; transform: translateX(20px); transition: opacity 0.3s ease, transform 0.3s ease;
+  border-left-width: 4px;
+  border-left-style: solid;
 }
-.alert.show { opacity: 1; transform: translateY(0); }
-.alert-success { background-color: #d1fae5; color: #065f46; }
-.alert-error { background-color: #fee2e2; color: #b91c1c; }
-.alert-warning { background-color: #fef3c7; color: #92400e; }
-.alert-info { background-color: #e0f2fe; color: #0369a1; }
+.alert.show { opacity: 1; transform: translateX(0); }
+.alert-success { background-color: #f0fdf4; /* green-50 */ color: #15803d; /* green-700 */ border-left-color: var(--admin-success-color); }
+.alert-error { background-color: #fef2f2; /* red-50 */ color: #b91c1c; /* red-700 */ border-left-color: var(--admin-danger-color); }
+.alert-warning { background-color: #fffbeb; /* amber-50 */ color: #b45309; /* amber-700 */ border-left-color: var(--admin-warning-color); }
+.alert-info { background-color: #eff6ff; /* blue-50 */ color: #1d4ed8; /* blue-700 */ border-left-color: var(--admin-primary-color); }
 
 /* Connection Status Bar */
-.connection-status { /* Usado em chat.html, mas pode ser generalizado */
+.connection-status {
     position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: var(--admin-border-radius);
+    bottom: 0; /* Colado na parte inferior */
+    left: 0;
+    width: 100%;
+    padding: 0.625rem 1rem; /* py-2.5 px-4 */
+    text-align: center;
     font-size: 0.875rem;
     font-weight: 500;
-    box-shadow: var(--admin-box-shadow);
-    z-index: 50;
+    z-index: 1001; /* Acima do modal se necessário, ou ajustar z-index do modal */
     transition: var(--admin-transition);
+    border-top: 1px solid transparent;
 }
-.connection-status.connected { background-color: var(--admin-success-color); color: white; }
-.connection-status.connecting { background-color: var(--admin-warning-color); color: var(--admin-text-dark); }
-.connection-status.disconnected { background-color: var(--admin-danger-color); color: white; }
+.connection-status.connected { background-color: var(--admin-success-color); color: white; border-top-color: var(--admin-success-hover); }
+.connection-status.connecting { background-color: var(--admin-warning-color); color: var(--admin-text-dark); border-top-color: var(--admin-warning-hover); }
+.connection-status.disconnected { background-color: var(--admin-danger-color); color: white; border-top-color: var(--admin-danger-hover); }

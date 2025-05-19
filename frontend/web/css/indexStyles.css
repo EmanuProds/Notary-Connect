@@ -1,212 +1,247 @@
+/* frontend/web/css/indexStyles.css */
 :root {
-  --primary-color: #4361ee;
-  --primary-hover: #3a56d4;
-  --secondary-color: #6c757d;
-  --secondary-hover: #5a6268;
-  --success-color: #2ecc71;
-  --danger-color: #e74c3c;
-  --warning-color: #f39c12;
-  --light-color: #f8f9fa;
-  --dark-color: #343a40;
-  --text-color: #333;
-  --text-muted: #6c757d;
-  --border-color: #dee2e6;
-  --border-radius: 8px;
-  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --transition: all 0.3s ease;
+    --login-primary-color: #3b82f6; /* Azul (Tailwind blue-500) */
+    --login-primary-hover: #2563eb; /* Azul mais escuro (Tailwind blue-600) */
+    --login-secondary-color: #6b7280; /* Cinza (Tailwind gray-500) */
+    --login-secondary-hover: #4b5563; /* Cinza mais escuro (Tailwind gray-600) */
+    --login-text-dark: #1f2937; /* Cinza muito escuro (Tailwind slate-900) */
+    --login-text-light: #f9fafb; /* Cinza muito claro (Tailwind slate-50) */
+    --login-text-muted: #6b7280; /* Cinza (Tailwind gray-500) */
+    --login-bg-page: #f3f4f6; /* Fundo da página (Tailwind gray-100) */
+    --login-bg-card: #ffffff; /* Branco para o card de login */
+    --login-border-color: #e5e7eb; /* Cor da borda (Tailwind gray-200) */
+    --login-border-focus-color: var(--login-primary-color);
+    --login-error-color: #ef4444; /* Vermelho (Tailwind red-500) */
+    --login-border-radius: 0.375rem; /* rounded-md (6px) */
+    --login-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --login-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --login-transition: all 0.2s ease-in-out;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+html, body {
+    font-family: var(--login-font-family);
+    height: 100%;      
+    width: 100%;       
+    margin: 0 !important; 
+    padding: 0 !important; 
+    background-color: transparent !important; /* Mantido transparente para Electron */
+    overflow: hidden !important; 
+    box-sizing: border-box; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-html,
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
 body {
-  height: 100%;
-  font-family: "Inter", sans-serif;
-  background-color: #f5f7fb;
-  color: var(--text-color);
-}
-
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+    display: flex; 
+    justify-content: center;
+    align-items: center;
 }
 
 .login-container {
-  width: 100%;
-  max-width: 420px;
-  background-color: white;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
-  overflow: hidden;
-  animation: fadeIn 0.5s ease;
+    background-color: var(--login-bg-card);
+    padding: 2rem 2.5rem; 
+    border-radius: var(--login-border-radius); 
+    box-shadow: var(--login-box-shadow);
+    width: 100%;
+    max-width: 400px; /* Ligeiramente menor */
+    text-align: center;
+    border: 1px solid var(--login-border-color);
+    animation: fadeInLogin 0.5s ease-out;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes fadeInLogin {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .login-header {
-  padding: 2rem 2rem 1.5rem;
-  text-align: center;
+    margin-bottom: 1.5rem;
 }
 
-.logo {
-  width: 80px;
-  height: 80px;
-  margin-bottom: 1rem;
+.logo { /* Classe para o logo no index.html */
+    width: 64px; /* Ajustado */
+    height: 64px;
+    margin: 0 auto 1rem;
+    display: block;
 }
 
-.login-header h1 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-bottom: 0.5rem;
+.login-header h1 { /* Título "Notary Connect" */
+    margin-bottom: 0.25rem; /* Menor margem */
+    color: var(--login-text-dark);
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: 700; /* bold */
+}
+.subtitle { /* Subtítulo "Sistema de Atendimento Digital" */
+    color: var(--login-text-muted);
+    font-size: 0.875rem; /* text-sm */
+    margin-bottom: 1.5rem;
 }
 
-.subtitle {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-
-.login-form {
-  padding: 0 2rem 2rem;
-}
 
 .form-group {
-  margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem; /* Espaçamento ligeiramente menor */
+    text-align: left;
 }
-
 .form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: var(--text-color);
+    display: block;
+    margin-bottom: 0.375rem; /* py-1.5 */
+    color: var(--login-text-dark);
+    font-weight: 500; /* medium */
+    font-size: 0.875rem; /* text-sm */
 }
 
 .input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .input-icon {
-  position: absolute;
-  left: 12px;
-  width: 20px;
-  height: 20px;
-  color: var(--text-muted);
+    position: absolute;
+    left: 0.875rem; /* px-3.5 */
+    width: 18px; /* Ajustado */
+    height: 18px;
+    color: var(--login-text-muted);
+    pointer-events: none; /* Para não interferir com o clique no input */
 }
 
 .input-wrapper input {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  transition: var(--transition);
+    width: 100%;
+    padding: 0.625rem 0.875rem; /* py-2.5 px-3.5 */
+    padding-left: 2.5rem; /* Para dar espaço ao ícone */
+    border: 1px solid var(--login-border-color);
+    border-radius: var(--login-border-radius);
+    box-sizing: border-box;
+    font-size: 0.9375rem; /* Um pouco maior */
+    color: var(--login-text-dark);
+    transition: var(--login-transition);
+    background-color: #f9fafb; /* slate-50, fundo sutil */
+}
+.input-wrapper input:focus {
+    outline: none;
+    border-color: var(--login-border-focus-color);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* Sombra de foco mais pronunciada */
+}
+.input-wrapper input::placeholder {
+    color: #9ca3af; /* gray-400 */
 }
 
-.input-wrapper input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-}
 
 .toggle-password {
-  position: absolute;
-  right: 12px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+    position: absolute;
+    right: 0.75rem; /* px-3 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--login-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem; /* p-1 */
 }
-
+.toggle-password:hover {
+    color: var(--login-text-dark);
+}
 .eye-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.error-message {
-  color: var(--danger-color);
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
-  min-height: 1.25rem;
-  text-align: center;
+    width: 18px; /* Ajustado */
+    height: 18px;
 }
 
 .button-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Espaço entre botões */
+    margin-top: 1.5rem; /* Espaço acima do grupo de botões */
 }
 
 .btn {
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  text-align: center;
+    width: 100%;
+    padding: 0.75rem 1rem; /* py-3 px-4 */
+    border: none;
+    border-radius: var(--login-border-radius);
+    cursor: pointer;
+    font-size: 0.9375rem; /* Um pouco maior */
+    font-weight: 600; /* semibold */
+    transition: var(--login-transition);
+    letter-spacing: 0.025em; /* Leve espaçamento entre letras */
+    display: inline-flex; /* Para alinhar spinner e texto */
+    align-items: center;
+    justify-content: center;
+}
+.btn:hover {
+    filter: brightness(0.95);
+}
+.btn:active {
+    transform: translateY(1px);
+    filter: brightness(0.9);
+}
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 .btn-primary {
-  background-color: var(--primary-color);
-  color: white;
+    background-color: var(--login-primary-color);
+    color: white;
 }
-
 .btn-primary:hover {
-  background-color: var(--primary-hover);
+    background-color: var(--login-primary-hover);
 }
 
-.btn-secondary {
-  background-color: var(--secondary-color);
-  color: white;
+.btn-secondary { /* Botão Fechar */
+    background-color: var(--login-secondary-color);
+    color: white;
 }
-
 .btn-secondary:hover {
-  background-color: var(--secondary-hover);
+    background-color: var(--login-secondary-hover);
 }
+
+.loading-spinner {
+    width: 1em;
+    height: 1em;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.8s linear infinite;
+    margin-right: 0.5em; /* Espaço entre spinner e texto */
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+.error-message {
+    color: var(--login-error-color);
+    margin-top: 1rem; /* Reduzido */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500; /* medium */
+    min-height: 1.25rem; 
+    margin-bottom: 0; /* Removido margin-bottom, o button-group já tem margin-top */
+}
+
+.login-container.error-shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+  40%, 60% { transform: translate3d(3px, 0, 0); }
+}
+
 
 .app-footer {
-  padding: 1.5rem 0;
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border-color);
-  margin-top: 1rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-  .login-container {
-    box-shadow: none;
-  }
-
-  .login-header {
-    padding: 1.5rem 1.5rem 1rem;
-  }
-
-  .login-form {
-    padding: 0 1.5rem 1.5rem;
-  }
+    width: 100%;
+    text-align: center;
+    font-size: 0.75rem; /* text-xs */
+    color: var(--login-text-muted); 
+    padding-top: 1.25rem; 
+    border-top: 1px solid var(--login-border-color); 
+    margin-top: 1.5rem; 
 }

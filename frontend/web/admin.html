@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:3000; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notary Connect - Administração</title>
@@ -10,13 +9,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/adminStyles.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:3000; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';">
+
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="/img/icons/logo.svg" alt="Notary Connect" class="logo">
-                <h1>Notary Connect</h1>
+                <img src="./img/icons/logo.svg" alt="Notary Connect" class="logo"> <h1>Notary Connect</h1>
             </div>
             
             <nav class="sidebar-nav">
@@ -48,7 +48,7 @@
                 <button id="navConfiguracoesBtn" data-section="configuracoesSection" class="nav-item">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2-2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
                     <span>Configurações</span>
                 </button>
@@ -86,7 +86,6 @@
         </aside>
         
         <main class="main-content">
-            <!-- Seção do WhatsApp Bot (mantida como estava) -->
             <section id="roboSection" class="content-section active">
                 <div class="section-header">
                     <h2>Status do WhatsApp Bot</h2>
@@ -149,7 +148,6 @@
                 </div>
             </section>
             
-            <!-- Seção de Respostas Automáticas (nova) -->
             <section id="respostasSection" class="content-section">
                 <div class="section-header">
                     <h2>Gerenciamento de Respostas</h2>
@@ -172,7 +170,6 @@
                 </div>
                 
                 <div id="responseList" class="response-list">
-                    <!-- Lista de respostas será carregada dinamicamente -->
                     <div class="loading-state">
                         <svg class="spinner" viewBox="0 0 50 50">
                             <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
@@ -181,7 +178,6 @@
                     </div>
                 </div>
                 
-                <!-- Modal para adicionar/editar resposta -->
                 <div id="responseModal" class="modal">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -200,36 +196,49 @@
                                 <div class="form-group">
                                     <label for="responseKey">Chave da Resposta</label>
                                     <input type="text" id="responseKey" placeholder="Ex: greeting, help, info_services" required>
-                                    <small>Identificador único para esta resposta</small>
+                                    <small>Identificador único para esta resposta (sem espaços ou acentos).</small>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="responseName">Nome da Resposta</label>
-                                    <input type="text" id="responseName" placeholder="Ex: Saudação, Ajuda, Informações" required>
+                                    <input type="text" id="responseName" placeholder="Ex: Saudação Inicial, Pedido de Ajuda" required>
+                                    <small>Um nome descritivo para fácil identificação.</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="responsePattern">Padrão Regex</label>
-                                    <input type="text" id="responsePattern" placeholder="Ex: (?:^|\W)(oi|olá)(?:$|\W)" required>
-                                    <small>Expressão regular para identificar mensagens do cliente</small>
+                                    <label for="responsePattern">Padrão Regex (Palavras-chave)</label>
+                                    <input type="text" id="responsePattern" placeholder="Ex: (oi|olá|bom dia), menu, ajuda" required>
+                                    <small>Expressão regular ou palavras-chave (separadas por vírgula) que acionam esta resposta.</small>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="responseText">Texto da Resposta</label>
-                                    <textarea id="responseText" rows="6" placeholder="Digite a resposta que o robô enviará..." required></textarea>
-                                    <small>Use {client_name} para incluir o nome do cliente</small>
+                                    <textarea id="responseText" rows="5" placeholder="Digite a resposta que o robô enviará..." required></textarea>
+                                    <small>Use {client_name} para o nome do cliente. Use *texto* para negrito, _texto_ para itálico.</small>
                                 </div>
                                 
                                 <div class="form-row">
                                     <div class="form-group">
+                                        <label for="responseTypingDelay">Simular Digitação (ms)</label>
+                                        <input type="number" id="responseTypingDelay" min="0" step="100" value="1000">
+                                        <small>Tempo em milissegundos que o robô simula estar digitando antes desta resposta.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="responseSendDelay">Atraso Envio (ms)</label>
+                                        <input type="number" id="responseSendDelay" min="0" step="100" value="500">
+                                        <small>Atraso adicional antes de efetivamente enviar a mensagem após "digitar".</small>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
                                         <label for="responsePriority">Prioridade</label>
                                         <input type="number" id="responsePriority" min="0" max="100" value="0">
-                                        <small>Maior número = maior prioridade</small>
+                                        <small>Maior número = maior prioridade (0 é padrão).</small>
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label class="checkbox-label">
-                                            <input type="checkbox" id="responseActive" checked>
+                                        <label class="checkbox-label" style="margin-top: 1.5rem;"> <input type="checkbox" id="responseActive" checked>
                                             <span>Ativo</span>
                                         </label>
                                     </div>
@@ -237,31 +246,33 @@
                                 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="responseStartTime">Horário Início</label>
-                                        <input type="time" id="responseStartTime" value="00:00">
+                                        <label for="responseStartTime">Horário Início (Opcional)</label>
+                                        <input type="time" id="responseStartTime">
+                                        <small>Deixar em branco para sempre ativo dentro dos dias.</small>
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label for="responseEndTime">Horário Fim</label>
-                                        <input type="time" id="responseEndTime" value="23:59">
+                                        <label for="responseEndTime">Horário Fim (Opcional)</label>
+                                        <input type="time" id="responseEndTime">
+                                        <small>Deixar em branco para sempre ativo dentro dos dias.</small>
                                     </div>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="responseAllowedDays">Dias Permitidos</label>
-                                    <input type="text" id="responseAllowedDays" value="1,2,3,4,5,6,0">
-                                    <small>0=Domingo, 1=Segunda, 2=Terça, etc. Separados por vírgula.</small>
+                                    <input type="text" id="responseAllowedDays" value="0,1,2,3,4,5,6">
+                                    <small>0=Dom, 1=Seg, ..., 6=Sáb. Separados por vírgula. Ex: 1,2,3,4,5 para Seg-Sex.</small>
                                 </div>
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button id="saveResponseBtn" class="btn btn-primary">Salvar</button>
+                            <button type="button" class="btn btn-secondary" id="cancelResponseBtn">Cancelar</button>
+                            <button type="button" id="saveResponseBtn" class="btn btn-primary">Salvar Resposta</button>
                         </div>
                     </div>
                 </div>
             </section>
             
-            <!-- Seção de Funcionários (nova) -->
             <section id="funcionariosSection" class="content-section">
                 <div class="section-header">
                     <h2>Gerenciamento de Funcionários</h2>
@@ -284,7 +295,6 @@
                 </div>
                 
                 <div id="attendantList" class="attendant-list">
-                    <!-- Lista de funcionários será carregada dinamicamente -->
                     <div class="loading-state">
                         <svg class="spinner" viewBox="0 0 50 50">
                             <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
@@ -293,7 +303,6 @@
                     </div>
                 </div>
                 
-                <!-- Modal para adicionar/editar funcionário -->
                 <div id="attendantModal" class="modal">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -310,53 +319,53 @@
                                 <input type="hidden" id="attendantId">
                                 
                                 <div class="form-group">
-                                    <label for="attendantUsername">Nome de Usuário</label>
+                                    <label for="attendantUsername">Nome de Usuário (para login)</label>
                                     <input type="text" id="attendantUsername" placeholder="Ex: joao.silva" required>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="attendantName">Nome Completo</label>
+                                    <label for="attendantName">Nome Completo (Exibição)</label>
                                     <input type="text" id="attendantName" placeholder="Ex: João Silva" required>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="attendantPassword">Senha</label>
-                                    <input type="password" id="attendantPassword" placeholder="Digite a senha">
-                                    <small id="passwordNote" style="display: none;">Deixe em branco para manter a senha atual</small>
+                                    <input type="password" id="attendantPassword" placeholder="Mínimo 6 caracteres">
+                                    <small id="passwordNote" style="display: none;">Deixe em branco para manter a senha atual.</small>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="attendantPhone">Número de Telefone</label>
+                                    <label for="attendantPhone">Número de Contato Direto (Opcional)</label>
                                     <input type="text" id="attendantPhone" placeholder="Ex: 5521999999999">
-                                    <small>Formato internacional com código do país (55 para Brasil)</small>
+                                    <small>Usado para transferências diretas. Formato internacional (55DDDNUMERO).</small>
                                 </div>
                                 
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="attendantIsAdmin">
-                                        <span>Administrador</span>
+                                        <span>Conceder permissões de Administrador</span>
                                     </label>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label>Setores</label>
+                                    <label>Setores de Atuação</label>
                                     <div id="sectorCheckboxes" class="checkbox-group">
-                                        <!-- Checkboxes de setores serão carregados dinamicamente -->
                                         <div class="loading-state">
                                             <span>Carregando setores...</span>
                                         </div>
                                     </div>
+                                    <small>Selecione os setores que este funcionário pode atender.</small>
                                 </div>
                             </form>
                         </div>
                         <div class="modal-footer">
-                            <button id="saveAttendantBtn" class="btn btn-primary">Salvar</button>
+                            <button type="button" class="btn btn-secondary" id="cancelAttendantBtn">Cancelar</button>
+                            <button type="button" id="saveAttendantBtn" class="btn btn-primary">Salvar Funcionário</button>
                         </div>
                     </div>
                 </div>
             </section>
             
-            <!-- Seção de Configurações (nova) -->
             <section id="configuracoesSection" class="content-section">
                 <div class="section-header">
                     <h2>Configurações Gerais</h2>
@@ -373,37 +382,54 @@
                                     <input type="checkbox" id="config_bot_active" checked>
                                     <span>Robô Ativo</span>
                                 </label>
-                                <small>Ativa ou desativa o robô de respostas automáticas</small>
+                                <small>Ativa ou desativa o robô de respostas automáticas.</small>
                             </div>
                             
                             <div class="form-group">
-                                <label for="config_bot_response_delay">Delay de Resposta (ms)</label>
+                                <label for="config_bot_response_delay">Delay Padrão de Resposta (ms)</label>
                                 <input type="number" id="config_bot_response_delay" min="0" max="10000" value="1500">
-                                <small>Tempo em milissegundos antes de enviar uma resposta automática</small>
+                                <small>Tempo padrão em milissegundos que o robô simula estar digitando/processando antes de responder (pode ser sobrescrito por resposta individual).</small>
                             </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="config_bot_working_hours_start">Horário de Início</label>
+                                    <label for="config_bot_working_hours_start">Horário de Início (Funcionamento Geral)</label>
                                     <input type="time" id="config_bot_working_hours_start" value="08:00">
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="config_bot_working_hours_end">Horário de Término</label>
+                                    <label for="config_bot_working_hours_end">Horário de Término (Funcionamento Geral)</label>
                                     <input type="time" id="config_bot_working_hours_end" value="18:00">
                                 </div>
                             </div>
                             
                             <div class="form-group">
-                                <label for="config_bot_working_days">Dias de Funcionamento</label>
+                                <label for="config_bot_working_days">Dias de Funcionamento (Geral)</label>
                                 <input type="text" id="config_bot_working_days" value="1,2,3,4,5">
-                                <small>0=Domingo, 1=Segunda, 2=Terça, etc. Separados por vírgula.</small>
+                                <small>0=Dom, 1=Seg, ..., 6=Sáb. Separados por vírgula. Para o robô e atendimento geral.</small>
                             </div>
                             
                             <div class="form-group">
-                                <label for="config_bot_out_of_hours_message">Mensagem Fora do Horário</label>
-                                <textarea id="config_bot_out_of_hours_message" rows="4">Olá! Nosso horário de atendimento é de segunda a sexta, das 8h às 18h. Por favor, retorne durante nosso horário comercial.</textarea>
-                                <small>Mensagem enviada quando o cliente entra em contato fora do horário de funcionamento</small>
+                                <label for="config_bot_out_of_hours_message">Mensagem Fora do Horário (Geral)</label>
+                                <textarea id="config_bot_out_of_hours_message" rows="4">Olá! No momento estamos fora do nosso horário de atendimento ({start_hour} às {end_hour}, de {working_days}). Por favor, retorne durante o horário comercial ou deixe sua mensagem que responderemos assim que possível.</textarea>
+                                <small>Mensagem padrão se o contato ocorrer fora do expediente. Use {start_hour}, {end_hour}, {working_days}.</small>
+                            </div>
+                             <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="config_enable_sound_notifications" checked>
+                                    <span>Ativar Notificações Sonoras (Chat Atendente)</span>
+                                </label>
+                                <small>Habilita sons para novas mensagens e chats na interface do atendente.</small>
+                            </div>
+                             <div class="form-group">
+                                <label for="config_notification_sound">Som de Notificação (Chat Atendente)</label>
+                                <select id="config_notification_sound">
+                                    <option value="default">Padrão</option>
+                                    <option value="chime">Sino</option>
+                                    <option value="bell">Campainha</option>
+                                    <option value="notify1">Notificação 1</option>
+                                </select>
+                                <small>Escolha o som para novas mensagens/chats.</small>
                             </div>
                             
                             <div class="form-actions">
@@ -420,41 +446,10 @@
         Conectando ao servidor WebSocket...
     </div>
     
-    <div id="alertContainer"></div>
-
-    <script src="./js/adminScript.js"></script>
-    <script>
-        // Verificar se os recursos foram carregados corretamente
-        document.addEventListener('DOMContentLoaded', function() {
-            // Verificar CSS
-            const styles = document.styleSheets;
-            let cssLoaded = false;
-            
-            for (let i = 0; i < styles.length; i++) {
-                if (styles[i].href && styles[i].href.includes('adminStyles.css')) {
-                    cssLoaded = true;
-                    break;
-                }
-            }
-            
-            if (!cssLoaded) {
-                console.error('Erro: adminStyles.css não foi carregado corretamente!');
-                // Tentar carregar novamente
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = './css/adminStyles.css';
-                document.head.appendChild(link);
-            }
-            
-            // Verificar JS
-            if (typeof QRCode === 'undefined') {
-                console.error('Erro: QRCode não foi carregado corretamente!');
-                // Tentar carregar novamente
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-                document.body.appendChild(script);
-            }
-        });
-    </script>
+    <div id="alertContainer"></div> <script src="./js/adminScript.js"></script>
+    <script src="./js/adminResponses.js"></script>
+    <script src="./js/adminAttendants.js"></script>
+    <script src="./js/adminConfig.js"></script>
+    
 </body>
 </html>
