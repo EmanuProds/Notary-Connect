@@ -1,6 +1,4 @@
 // frontend/web/js/chatUiUpdater.js
-
-// Define o objeto no escopo global (window)
 window.ChatUiUpdater = {
   activeConversationId: null,
   conversations: {
@@ -10,19 +8,16 @@ window.ChatUiUpdater = {
   currentFilter: "",
   currentTab: "active",
 
-  // Método de inicialização, chamado por mainChatScript.js
   initialize() {
     console.log("[ChatUiUpdater] Método initialize() FOI CHAMADO.");
-    // Verifica se 'updateConversations' existe no objeto 'this' (que é window.ChatUiUpdater aqui)
     if (this.updateConversations && typeof this.updateConversations === 'function') {
         console.log("[ChatUiUpdater] 'updateConversations' está DEFINIDA CORRETAMENTE dentro do objeto ChatUiUpdater no momento da inicialização.");
     } else {
         console.error("[ChatUiUpdater] ERRO CRÍTICO NO MÉTODO initialize(): 'updateConversations' NÃO está definida ou não é uma função AQUI.");
     }
-    return this; // Retorna a instância para encadeamento, se necessário
+    return this; 
   },
 
-  // A função que está causando o TypeError
   updateConversations(newConversations, tabType, errorMessage = null) {
     console.log(`[ChatUiUpdater] FUNÇÃO updateConversations EXECUTADA para aba: ${tabType}. Recebidas: ${newConversations ? newConversations.length : 'N/A'}. Erro: ${errorMessage}`);
 
@@ -102,7 +97,7 @@ window.ChatUiUpdater = {
     if (conversation.STATUS === "pending") {
       item.classList.add("pending"); 
     }
-    if (conversation.UNREAD_MESSAGES > 0) {
+    if (conversation.UNREAD_MESSAGES > 0 && String(conversation.ID) !== String(this.activeConversationId)) { 
         item.classList.add("unread"); 
     }
 
@@ -110,6 +105,7 @@ window.ChatUiUpdater = {
     const lastMessageTime = conversation.LAST_MESSAGE_TIME ? this.formatTime(conversation.LAST_MESSAGE_TIME) : "";
     const lastMessagePreviewText = conversation.LAST_MESSAGE || "Sem mensagens";
     const truncatedPreview = lastMessagePreviewText.length > 35 ? lastMessagePreviewText.substring(0, 32) + "..." : lastMessagePreviewText;
+
 
     item.innerHTML = `
       <div class="chat-item-details">
@@ -124,7 +120,7 @@ window.ChatUiUpdater = {
         </div>
         <div class="chat-item-meta">
             <span class="chat-item-timestamp">${lastMessageTime}</span>
-            ${conversation.UNREAD_MESSAGES > 0 ? `<span class="unread-badge">${conversation.UNREAD_MESSAGES}</span>` : ""}
+            ${conversation.UNREAD_MESSAGES > 0 && String(conversation.ID) !== String(this.activeConversationId) ? `<span class="unread-badge">${conversation.UNREAD_MESSAGES}</span>` : ""}
         </div>
       </div>
       ${conversation.STATUS === "pending" ? `<button class="take-chat-button" data-id="${conversation.ID}">Assumir</button>` : ""}
@@ -143,11 +139,13 @@ window.ChatUiUpdater = {
 
   selectConversation(conversationId) {
     console.log("[ChatUiUpdater] Selecionando conversa:", conversationId);
-    if (String(this.activeConversationId) === String(conversationId)) {
+    const stringConversationId = String(conversationId);
+
+    if (this.activeConversationId === stringConversationId) {
         if (window.ChatActions) window.ChatActions.loadChatHistory(conversationId); 
         return;
     }
-    this.activeConversationId = conversationId;
+    this.activeConversationId = stringConversationId;
     this.highlightActiveConversation();
 
     const conversation = this.getActiveConversationDetails();
@@ -160,8 +158,16 @@ window.ChatUiUpdater = {
     if (window.ChatDomElements) {
         if (window.ChatDomElements.welcomeScreen) window.ChatDomElements.welcomeScreen.style.display = "none";
         if (window.ChatDomElements.chatInterface) window.ChatDomElements.chatInterface.style.display = "flex"; 
-        if (window.ChatDomElements.chatInputControls) window.ChatDomElements.chatInputControls.style.display = conversation.STATUS !== 'closed' ? "flex" : "none";
-        if (window.ChatDomElements.endChatButton) window.ChatDomElements.endChatButton.style.display = conversation.STATUS !== 'closed' ? "flex" : "none";
+        
+        // A lógica de 'canInteract' determina se os controles de chat são mostrados
+        const canInteract = conversation.STATUS === 'active' && 
+                            conversation.ATTENDANT_USERNAME === window.ChatWebsocketService.agentId;
+        
+        console.log(`[ChatUiUpdater] selectConversation: ConvID ${conversationId}, Status: ${conversation.STATUS}, Atendente da Conv: ${conversation.ATTENDANT_USERNAME}, Atendente Logado: ${window.ChatWebsocketService.agentId}, Pode Interagir: ${canInteract}`);
+
+        if (window.ChatDomElements.chatInputControls) window.ChatDomElements.chatInputControls.style.display = canInteract ? "flex" : "none";
+        if (window.ChatDomElements.endChatButton) window.ChatDomElements.endChatButton.style.display = canInteract ? "flex" : "none";
+        if (window.ChatDomElements.transferChatButton) window.ChatDomElements.transferChatButton.style.display = canInteract ? "flex" : "none";
     }
     
     this.updateChatHeader(conversation);
@@ -172,7 +178,8 @@ window.ChatUiUpdater = {
 
     if (window.ChatActions) {
       window.ChatActions.loadChatHistory(conversationId);
-      if (conversation.UNREAD_MESSAGES > 0) {
+      // Marca como lida APENAS se o atendente logado for o dono da conversa ativa
+      if (conversation.UNREAD_MESSAGES > 0 && conversation.STATUS === 'active' && conversation.ATTENDANT_USERNAME === window.ChatWebsocketService.agentId) { 
         window.ChatActions.markMessagesAsRead(conversationId);
       }
     }
@@ -187,24 +194,34 @@ window.ChatUiUpdater = {
 
   updateChatHeader(conversation) {
     if (!window.ChatDomElements) return;
-    const { contactName, contactNumber, contactAvatar, chatHeaderName, chatHeaderIcon, endChatButton } = window.ChatDomElements;
+    const { contactName, contactNumber, contactAvatar, chatHeaderName, chatHeaderIcon, endChatButton, transferChatButton } = window.ChatDomElements;
 
     if (conversation) {
         const name = conversation.CLIENT_NAME || conversation.CLIENT_WHATSAPP_ID || "Desconhecido";
-        if (contactName) contactName.textContent = name;
         if (chatHeaderName) chatHeaderName.textContent = name; 
-        if (contactNumber) contactNumber.textContent = conversation.CLIENT_WHATSAPP_ID || "";
+        
+        // Usar contactDetailsDiv para o tooltip do JID
+        if (window.ChatDomElements.contactDetailsDiv) { // Assumindo que contactDetailsDiv é o container do nome e número
+            window.ChatDomElements.contactDetailsDiv.title = `JID: ${conversation.CLIENT_JID || conversation.CLIENT_WHATSAPP_ID || 'N/A'}`;
+        }
+        // Se contactNumber ainda for usado para exibir algo, ajuste aqui:
+        // if (contactNumber) contactNumber.textContent = conversation.CLIENT_WHATSAPP_ID || ""; 
+        
         if (contactAvatar) contactAvatar.src = conversation.CLIENT_PROFILE_PIC || './img/icons/profile.svg';
-        if (chatHeaderIcon) chatHeaderIcon.style.display = 'inline-block';
-        if (endChatButton) endChatButton.style.display = conversation.STATUS !== 'closed' ? "flex" : "none";
+        if (chatHeaderIcon) chatHeaderIcon.style.display = 'inline-block'; // Ou 'block'
+        
+        const canInteract = conversation.STATUS === 'active' && 
+                            conversation.ATTENDANT_USERNAME === window.ChatWebsocketService.agentId;
+        if (endChatButton) endChatButton.style.display = canInteract ? "flex" : "none";
+        if (transferChatButton) transferChatButton.style.display = canInteract ? "flex" : "none";
 
     } else {
-        if (contactName) contactName.textContent = "Nenhum chat selecionado";
         if (chatHeaderName) chatHeaderName.textContent = "Nenhum chat selecionado";
-        if (contactNumber) contactNumber.textContent = "";
+        if (window.ChatDomElements.contactDetailsDiv) window.ChatDomElements.contactDetailsDiv.title = "";
         if (contactAvatar) contactAvatar.src = './img/icons/profile.svg';
         if (chatHeaderIcon) chatHeaderIcon.style.display = 'none';
         if (endChatButton) endChatButton.style.display = "none";
+        if (transferChatButton) transferChatButton.style.display = "none";
     }
   },
 
@@ -223,7 +240,7 @@ window.ChatUiUpdater = {
     }
     
     if (errorMessage) {
-        messagesContainer.innerHTML = `<div class="empty-history error-message">${errorMessage}</div>`;
+        messagesContainer.innerHTML = `<div class="empty-history error-message">${window.ChatUtils.escapeHtml(errorMessage)}</div>`;
         return;
     }
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -232,7 +249,7 @@ window.ChatUiUpdater = {
     }
 
     messages.forEach(message => {
-      if (message && typeof message.ID !== 'undefined') { 
+      if (message && (typeof message.ID !== 'undefined' || typeof message.id !== 'undefined')) { 
         const messageElement = this.createMessageElement(message);
         messagesContainer.appendChild(messageElement);
       } else {
@@ -244,39 +261,51 @@ window.ChatUiUpdater = {
 
   createMessageElement(message) {
     const messageElement = document.createElement("div");
-    const senderTypeClass = (message.SENDER_TYPE || 'unknown').toLowerCase();
+    const senderTypeActual = message.SENDER_TYPE || message.senderType || 'unknown';
+    const senderTypeClass = senderTypeActual.toLowerCase();
     messageElement.className = `message ${senderTypeClass}`;
-    messageElement.dataset.id = String(message.ID || message.id || Date.now()); 
+    messageElement.dataset.id = String(message.ID || message.id || `local_${Date.now()}`); 
 
-    const senderName = message.SENDER_TYPE === 'AGENT' ? (message.AGENT_NAME || 'Atendente') : (message.CLIENT_NAME || 'Cliente');
+    // Determina o nome do remetente para exibição
+    let senderNameDisplay = 'Sistema'; // Padrão para mensagens do sistema/bot
+    if (senderTypeActual === 'AGENT') {
+        senderNameDisplay = message.AGENT_NAME || (window.ChatWebsocketService ? window.ChatWebsocketService.agentName : null) || 'Atendente';
+    } else if (senderTypeActual === 'CLIENT') {
+        senderNameDisplay = message.CLIENT_NAME || 'Cliente';
+    } else if (senderTypeActual === 'BOT') {
+        senderNameDisplay = 'Robô Notary Connect';
+    }
+
+
     const messageTime = this.formatTime(message.TIMESTAMP || message.timestamp); 
 
     let contentHTML = '';
     const textContent = message.CONTENT || message.content || message.MESSAGE_CONTENT || "";
+    const messageTypeActual = message.MESSAGE_TYPE || message.messageType;
 
-    if (message.MESSAGE_TYPE === 'image' && message.MEDIA_URL) {
+    if (messageTypeActual === 'image' && message.MEDIA_URL) {
         contentHTML = `<img src="${message.MEDIA_URL}" alt="Imagem" class="media-content image" onerror="this.style.display='none'; this.parentElement.innerHTML += '<p class=\\'media-error\\'>Erro ao carregar imagem.</p>';">`;
-        if (textContent && textContent !== message.MEDIA_URL) contentHTML += `<div class="message-text">${textContent}</div>`;
-    } else if (message.MESSAGE_TYPE === 'audio' && message.MEDIA_URL) {
+        if (textContent && textContent !== message.MEDIA_URL && textContent !== `(${messageTypeActual})`) contentHTML += `<div class="message-text">${window.ChatUtils.escapeHtml(textContent)}</div>`;
+    } else if (messageTypeActual === 'audio' && message.MEDIA_URL) {
         contentHTML = `<audio controls src="${message.MEDIA_URL}" class="media-content audio"></audio>`;
-         if (textContent && textContent !== message.MEDIA_URL) contentHTML += `<div class="message-text">${textContent}</div>`;
-    } else if (message.MESSAGE_TYPE === 'video' && message.MEDIA_URL) {
+         if (textContent && textContent !== message.MEDIA_URL && textContent !== `(${messageTypeActual})`) contentHTML += `<div class="message-text">${window.ChatUtils.escapeHtml(textContent)}</div>`;
+    } else if (messageTypeActual === 'video' && message.MEDIA_URL) {
         contentHTML = `<video controls src="${message.MEDIA_URL}" class="media-content video"></video>`;
-         if (textContent && textContent !== message.MEDIA_URL) contentHTML += `<div class="message-text">${textContent}</div>`;
-    } else if (message.MESSAGE_TYPE === 'document' && message.MEDIA_URL) {
+         if (textContent && textContent !== message.MEDIA_URL && textContent !== `(${messageTypeActual})`) contentHTML += `<div class="message-text">${window.ChatUtils.escapeHtml(textContent)}</div>`;
+    } else if (messageTypeActual === 'document' && message.MEDIA_URL) {
         contentHTML = `
             <a href="${message.MEDIA_URL}" target="_blank" rel="noopener noreferrer" class="media-content document">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                <span>${textContent || "Documento"}</span>
+                <span>${window.ChatUtils.escapeHtml(textContent || "Documento")}</span>
             </a>`;
-    } else { 
-        contentHTML = `<div class="message-text">${window.ChatUtils ? window.ChatUtils.escapeHtml(textContent) : textContent}</div>`;
+    } else { // text, chat, system, bot
+        contentHTML = `<div class="message-text">${window.ChatUtils.escapeHtml(textContent)}</div>`;
     }
     
-    const senderDisplay = senderTypeClass !== 'system' ? `<div class="sender-name">${senderName}</div>` : '';
+    const senderDisplayElement = senderTypeClass !== 'system' ? `<div class="sender-name">${window.ChatUtils.escapeHtml(senderNameDisplay)}</div>` : '';
 
     messageElement.innerHTML = `
-      ${senderDisplay}
+      ${senderDisplayElement}
       ${contentHTML}
       <div class="message-info">${messageTime}</div>
     `;
@@ -285,33 +314,33 @@ window.ChatUiUpdater = {
 
   addNewMessage(conversationId, message) {
     console.log("[ChatUiUpdater] Adicionando nova mensagem:", message, "para conversa:", conversationId);
+    const stringConversationId = String(conversationId);
     
-    this.updateConversationInList(conversationId, {
+    this.updateConversationInList(stringConversationId, {
         LAST_MESSAGE: message.CONTENT || message.content || message.MESSAGE_CONTENT,
         LAST_MESSAGE_TIME: message.TIMESTAMP || message.timestamp,
         UNREAD_MESSAGES: (currentConv) => { 
-            if (String(this.activeConversationId) === String(conversationId) && document.hasFocus()) {
+            if (String(this.activeConversationId) === stringConversationId && document.hasFocus()) {
                 if (window.ChatActions && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client")) {
-                    window.ChatActions.markMessagesAsRead(conversationId); 
+                    window.ChatActions.markMessagesAsRead(stringConversationId); 
                 }
                 return 0; 
             }
             if (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") {
-                const convInList = this.getConversationFromListById(conversationId);
+                const convInList = this.getConversationFromListById(stringConversationId);
                 return convInList ? (convInList.UNREAD_MESSAGES || 0) + 1 : 1;
             }
             return currentConv ? currentConv.UNREAD_MESSAGES : 0; 
         }
     });
 
-    if (String(conversationId) !== String(this.activeConversationId)) {
+    if (String(this.activeConversationId) !== stringConversationId) {
       console.warn("[ChatUiUpdater] Nova mensagem para conversa não ativa. Lista atualizada.");
       if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
         window.NotificationService.playMessageSound();
       }
       return;
     }
-
     if (!window.ChatDomElements || !window.ChatDomElements.messagesContainer) {
       console.error("[ChatUiUpdater] Container de mensagens não encontrado.");
       return;
@@ -331,7 +360,7 @@ window.ChatUiUpdater = {
   
   updateLocalMessageStatus(originalMessageId, success, sentMessageId, timestamp) {
     console.log(`[ChatUiUpdater] Atualizando status da mensagem local ID ${originalMessageId}: sucesso=${success}, novoID=${sentMessageId}`);
-    const messageElement = document.querySelector(`.message[data-id="${originalMessageId}"]`);
+    const messageElement = document.querySelector(`.message[data-id="${originalMessageId}"]`); 
     if (messageElement) {
         messageElement.classList.remove('sending'); 
         if (success && sentMessageId) {
@@ -348,11 +377,13 @@ window.ChatUiUpdater = {
                 timeElement.textContent += " (Falha ao enviar)";
             }
         }
+    } else {
+        console.warn(`[ChatUiUpdater] Mensagem local com ID ${originalMessageId} não encontrada para atualização de status.`);
     }
   },
 
   addSystemMessage(text, conversationId) {
-    if (String(conversationId) !== String(this.activeConversationId)) return;
+     if (String(conversationId) !== String(this.activeConversationId)) return;
     if (!window.ChatDomElements || !window.ChatDomElements.messagesContainer) return;
     const messagesContainer = window.ChatDomElements.messagesContainer;
 
@@ -360,7 +391,7 @@ window.ChatUiUpdater = {
         SENDER_TYPE: 'SYSTEM',
         CONTENT: text,
         TIMESTAMP: new Date().toISOString(),
-        MESSAGE_TYPE: 'system',
+        MESSAGE_TYPE: 'system', // Ou 'text' se o CSS tratar 'system' de forma especial
         ID: `sys_${Date.now()}` 
     };
     const messageElement = this.createMessageElement(systemMessage);
@@ -387,7 +418,7 @@ window.ChatUiUpdater = {
                 
                 list[index] = { ...list[index], ...updates, ...unreadUpdate };
 
-                if (tabKey === 'active') {
+                if (tabKey === 'active') { 
                     const updatedConv = list.splice(index, 1)[0];
                     list.unshift(updatedConv);
                 }
@@ -396,10 +427,23 @@ window.ChatUiUpdater = {
     });
 
     if (foundAndUpdated) {
-        this.renderCurrentTabConversations(); 
+        // Re-renderiza apenas a aba que está ativa na UI
+        if (this.currentTab === 'active' || this.currentTab === 'closed') { 
+             this.renderCurrentTabConversations(); 
+        }
+       
         if (selectAfterUpdate && String(this.activeConversationId) === stringConversationId) {
             const updatedDetails = this.getActiveConversationDetails();
-            if (updatedDetails) this.updateChatHeader(updatedDetails);
+            if (updatedDetails) {
+                this.updateChatHeader(updatedDetails);
+                if (window.ChatDomElements) {
+                    const canInteract = updatedDetails.STATUS === 'active' && 
+                                        updatedDetails.ATTENDANT_USERNAME === window.ChatWebsocketService.agentId;
+                    if (window.ChatDomElements.chatInputControls) window.ChatDomElements.chatInputControls.style.display = canInteract ? "flex" : "none";
+                    if (window.ChatDomElements.endChatButton) window.ChatDomElements.endChatButton.style.display = canInteract ? "flex" : "none";
+                    if (window.ChatDomElements.transferChatButton) window.ChatDomElements.transferChatButton.style.display = canInteract ? "flex" : "none";
+                }
+            }
         }
     } else {
         console.warn(`[ChatUiUpdater] Tentativa de atualizar conversa ${conversationId} que não foi encontrada em nenhuma lista.`);
@@ -409,6 +453,10 @@ window.ChatUiUpdater = {
   moveConversationToClosed(conversationId) {
     const stringConversationId = String(conversationId);
     const activeList = this.conversations.active;
+    if (!activeList) {
+        console.warn("[ChatUiUpdater] Lista de conversas ativas não encontrada para mover conversa.");
+        return;
+    }
     const index = activeList.findIndex(c => c && String(c.ID) === stringConversationId);
 
     if (index !== -1) {
@@ -443,7 +491,7 @@ window.ChatUiUpdater = {
     const newConversationEntry = { 
         ...conversationData, 
         STATUS: conversationData.STATUS || 'pending', 
-        UNREAD_MESSAGES: conversationData.UNREAD_MESSAGES || (conversationData.STATUS === 'pending' ? 1 : 0) 
+        UNREAD_MESSAGES: conversationData.UNREAD_MESSAGES === undefined ? (conversationData.STATUS === 'pending' ? 1 : 0) : conversationData.UNREAD_MESSAGES
     };
 
     if (existingIndex !== -1) {
@@ -472,7 +520,7 @@ window.ChatUiUpdater = {
   },
 
   getActiveConversationDetails() {
-    if (!this.activeConversationId) return null;
+     if (!this.activeConversationId) return null;
     return this.getConversationFromListById(this.activeConversationId); 
   },
 
@@ -488,26 +536,25 @@ window.ChatUiUpdater = {
              </div>`;
         if (window.ChatDomElements.chatInterface) window.ChatDomElements.chatInterface.style.display = "none";
         if (window.ChatDomElements.welcomeScreen) window.ChatDomElements.welcomeScreen.style.display = "flex";
-         if (window.ChatDomElements.chatInputControls) window.ChatDomElements.chatInputControls.style.display = "none"; // Esconde input
+         if (window.ChatDomElements.chatInputControls) window.ChatDomElements.chatInputControls.style.display = "none"; 
+         if (window.ChatDomElements.transferChatButton) window.ChatDomElements.transferChatButton.style.display = "none";
     }
     this.updateChatHeader(null); 
     this.highlightActiveConversation(); 
   },
 
-  filterConversations(searchTerm) {
+  filterConversations(searchTerm) { 
     this.currentFilter = searchTerm.toLowerCase();
     this.renderCurrentTabConversations();
   },
-
-  matchesFilter(conversation, filter) {
+  matchesFilter(conversation, filter) { 
     if (!filter) return true;
     const name = (conversation.CLIENT_NAME || "").toLowerCase();
     const id = (conversation.CLIENT_WHATSAPP_ID || "").toLowerCase();
     const sector = (conversation.SECTOR || "").toLowerCase(); 
     return name.includes(filter) || id.includes(filter) || sector.includes(filter);
-  },
-
-  renderCurrentTabConversations() {
+  }, 
+  renderCurrentTabConversations() { 
     if (this.conversations[this.currentTab]) {
         this.updateConversations(this.conversations[this.currentTab], this.currentTab);
     } else {
@@ -515,13 +562,11 @@ window.ChatUiUpdater = {
         this.updateConversations([], this.currentTab, "Aba não encontrada ou vazia.");
     }
   },
-
-  setActiveTab(tabType) {
+  setActiveTab(tabType) { 
     this.currentTab = tabType;
-    // Acessa tabButtonsNodeList de ChatDomElements se estiver definido
     const tabButtonsToUpdate = window.ChatDomElements && window.ChatDomElements.tabButtonsNodeList 
                                 ? window.ChatDomElements.tabButtonsNodeList
-                                : document.querySelectorAll(".sidebar .tabs .tab-button"); // Fallback
+                                : document.querySelectorAll(".sidebar .tabs .tab-button"); 
 
     if (tabButtonsToUpdate && tabButtonsToUpdate.length > 0) {
         tabButtonsToUpdate.forEach(button => {
@@ -532,8 +577,7 @@ window.ChatUiUpdater = {
     }
     this.renderCurrentTabConversations(); 
   },
-
-  updateTypingIndicator(clientName, isTyping) {
+  updateTypingIndicator(clientName, isTyping) { 
     if (!window.ChatDomElements || !window.ChatDomElements.typingIndicator) return;
     const typingIndicator = window.ChatDomElements.typingIndicator;
     if (isTyping) {
@@ -543,8 +587,7 @@ window.ChatUiUpdater = {
         typingIndicator.style.display = 'none';
     }
   },
-
-  formatTime(timestamp) {
+  formatTime(timestamp) { 
     if (!timestamp) return "";
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return ""; 
@@ -558,11 +601,10 @@ window.ChatUiUpdater = {
     } else if (date.toDateString() === yesterday.toDateString()) {
       return "Ontem";
     } else {
-      return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
+      return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }); // Alterado para ano completo
     }
-  },
-
-  showError(message) {
+  }, 
+  showError(message) { 
     console.error("[ChatUiUpdater] Erro:", message);
     if (window.ChatDomElements && typeof window.ChatDomElements.showAlert === 'function') {
         window.ChatDomElements.showAlert(message, "error");
@@ -570,7 +612,6 @@ window.ChatUiUpdater = {
         alert(`Erro: ${message}`);
     }
   },
-
   showNotification(message, type = "info") { 
     console.log(`[ChatUiUpdater] Notificação (${type}):`, message);
     if (window.ChatDomElements && typeof window.ChatDomElements.showAlert === 'function') {
@@ -581,5 +622,4 @@ window.ChatUiUpdater = {
   },
 };
 
-// REMOVIDA a auto-inicialização daqui. mainChatScript.js fará isso.
 console.log("[ChatUiUpdater] Módulo carregado e objeto window.ChatUiUpdater definido.");
