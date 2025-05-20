@@ -1,455 +1,363 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
+<html lang="pt-BR" data-theme="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notary Connect - Administração</title>
-    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="./img/icons/logo.svg" type="image/svg+xml">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Painel de Administração</title>
     <link rel="stylesheet" href="./css/adminStyles.css">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:3000; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar">
+    <div class="admin-container">
+        <aside class="admin-sidebar">
             <div class="sidebar-header">
-                <img src="./img/icons/logo.svg" alt="Notary Connect" class="logo"> <h1>Notary Connect</h1>
+                <img src="./img/icons/logo.svg" alt="Logo do Projeto" class="logo" onerror="this.src='https://placehold.co/40x40/FFFFFF/3498DB?text=L'">
+                <h1>Painel Admin</h1>
             </div>
-            
-            <nav class="sidebar-nav">
-                <button id="navRoboBtn" data-section="roboSection" class="nav-item active">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    <span>WhatsApp Bot</span>
-                </button>
-                
-                <button id="navRespostasBtn" data-section="respostasSection" class="nav-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    <span>Respostas</span>
-                </button>
-                
-                <button id="navFuncionariosBtn" data-section="funcionariosSection" class="nav-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
-                    <span>Funcionários</span>
-                </button>
-                
-                <button id="navConfiguracoesBtn" data-section="configuracoesSection" class="nav-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2-2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                    <span>Configurações</span>
-                </button>
+            <nav class="nav-list">
+                <ul>
+                    <li>
+                        <a href="#" class="nav-item active" data-section="roboSection">
+                            <img src="./img/icons/robot.svg" alt="Ícone Robô" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-robot fa-icon" style="display:none;"></i> Robô / QR Code
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-section="respostasSection">
+                            <img src="./img/icons/responses.svg" alt="Ícone Respostas" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-reply-all fa-icon" style="display:none;"></i> Respostas Automáticas
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-section="funcionariosSection">
+                            <img src="./img/icons/users.svg" alt="Ícone Funcionários" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-users-cog fa-icon" style="display:none;"></i> Funcionários
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-section="setoresSection">
+                             <img src="./img/icons/sectors.svg" alt="Ícone Setores" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-sitemap fa-icon" style="display:none;"></i> Setores
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item" data-section="configuracoesSection">
+                            <img src="./img/icons/settings.svg" alt="Ícone Configurações" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-cogs fa-icon" style="display:none;"></i> Configurações
+                        </a>
+                    </li>
+                </ul>
             </nav>
-            
             <div class="sidebar-footer">
-                <button id="viewLogsBtn" class="footer-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
-                    </svg>
-                    <span>Ver Logs</span>
+                <div id="connectionStatus" class="connection-status">
+                    Conectando...
+                </div>
+                <button id="viewLogsBtn" class="button-link">
+                    <img src="./img/icons/logs.svg" alt="Ícone Logs" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                    <i class="fas fa-file-alt fa-icon" style="display:none;"></i> Ver Logs
                 </button>
-                
-                <button id="openDevToolsBtnAdmin" class="footer-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="16 18 22 12 16 6"></polyline>
-                        <polyline points="8 6 2 12 8 18"></polyline>
-                    </svg>
-                    <span>DevTools</span>
+                 <button id="openDevToolsBtnAdmin" class="button-link">
+                    <img src="./img/icons/devtools.svg" alt="Ícone DevTools" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                    <i class="fas fa-tools fa-icon" style="display:none;"></i> Ferramentas Dev
                 </button>
-                
-                <button id="logoutBtn" class="footer-btn logout-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                    <span>Sair</span>
+                <button id="logoutBtn" class="button-link">
+                    <img src="./img/icons/logout.svg" alt="Ícone Logout" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                    <i class="fas fa-sign-out-alt fa-icon" style="display:none;"></i> Sair
                 </button>
             </div>
         </aside>
-        
-        <main class="main-content">
-            <section id="roboSection" class="content-section active">
-                <div class="section-header">
-                    <h2>Status do WhatsApp Bot</h2>
-                </div>
-                
-                <div class="card qr-card">
-                    <div class="card-body">
-                        <div id="qrDisplay" class="qr-display">
-                            <div class="qr-placeholder">
-                                <svg class="spinner" viewBox="0 0 50 50">
-                                    <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
-                                </svg>
-                            </div>
-                        </div>
-                        
-                        <div id="qrStatusText" class="qr-status">Aguardando conexão...</div>
-                        
-                        <div id="botActions" class="bot-actions" style="display: none;">
-                            <button id="pauseBotBtn" class="btn btn-warning">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="6" y="4" width="4" height="16"></rect>
-                                    <rect x="14" y="4" width="4" height="16"></rect>
-                                </svg>
-                                <span>Pausar Bot</span>
-                            </button>
-                            
-                            <button id="restartBotBtn" class="btn btn-danger">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M23 4v6h-6"></path>
-                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                                </svg>
-                                <span>Reiniciar Bot</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card info-card">
-                    <div class="card-header">
-                        <h3>Informações do Sistema</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="info-item">
-                            <span class="info-label">Status:</span>
-                            <span id="systemStatus" class="info-value">Operacional</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Atendentes Online:</span>
-                            <span id="onlineAttendants" class="info-value">0</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Conversas Ativas:</span>
-                            <span id="activeConversations" class="info-value">0</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Última Atualização:</span>
-                            <span id="lastUpdate" class="info-value">-</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="respostasSection" class="content-section">
-                <div class="section-header">
-                    <h2>Gerenciamento de Respostas</h2>
-                    <div class="section-actions">
-                        <div class="search-box">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                            <input type="text" id="responseSearchInput" placeholder="Buscar respostas...">
-                        </div>
-                        <button id="addResponseBtn" class="btn btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            <span>Nova Resposta</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="responseList" class="response-list">
-                    <div class="loading-state">
-                        <svg class="spinner" viewBox="0 0 50 50">
-                            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
-                        </svg>
-                        <span>Carregando respostas...</span>
-                    </div>
-                </div>
-                
-                <div id="responseModal" class="modal">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 id="responseModalTitle">Nova Resposta Automática</h3>
-                            <button id="closeResponseModal" class="close-modal">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="responseForm">
-                                <input type="hidden" id="responseId">
-                                
-                                <div class="form-group">
-                                    <label for="responseKey">Chave da Resposta</label>
-                                    <input type="text" id="responseKey" placeholder="Ex: greeting, help, info_services" required>
-                                    <small>Identificador único para esta resposta (sem espaços ou acentos).</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="responseName">Nome da Resposta</label>
-                                    <input type="text" id="responseName" placeholder="Ex: Saudação Inicial, Pedido de Ajuda" required>
-                                    <small>Um nome descritivo para fácil identificação.</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="responsePattern">Padrão Regex (Palavras-chave)</label>
-                                    <input type="text" id="responsePattern" placeholder="Ex: (oi|olá|bom dia), menu, ajuda" required>
-                                    <small>Expressão regular ou palavras-chave (separadas por vírgula) que acionam esta resposta.</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="responseText">Texto da Resposta</label>
-                                    <textarea id="responseText" rows="5" placeholder="Digite a resposta que o robô enviará..." required></textarea>
-                                    <small>Use {client_name} para o nome do cliente. Use *texto* para negrito, _texto_ para itálico.</small>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="responseTypingDelay">Simular Digitação (ms)</label>
-                                        <input type="number" id="responseTypingDelay" min="0" step="100" value="1000">
-                                        <small>Tempo em milissegundos que o robô simula estar digitando antes desta resposta.</small>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="responseSendDelay">Atraso Envio (ms)</label>
-                                        <input type="number" id="responseSendDelay" min="0" step="100" value="500">
-                                        <small>Atraso adicional antes de efetivamente enviar a mensagem após "digitar".</small>
-                                    </div>
-                                </div>
 
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="responsePriority">Prioridade</label>
-                                        <input type="number" id="responsePriority" min="0" max="100" value="0">
-                                        <small>Maior número = maior prioridade (0 é padrão).</small>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label class="checkbox-label" style="margin-top: 1.5rem;"> <input type="checkbox" id="responseActive" checked>
-                                            <span>Ativo</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="responseStartTime">Horário Início (Opcional)</label>
-                                        <input type="time" id="responseStartTime">
-                                        <small>Deixar em branco para sempre ativo dentro dos dias.</small>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="responseEndTime">Horário Fim (Opcional)</label>
-                                        <input type="time" id="responseEndTime">
-                                        <small>Deixar em branco para sempre ativo dentro dos dias.</small>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="responseAllowedDays">Dias Permitidos</label>
-                                    <input type="text" id="responseAllowedDays" value="0,1,2,3,4,5,6">
-                                    <small>0=Dom, 1=Seg, ..., 6=Sáb. Separados por vírgula. Ex: 1,2,3,4,5 para Seg-Sex.</small>
-                                </div>
-                            </form>
+        <main class="admin-content">
+            <section id="roboSection" class="content-section active">
+                <header class="section-header">
+                    <h2>Status do Robô e QR Code</h2>
+                </header>
+                <div class="section-body columns">
+                    <div class="column">
+                        <div class="card">
+                            <h3>QR Code WhatsApp</h3>
+                            <div id="qrDisplay" class="qr-code-display">
+                                <p>Aguardando QR Code...</p>
+                            </div>
+                            <p id="qrStatusText" class="status-text">Inicializando...</p>
+                            <div id="botActions" class="bot-actions" style="display: none;">
+                                <button id="pauseBotBtn" class="button icon-button">
+                                     <img src="./img/icons/pause.svg" alt="Pausar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                                     <i class="fas fa-pause fa-icon" style="display:none;"></i> Pausar Bot
+                                </button>
+                                <button id="restartBotBtn" class="button icon-button danger">
+                                    <img src="./img/icons/restart.svg" alt="Reiniciar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                                    <i class="fas fa-redo fa-icon" style="display:none;"></i> Reiniciar Bot
+                                </button>
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="cancelResponseBtn">Cancelar</button>
-                            <button type="button" id="saveResponseBtn" class="btn btn-primary">Salvar Resposta</button>
+                    </div>
+                    <div class="column">
+                        <div class="card">
+                            <h3>Informações do Sistema</h3>
+                            <ul class="info-list">
+                                <li><strong>Status:</strong> <span id="systemStatus" class="status-value">--</span></li>
+                                <li><strong>Atendentes Online:</strong> <span id="onlineAttendants" class="status-value">--</span></li>
+                                <li><strong>Conversas Ativas:</strong> <span id="activeConversations" class="status-value">--</span></li>
+                                <li><strong>Última Atualização:</strong> <span id="lastUpdate" class="status-value">--</span></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </section>
-            
-            <section id="funcionariosSection" class="content-section">
-                <div class="section-header">
-                    <h2>Gerenciamento de Funcionários</h2>
-                    <div class="section-actions">
-                        <div class="search-box">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                            </svg>
-                            <input type="text" id="attendantSearchInput" placeholder="Buscar funcionários...">
-                        </div>
-                        <button id="addAttendantBtn" class="btn btn-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            <span>Novo Funcionário</span>
+
+            <section id="respostasSection" class="content-section">
+                <header class="section-header">
+                    <h2>Respostas Automáticas</h2>
+                    <div class="header-actions">
+                        <input type="text" id="responseSearchInput" placeholder="Buscar respostas..." class="search-input">
+                        <button id="addResponseBtn" class="button primary">
+                            <img src="./img/icons/add.svg" alt="Adicionar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-plus fa-icon" style="display:none;"></i> Nova Resposta
                         </button>
                     </div>
-                </div>
-                
-                <div id="attendantList" class="attendant-list">
-                    <div class="loading-state">
-                        <svg class="spinner" viewBox="0 0 50 50">
-                            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
-                        </svg>
-                        <span>Carregando funcionários...</span>
+                </header>
+                <div id="responseList" class="list-container">
                     </div>
-                </div>
-                
-                <div id="attendantModal" class="modal">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 id="attendantModalTitle">Novo Funcionário</h3>
-                            <button id="closeAttendantModal" class="close-modal">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="attendantForm">
-                                <input type="hidden" id="attendantId">
-                                
-                                <div class="form-group">
-                                    <label for="attendantUsername">Nome de Usuário (para login)</label>
-                                    <input type="text" id="attendantUsername" placeholder="Ex: joao.silva" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="attendantName">Nome Completo (Exibição)</label>
-                                    <input type="text" id="attendantName" placeholder="Ex: João Silva" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="attendantPassword">Senha</label>
-                                    <input type="password" id="attendantPassword" placeholder="Mínimo 6 caracteres">
-                                    <small id="passwordNote" style="display: none;">Deixe em branco para manter a senha atual.</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="attendantPhone">Número de Contato Direto (Opcional)</label>
-                                    <input type="text" id="attendantPhone" placeholder="Ex: 5521999999999">
-                                    <small>Usado para transferências diretas. Formato internacional (55DDDNUMERO).</small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="attendantIsAdmin">
-                                        <span>Conceder permissões de Administrador</span>
-                                    </label>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Setores de Atuação</label>
-                                    <div id="sectorCheckboxes" class="checkbox-group">
-                                        <div class="loading-state">
-                                            <span>Carregando setores...</span>
-                                        </div>
-                                    </div>
-                                    <small>Selecione os setores que este funcionário pode atender.</small>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="cancelAttendantBtn">Cancelar</button>
-                            <button type="button" id="saveAttendantBtn" class="btn btn-primary">Salvar Funcionário</button>
-                        </div>
-                    </div>
-                </div>
             </section>
-            
+
+            <section id="funcionariosSection" class="content-section">
+                <header class="section-header">
+                    <h2>Gerenciar Funcionários</h2>
+                     <div class="header-actions">
+                        <input type="text" id="attendantSearchInput" placeholder="Buscar funcionários..." class="search-input">
+                        <button id="addAttendantBtn" class="button primary">
+                            <img src="./img/icons/add-user.svg" alt="Adicionar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-user-plus fa-icon" style="display:none;"></i> Novo Funcionário
+                        </button>
+                    </div>
+                </header>
+                <div id="attendantList" class="list-container">
+                    </div>
+            </section>
+
+            <section id="setoresSection" class="content-section">
+                <header class="section-header">
+                    <h2>Gerenciar Setores</h2>
+                     <div class="header-actions">
+                        <input type="text" id="sectorSearchInput" placeholder="Buscar setores..." class="search-input">
+                        <button id="addSectorBtn" class="button primary">
+                            <img src="./img/icons/add-folder.svg" alt="Adicionar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-folder-plus fa-icon" style="display:none;"></i> Novo Setor
+                        </button>
+                    </div>
+                </header>
+                <div id="sectorList" class="list-container">
+                    </div>
+            </section>
+
             <section id="configuracoesSection" class="content-section">
-                <div class="section-header">
+                <header class="section-header">
                     <h2>Configurações Gerais</h2>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h3>Configurações do Robô</h3>
-                    </div>
-                    <div class="card-body">
-                        <form id="configForm">
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="config_bot_active" checked>
-                                    <span>Robô Ativo</span>
-                                </label>
-                                <small>Ativa ou desativa o robô de respostas automáticas.</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="config_bot_response_delay">Delay Padrão de Resposta (ms)</label>
-                                <input type="number" id="config_bot_response_delay" min="0" max="10000" value="1500">
-                                <small>Tempo padrão em milissegundos que o robô simula estar digitando/processando antes de responder (pode ser sobrescrito por resposta individual).</small>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="config_bot_working_hours_start">Horário de Início (Funcionamento Geral)</label>
-                                    <input type="time" id="config_bot_working_hours_start" value="08:00">
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="config_bot_working_hours_end">Horário de Término (Funcionamento Geral)</label>
-                                    <input type="time" id="config_bot_working_hours_end" value="18:00">
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="config_bot_working_days">Dias de Funcionamento (Geral)</label>
-                                <input type="text" id="config_bot_working_days" value="1,2,3,4,5">
-                                <small>0=Dom, 1=Seg, ..., 6=Sáb. Separados por vírgula. Para o robô e atendimento geral.</small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="config_bot_out_of_hours_message">Mensagem Fora do Horário (Geral)</label>
-                                <textarea id="config_bot_out_of_hours_message" rows="4">Olá! No momento estamos fora do nosso horário de atendimento ({start_hour} às {end_hour}, de {working_days}). Por favor, retorne durante o horário comercial ou deixe sua mensagem que responderemos assim que possível.</textarea>
-                                <small>Mensagem padrão se o contato ocorrer fora do expediente. Use {start_hour}, {end_hour}, {working_days}.</small>
-                            </div>
-                             <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="config_enable_sound_notifications" checked>
-                                    <span>Ativar Notificações Sonoras (Chat Atendente)</span>
-                                </label>
-                                <small>Habilita sons para novas mensagens e chats na interface do atendente.</small>
-                            </div>
-                             <div class="form-group">
-                                <label for="config_notification_sound">Som de Notificação (Chat Atendente)</label>
-                                <select id="config_notification_sound">
-                                    <option value="default">Padrão</option>
-                                    <option value="chime">Sino</option>
-                                    <option value="bell">Campainha</option>
-                                    <option value="notify1">Notificação 1</option>
+                </header>
+                <form id="configForm" class="config-form card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="config_bot_active">Ativar Robô de Respostas:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="config_bot_active" name="bot_active">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="config_bot_response_delay">Delay de Resposta do Robô (ms):</label>
+                            <input type="number" id="config_bot_response_delay" name="bot_response_delay" value="1000" min="0">
+                        </div>
+                         <div class="form-group full-width">
+                            <label for="config_bot_working_days">Dias de Funcionamento do Robô (0=Dom, 6=Sáb):</label>
+                            <input type="text" id="config_bot_working_days" name="bot_working_days" placeholder="Ex: 1,2,3,4,5">
+                        </div>
+                        <div class="form-group">
+                            <label for="config_bot_working_hours_start">Início Horário Robô:</label>
+                            <input type="time" id="config_bot_working_hours_start" name="bot_working_hours_start">
+                        </div>
+                        <div class="form-group">
+                            <label for="config_bot_working_hours_end">Fim Horário Robô:</label>
+                            <input type="time" id="config_bot_working_hours_end" name="bot_working_hours_end">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="config_bot_out_of_hours_message">Mensagem Fora de Horário:</label>
+                            <textarea id="config_bot_out_of_hours_message" name="bot_out_of_hours_message" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="config_enable_sound_notifications">Ativar Notificações Sonoras (Chat):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="config_enable_sound_notifications" name="enable_sound_notifications">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="config_notification_sound">Som de Notificação (Chat):</label>
+                            <select id="config_notification_sound" name="notification_sound">
+                                <option value="default">Padrão</option>
+                                <option value="bell">Sino</option>
+                                <option value="chime">Timbre</option>
                                 </select>
-                                <small>Escolha o som para novas mensagens/chats.</small>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button id="saveConfigBtn" class="btn btn-primary">Salvar Configurações</button>
-                            </div>
-                        </form>
+                        </div>
                     </div>
-                </div>
+                    <div class="form-actions">
+                        <button type="submit" id="saveConfigBtn" class="button primary">
+                            <img src="./img/icons/save.svg" alt="Salvar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
+                            <i class="fas fa-save fa-icon" style="display:none;"></i> Salvar Configurações
+                        </button>
+                    </div>
+                </form>
             </section>
         </main>
     </div>
-    
-    <div id="connectionStatus" class="connection-status">
-        Conectando ao servidor WebSocket...
+
+    <div id="responseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="responseModalTitle">Nova Resposta Automática</h3>
+                <button id="closeResponseModal" class="close-button">&times;</button>
+            </div>
+            <form id="responseForm" class="modal-form">
+                <input type="hidden" id="responseId">
+                <div class="form-group">
+                    <label for="responseKey">Chave Única:</label>
+                    <input type="text" id="responseKey" required>
+                </div>
+                <div class="form-group">
+                    <label for="responseName">Nome da Resposta:</label>
+                    <input type="text" id="responseName" required>
+                </div>
+                <div class="form-group">
+                    <label for="responsePattern">Padrão/Gatilho (Regex ou Palavra-chave):</label>
+                    <input type="text" id="responsePattern" required>
+                </div>
+                <div class="form-group">
+                    <label for="responseText">Texto da Resposta:</label>
+                    <textarea id="responseText" rows="4" required></textarea>
+                </div>
+                <div class="form-group-inline">
+                    <div class="form-group">
+                        <label for="responsePriority">Prioridade:</label>
+                        <input type="number" id="responsePriority" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="responseActive" class="checkbox-label">
+                            <input type="checkbox" id="responseActive" checked> Ativa
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group-inline">
+                     <div class="form-group">
+                        <label for="responseTypingDelay">Simular Digitação (ms):</label>
+                        <input type="number" id="responseTypingDelay" value="1000" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="responseSendDelay">Atraso Envio (ms):</label>
+                        <input type="number" id="responseSendDelay" value="500" min="0">
+                    </div>
+                </div>
+                <div class="form-group-inline">
+                    <div class="form-group">
+                        <label for="responseStartTime">Horário Início (Opcional):</label>
+                        <input type="time" id="responseStartTime">
+                    </div>
+                    <div class="form-group">
+                        <label for="responseEndTime">Horário Fim (Opcional):</label>
+                        <input type="time" id="responseEndTime">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="responseAllowedDays">Dias Permitidos (0=Dom, 6=Sáb, separado por vírgula):</label>
+                    <input type="text" id="responseAllowedDays" placeholder="Ex: 1,2,3,4,5">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="cancelResponseBtn" class="button secondary">Cancelar</button>
+                    <button type="submit" id="saveResponseBtn" class="button primary">Salvar Resposta</button>
+                </div>
+            </form>
+        </div>
     </div>
-    
-    <div id="alertContainer"></div> <script src="./js/adminScript.js"></script>
-    <script src="./js/adminResponses.js"></script>
-    <script src="./js/adminAttendants.js"></script>
-    <script src="./js/adminConfig.js"></script>
-    
-</body>
+
+    <div id="attendantModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="attendantModalTitle">Novo Funcionário</h3>
+                <button id="closeAttendantModal" class="close-button">&times;</button>
+            </div>
+            <form id="attendantForm" class="modal-form">
+                <input type="hidden" id="attendantId">
+                <div class="form-group">
+                    <label for="attendantUsername">Nome de Usuário:</label>
+                    <input type="text" id="attendantUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="attendantName">Nome Completo:</label>
+                    <input type="text" id="attendantName" required>
+                </div>
+                <div class="form-group">
+                    <label for="attendantPassword">Senha:</label>
+                    <input type="password" id="attendantPassword">
+                    <small id="passwordNote" style="display:none;">Deixe em branco para manter a senha atual.</small>
+                </div>
+                 <div class="form-group">
+                    <label for="attendantPhone">Nº Contato Direto (Opcional):</label>
+                    <input type="text" id="attendantPhone" placeholder="(XX) XXXXX-XXXX">
+                </div>
+                <div class="form-group">
+                    <label>Setores:</label>
+                    <div id="sectorCheckboxes" class="checkbox-group">
+                        <p>Carregando setores...</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="attendantIsAdmin" class="checkbox-label">
+                        <input type="checkbox" id="attendantIsAdmin"> Administrador
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelAttendantBtn" class="button secondary">Cancelar</button>
+                    <button type="submit" id="saveAttendantBtn" class="button primary">Salvar Funcionário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="sectorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="sectorModalTitle">Novo Setor</h3>
+                <button id="closeSectorModal" class="close-button">&times;</button>
+            </div>
+            <form id="sectorForm" class="modal-form">
+                <input type="hidden" id="sectorId">
+                <div class="form-group">
+                    <label for="sectorKey">Chave Única do Setor:</label>
+                    <input type="text" id="sectorKey" required placeholder="Ex: vendas, suporte_tecnico">
+                </div>
+                <div class="form-group">
+                    <label for="sectorName">Nome do Setor:</label>
+                    <input type="text" id="sectorName" required placeholder="Ex: Vendas, Suporte Técnico">
+                </div>
+                <div class="form-group">
+                    <label for="sectorDescription">Descrição (Opcional):</label>
+                    <textarea id="sectorDescription" rows="3"></textarea>
+                </div>
+                 <div class="form-group">
+                    <label for="sectorActive" class="checkbox-label">
+                        <input type="checkbox" id="sectorActive" checked> Ativo
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelSectorBtn" class="button secondary">Cancelar</button>
+                    <button type="submit" id="saveSectorBtn" class="button primary">Salvar Setor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="alertContainer" class="alert-container-fixed"></div>
+
+    <script src="./js/adminScript.js"></script>
+    </body>
 </html>

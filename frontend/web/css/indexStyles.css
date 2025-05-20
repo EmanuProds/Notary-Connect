@@ -1,247 +1,307 @@
-/* frontend/web/css/indexStyles.css */
+/* Estilo base e variáveis (inspirado no Adwaita) */
 :root {
-    --login-primary-color: #3b82f6; /* Azul (Tailwind blue-500) */
-    --login-primary-hover: #2563eb; /* Azul mais escuro (Tailwind blue-600) */
-    --login-secondary-color: #6b7280; /* Cinza (Tailwind gray-500) */
-    --login-secondary-hover: #4b5563; /* Cinza mais escuro (Tailwind gray-600) */
-    --login-text-dark: #1f2937; /* Cinza muito escuro (Tailwind slate-900) */
-    --login-text-light: #f9fafb; /* Cinza muito claro (Tailwind slate-50) */
-    --login-text-muted: #6b7280; /* Cinza (Tailwind gray-500) */
-    --login-bg-page: #f3f4f6; /* Fundo da página (Tailwind gray-100) */
-    --login-bg-card: #ffffff; /* Branco para o card de login */
-    --login-border-color: #e5e7eb; /* Cor da borda (Tailwind gray-200) */
-    --login-border-focus-color: var(--login-primary-color);
-    --login-error-color: #ef4444; /* Vermelho (Tailwind red-500) */
-    --login-border-radius: 0.375rem; /* rounded-md (6px) */
-    --login-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-    --login-font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    --login-transition: all 0.2s ease-in-out;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    
+    /* Variáveis para o tema claro (padrão) */
+    --card-bg-color: #f4f5f6; /* Alterado de #ffffff para o cinza claro anterior do body */
+    --header-bg-color: #f4f5f6; /* Mantido igual a card-bg-color */
+    --text-color: #2e3436;
+    --text-secondary-color: #5c616c;
+    --border-color: #dcdcdc;
+    --input-bg-color: #ffffff; /* Inputs podem continuar brancos para contraste */
+    --input-border-color: #c0c0c0;
+    --input-focus-border-color: #3584e4; /* Azul Adwaita */
+    --input-icon-color: #7d7d7d;
+    --input-icon-focus-color: #3584e4;
+    --button-primary-bg-color: #3584e4;
+    --button-primary-hover-bg-color: #2673cf;
+    --button-primary-active-bg-color: #1a62ba;
+    --button-primary-text-color: #ffffff;
+    --button-secondary-bg-color: #e0e0e0;
+    --button-secondary-hover-bg-color: #d0d0d0;
+    --button-secondary-active-bg-color: #c0c0c0;
+    --button-secondary-text-color: #2e3436;
+    --button-secondary-border-color: #c0c0c0;
+    --error-color: #c01c28; /* Vermelho Adwaita para erros */
+    --link-color: #3584e4;
+    --border-radius: 6px; /* Mantido para inputs e botões */
+    --transition-speed: 0.2s;
 }
 
-html, body {
-    font-family: var(--login-font-family);
-    height: 100%;      
-    width: 100%;       
-    margin: 0 !important; 
-    padding: 0 !important; 
-    background-color: transparent !important; /* Mantido transparente para Electron */
-    overflow: hidden !important; 
-    box-sizing: border-box; 
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-*, *::before, *::after {
-    box-sizing: inherit;
+html[data-theme="dark"] {
+    --card-bg-color: #242424; /* Alterado de #303030 para o cinza escuro anterior do body */
+    --header-bg-color: #242424; /* Mantido igual a card-bg-color */
+    --text-color: #eeeeec;
+    --text-secondary-color: #bababa;
+    --border-color: #4a4a4a;
+    --input-bg-color: #3a3a3a; /* Inputs podem manter um tom diferente para contraste */
+    --input-border-color: #5c5c5c;
+    --input-focus-border-color: #5294e2; /* Azul Adwaita um pouco mais claro para contraste */
+    --input-icon-color: #9a9a9a;
+    --input-icon-focus-color: #5294e2;
+    --button-primary-bg-color: #5294e2;
+    --button-primary-hover-bg-color: #4284d2;
+    --button-primary-active-bg-color: #3274c2;
+    --button-primary-text-color: #ffffff;
+    --button-secondary-bg-color: #424242;
+    --button-secondary-hover-bg-color: #505050;
+    --button-secondary-active-bg-color: #5e5e5e;
+    --button-secondary-text-color: #eeeeec;
+    --button-secondary-border-color: #5c5c5c;
+    --error-color: #ff7b72; /* Vermelho mais claro para contraste no escuro */
+    --link-color: #5294e2;
 }
 
 body {
-    display: flex; 
-    justify-content: center;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    background-color: var(--card-bg-color); 
+    margin: 0;
+    display: flex;
     align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
 .login-container {
-    background-color: var(--login-bg-card);
-    padding: 2rem 2.5rem; 
-    border-radius: var(--login-border-radius); 
-    box-shadow: var(--login-box-shadow);
+    background-color: var(--card-bg-color); 
     width: 100%;
-    max-width: 400px; /* Ligeiramente menor */
-    text-align: center;
-    border: 1px solid var(--login-border-color);
-    animation: fadeInLogin 0.5s ease-out;
-}
-
-@keyframes fadeInLogin {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    transition: background-color var(--transition-speed) ease; 
 }
 
 .login-header {
-    margin-bottom: 1.5rem;
+    text-align: center;
+    padding: 24px 24px 16px;
+    background-color: var(--header-bg-color); 
+    border-bottom: 1px solid var(--border-color); 
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 
-.logo { /* Classe para o logo no index.html */
-    width: 64px; /* Ajustado */
+.login-header .logo {
+    width: 64px;
     height: 64px;
-    margin: 0 auto 1rem;
-    display: block;
+    margin-bottom: 12px;
 }
 
-.login-header h1 { /* Título "Notary Connect" */
-    margin-bottom: 0.25rem; /* Menor margem */
-    color: var(--login-text-dark);
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: 700; /* bold */
-}
-.subtitle { /* Subtítulo "Sistema de Atendimento Digital" */
-    color: var(--login-text-muted);
-    font-size: 0.875rem; /* text-sm */
-    margin-bottom: 1.5rem;
+.login-header h1 {
+    font-size: 1.75rem; /* 28px */
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-color);
+    transition: color var(--transition-speed) ease;
 }
 
-
-.form-group {
-    margin-bottom: 1.25rem; /* Espaçamento ligeiramente menor */
-    text-align: left;
+.login-header p {
+    font-size: 0.9rem; /* 14.4px */
+    color: var(--text-secondary-color);
+    margin: 0;
+    transition: color var(--transition-speed) ease;
 }
-.form-group label {
-    display: block;
-    margin-bottom: 0.375rem; /* py-1.5 */
-    color: var(--login-text-dark);
-    font-weight: 500; /* medium */
-    font-size: 0.875rem; /* text-sm */
+
+.login-form {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background-color: var(--card-bg-color); 
+    transition: background-color var(--transition-speed) ease;
 }
 
 .input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-wrapper label {
+    font-size: 0.875rem; /* 14px */
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--text-color);
+    transition: color var(--transition-speed) ease;
+}
+
+.input-group {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.input-icon {
+.input-group .input-icon {
     position: absolute;
-    left: 0.875rem; /* px-3.5 */
-    width: 18px; /* Ajustado */
-    height: 18px;
-    color: var(--login-text-muted);
-    pointer-events: none; /* Para não interferir com o clique no input */
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--input-icon-color);
+    pointer-events: none;
+    transition: color var(--transition-speed) ease;
+}
+.input-wrapper.focused .input-icon {
+    color: var(--input-icon-focus-color);
 }
 
-.input-wrapper input {
+
+.input-group input[type="text"],
+.input-group input[type="password"] {
+    font-family: var(--font-family);
     width: 100%;
-    padding: 0.625rem 0.875rem; /* py-2.5 px-3.5 */
-    padding-left: 2.5rem; /* Para dar espaço ao ícone */
-    border: 1px solid var(--login-border-color);
-    border-radius: var(--login-border-radius);
-    box-sizing: border-box;
-    font-size: 0.9375rem; /* Um pouco maior */
-    color: var(--login-text-dark);
-    transition: var(--login-transition);
-    background-color: #f9fafb; /* slate-50, fundo sutil */
+    padding: 10px 12px 10px 40px; 
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--input-bg-color);
+    font-size: 1rem; /* 16px */
+    color: var(--text-color);
+    transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease, background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
-.input-wrapper input:focus {
+.input-group.password-group input[type="password"] {
+    padding-right: 40px; 
+}
+
+
+.input-group input[type="text"]:focus,
+.input-group input[type="password"]:focus {
     outline: none;
-    border-color: var(--login-border-focus-color);
-    background-color: white;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* Sombra de foco mais pronunciada */
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 2px var(--input-focus-border-color-alpha, rgba(53, 132, 228, 0.2)); 
 }
-.input-wrapper input::placeholder {
-    color: #9ca3af; /* gray-400 */
+
+html[data-theme="dark"] .input-group input[type="text"]:focus,
+html[data-theme="dark"] .input-group input[type="password"]:focus {
+    box-shadow: 0 0 0 2px rgba(82, 148, 226, 0.25); 
 }
 
 
-.toggle-password {
+.toggle-password-button {
     position: absolute;
-    right: 0.75rem; /* px-3 */
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
+    padding: 10px;
     cursor: pointer;
-    color: var(--login-text-muted);
+    color: var(--input-icon-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.25rem; /* p-1 */
-}
-.toggle-password:hover {
-    color: var(--login-text-dark);
-}
-.eye-icon {
-    width: 18px; /* Ajustado */
-    height: 18px;
+    transition: color var(--transition-speed) ease;
 }
 
-.button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem; /* Espaço entre botões */
-    margin-top: 1.5rem; /* Espaço acima do grupo de botões */
+.toggle-password-button:hover .eye-icon,
+.toggle-password-button:hover .eye-slash-icon {
+    color: var(--text-color);
+}
+
+.eye-icon, .eye-slash-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.error-message {
+    color: var(--error-color);
+    font-size: 0.875rem; /* 14px */
+    text-align: center;
+    min-height: 1.25em;
+    margin-top: -8px;
+    margin-bottom: 8px;
+    transition: color var(--transition-speed) ease;
 }
 
 .btn {
-    width: 100%;
-    padding: 0.75rem 1rem; /* py-3 px-4 */
+    font-family: var(--font-family);
+    padding: 10px 16px;
+    font-size: 0.95rem; /* 15.2px */
+    font-weight: 600;
+    border-radius: var(--border-radius);
     border: none;
-    border-radius: var(--login-border-radius);
     cursor: pointer;
-    font-size: 0.9375rem; /* Um pouco maior */
-    font-weight: 600; /* semibold */
-    transition: var(--login-transition);
-    letter-spacing: 0.025em; /* Leve espaçamento entre letras */
-    display: inline-flex; /* Para alinhar spinner e texto */
+    transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease, color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    text-align: center;
+    display: flex;
     align-items: center;
     justify-content: center;
 }
-.btn:hover {
-    filter: brightness(0.95);
+
+.btn-primary {
+    background-color: var(--button-primary-bg-color);
+    color: var(--button-primary-text-color);
 }
-.btn:active {
-    transform: translateY(1px);
-    filter: brightness(0.9);
+.btn-primary:hover {
+    background-color: var(--button-primary-hover-bg-color);
 }
-.btn:disabled {
-    opacity: 0.7;
+.btn-primary:active {
+    background-color: var(--button-primary-active-bg-color);
+}
+.btn-primary:disabled {
+    background-color: var(--button-primary-bg-color);
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
-.btn-primary {
-    background-color: var(--login-primary-color);
-    color: white;
-}
-.btn-primary:hover {
-    background-color: var(--login-primary-hover);
-}
 
-.btn-secondary { /* Botão Fechar */
-    background-color: var(--login-secondary-color);
-    color: white;
+.btn-secondary {
+    background-color: var(--button-secondary-bg-color);
+    color: var(--button-secondary-text-color);
+    border: 1px solid var(--button-secondary-border-color);
 }
 .btn-secondary:hover {
-    background-color: var(--login-secondary-hover);
+    background-color: var(--button-secondary-hover-bg-color);
+}
+.btn-secondary:active {
+    background-color: var(--button-secondary-active-bg-color);
+}
+
+.login-footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 0.75rem; /* 12px */
+    color: var(--text-secondary-color);
+    border-top: 1px solid var(--border-color); 
+    background-color: var(--card-bg-color); 
+    transition: color var(--transition-speed) ease, border-color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+}
+
+/* Animações */
+.error-shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
 }
 
 .loading-spinner {
+    display: inline-block;
     width: 1em;
     height: 1em;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3); 
     border-radius: 50%;
-    border-top-color: white;
-    animation: spin 0.8s linear infinite;
-    margin-right: 0.5em; /* Espaço entre spinner e texto */
+    border-top-color: var(--button-primary-text-color); 
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 0.5em;
 }
+
+html[data-theme="dark"] .loading-spinner {
+    border: 2px solid rgba(255, 255, 255, 0.2); 
+    border-top-color: var(--button-primary-text-color); 
+}
+
 
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
 
-
-.error-message {
-    color: var(--login-error-color);
-    margin-top: 1rem; /* Reduzido */
-    font-size: 0.875rem; /* text-sm */
-    font-weight: 500; /* medium */
-    min-height: 1.25rem; 
-    margin-bottom: 0; /* Removido margin-bottom, o button-group já tem margin-top */
+.btn-primary .loading-spinner {
+    /* As cores já são definidas acima e herdam de --button-primary-text-color */
 }
 
-.login-container.error-shake {
-    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-}
-@keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
-  40%, 60% { transform: translate3d(3px, 0, 0); }
-}
-
-
-.app-footer {
-    width: 100%;
-    text-align: center;
-    font-size: 0.75rem; /* text-xs */
-    color: var(--login-text-muted); 
-    padding-top: 1.25rem; 
-    border-top: 1px solid var(--login-border-color); 
-    margin-top: 1.5rem; 
+.btn-primary:disabled .loading-spinner {
+    border-top-color: var(--button-primary-text-color); 
 }

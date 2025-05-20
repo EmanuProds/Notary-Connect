@@ -1,4 +1,40 @@
+// frontend/web/js/indexScript.js
 document.addEventListener("DOMContentLoaded", () => {
+  // --- INÍCIO: Lógica de Detecção e Aplicação de Tema ---
+  const applyTheme = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
+    // Opcional: Salvar a preferência do usuário no localStorage, se você adicionar um seletor manual
+    // localStorage.setItem('theme', theme);
+    console.log(`[IndexTheme] Tema aplicado: ${theme}`);
+  };
+
+  const checkSystemTheme = () => {
+    // Opcional: Verificar se há um tema salvo pelo usuário
+    // const savedTheme = localStorage.getItem('theme');
+    // if (savedTheme) {
+    //    applyTheme(savedTheme);
+    //    return;
+    // }
+
+    // Verificar preferência do sistema
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      applyTheme('dark');
+    } else {
+      applyTheme('light');
+    }
+  };
+
+  // Aplicar tema na carga inicial
+  checkSystemTheme();
+
+  // Ouvir mudanças na preferência do sistema em tempo real
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+      applyTheme(event.matches ? 'dark' : 'light');
+    });
+  }
+  // --- FIM: Lógica de Detecção e Aplicação de Tema ---
+
   // Set current year in footer
   const currentYearElement = document.getElementById("currentYear");
   if (currentYearElement) {
@@ -6,28 +42,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Toggle password visibility
-  const togglePassword = document.getElementById("togglePassword");
+  const togglePasswordButton = document.getElementById("togglePassword");
   const passwordInput = document.getElementById("password");
+  const eyeIcon = togglePasswordButton ? togglePasswordButton.querySelector(".eye-icon") : null;
+  const eyeSlashIcon = togglePasswordButton ? togglePasswordButton.querySelector(".eye-slash-icon") : null;
 
-  if (togglePassword && passwordInput) {
-    togglePassword.addEventListener("click", () => {
+  if (togglePasswordButton && passwordInput && eyeIcon && eyeSlashIcon) {
+    togglePasswordButton.addEventListener("click", () => {
       const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
       passwordInput.setAttribute("type", type);
 
       // Update icon based on password visibility
-      const eyeIcon = togglePassword.querySelector(".eye-icon");
-      if (eyeIcon) {
-        if (type === "password") {
-          eyeIcon.innerHTML = `
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          `;
-        } else {
-          eyeIcon.innerHTML = `
-            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          `;
-        }
+      if (type === "password") {
+        eyeIcon.style.display = "block";
+        eyeSlashIcon.style.display = "none";
+      } else {
+        eyeIcon.style.display = "none";
+        eyeSlashIcon.style.display = "block";
       }
     });
   }
@@ -50,8 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
     event.preventDefault();
 
     const usernameInput = document.getElementById("username");
-    const passwordInputRef = document.getElementById("password"); // Renomeado para evitar conflito com a variável password
-    
+    const passwordInputRef = document.getElementById("password");
+
     if (!usernameInput || !passwordInputRef) {
         if(errorMessageDiv) errorMessageDiv.textContent = "Campos de usuário ou senha não encontrados no formulário.";
         return;
@@ -60,13 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = usernameInput.value;
     const password = passwordInputRef.value;
 
-
     if (!username || !password) {
       if(errorMessageDiv) errorMessageDiv.textContent = "Por favor, preencha todos os campos.";
       return;
     }
 
-    if(errorMessageDiv) errorMessageDiv.textContent = "";
+    if(errorMessageDiv) errorMessageDiv.textContent = ""; // Limpa mensagens de erro anteriores
 
     const submitBtn = loginForm.querySelector('button[type="submit"]');
     let originalBtnText = "";
@@ -77,7 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/login", {
+      // Comunicação com o backend para autenticação
+      const response = await fetch("/api/auth/login", { // Endpoint do backend
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,15 +127,21 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Login bem-sucedido:", data);
         loginForm.classList.add("success");
 
+        // Navegação usando electronAPI (se disponível)
         if (window.electronAPI && typeof window.electronAPI.navigate === "function") {
           if (data.admin) {
-            window.electronAPI.navigate("admin", { adminInfo: { name: data.name || username } });
+            // Para admin, passar adminInfo com nome e o 'agent' que é o username
+            window.electronAPI.navigate("admin", { adminInfo: { name: data.name || username, agent: data.agent } });
           } else {
-            // CORREÇÃO: Usar data.agent em vez de data.attendant
+            // Para atendente, passar agentInfo com 'agent' (username) e nome
             window.electronAPI.navigate("chat", { agentInfo: { agent: data.agent, name: data.name || username } });
           }
         } else {
-          if(errorMessageDiv) errorMessageDiv.textContent = "Erro de configuração: não é possível navegar.";
+          // Fallback para navegação web ou mensagem de erro
+          if(errorMessageDiv) errorMessageDiv.textContent = "Login bem-sucedido (simulado). Navegação não disponível neste ambiente.";
+          console.warn("API do Electron não encontrada para navegação.");
+          // Exemplo de fallback para web:
+          // window.location.href = data.admin ? 'admin.html' : `chat.html?agentId=${encodeURIComponent(data.agent)}&agentName=${encodeURIComponent(data.name || data.agent)}`;
         }
       } else {
         if(errorMessageDiv) errorMessageDiv.textContent = data.message || "Falha no login. Verifique suas credenciais.";
@@ -116,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Erro durante a requisição de login:", error);
       if(errorMessageDiv) errorMessageDiv.textContent = "Ocorreu um erro ao tentar conectar ao servidor.";
-      if (submitBtn) { // Garante que o botão seja reativado em caso de erro de rede
+      if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
       }
@@ -127,14 +164,24 @@ document.addEventListener("DOMContentLoaded", () => {
     closeAppBtn.addEventListener("click", () => {
       window.electronAPI.closeApp();
     });
+  } else if (closeAppBtn) {
+      closeAppBtn.addEventListener("click", () => {
+          if (confirm("Deseja fechar esta aba? (Simulação - não funciona em todos os contextos)")) {
+            window.close();
+          }
+      });
   }
 
   document.querySelectorAll(".input-wrapper input").forEach((input) => {
     input.addEventListener("focus", () => {
-      if (input.parentElement) input.parentElement.classList.add("focused");
+      if (input.parentElement && input.parentElement.parentElement) { // input -> input-group -> input-wrapper
+        input.parentElement.parentElement.classList.add("focused");
+      }
     });
     input.addEventListener("blur", () => {
-      if (input.parentElement) input.parentElement.classList.remove("focused");
+       if (input.parentElement && input.parentElement.parentElement) {
+        input.parentElement.parentElement.classList.remove("focused");
+      }
     });
   });
 });

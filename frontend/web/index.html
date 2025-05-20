@@ -1,103 +1,70 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:3000; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';">
+<html lang="pt-BR" data-theme="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notary Connect - Login</title>
-    <link rel="icon" href="/img/icons/favicon.ico" type="image/x-icon">
-    <link rel="icon" href="/img/icons/logo.svg" type="image/svg+xml">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/indexStyles.css">
-    <style>
-        /* Estilos para garantir a janela transparente e sem bordas */
-        html, body {
-            background-color: transparent !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            height: 100vh; /* Garante que o corpo ocupe toda a altura da viewport */
-            width: 100vw;  /* Garante que o corpo ocupe toda a largura da viewport */
-            overflow: hidden; /* Evita barras de rolagem se o conteúdo exceder um pouco */
-        }
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Inter', sans-serif;
-        }
-        /* Estilos do botão fechar e outros podem permanecer no indexStyles.css ou aqui */
-        .close-button {
-            background-color: #718096;
-            color: white;
-            margin-top: 0.75rem;
-            width: 100%;
-            padding: 0.9rem;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-size: 1.05rem;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            letter-spacing: 0.5px;
-        }
-        .close-button:hover {
-            background-color: #4A5568;
-        }
-        .close-button:active {
-            transform: translateY(1px);
-        }
-    </style>
+    <link rel="stylesheet" href="./css/indexStyles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="login-container">
-        <div class="login-header">
-            <img src="/img/icons/logo.svg" alt="Notary Connect" class="logo">
+        <header class="login-header">
+            <img src="img/icons/logo.svg" alt="Logo Notary Connect" class="logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:64px;height:64px;background:#ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;border-radius:4px;margin-bottom:12px;\'>Logo</div>')">
             <h1>Notary Connect</h1>
-            <p class="subtitle">Sistema de Atendimento Digital</p>
-        </div>
-        
+            <p>Sistema de Atendimento Digital</p>
+        </header>
+
         <form id="loginForm" class="login-form">
-            <div class="form-group">
+            <div class="input-wrapper">
                 <label for="username">Usuário</label>
-                <div class="input-wrapper">
-                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
+                <div class="input-group">
+                    <span class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </span>
                     <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
                 </div>
             </div>
-            
-            <div class="form-group">
+
+            <div class="input-wrapper">
                 <label for="password">Senha</label>
-                <div class="input-wrapper">
-                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
+                <div class="input-group password-group">
+                    <span class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/>
+                        </svg>
+                    </span>
                     <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
-                    <button type="button" id="togglePassword" class="toggle-password">
-                        <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <button type="button" id="togglePassword" class="toggle-password-button" aria-label="Mostrar/Ocultar senha">
+                        <svg class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                             <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                         <svg class="eye-slash-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20" style="display: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
                         </svg>
                     </button>
                 </div>
             </div>
-            
-            <div id="errorMessage" class="error-message"></div>
-            
-            <div class="button-group">
-                <button type="submit" class="btn btn-primary">Entrar</button>
-                <button type="button" id="closeAppBtn" class="btn btn-secondary">Fechar</button>
-            </div>
+
+            <div id="errorMessage" class="error-message">
+                </div>
+
+            <button type="submit" class="btn btn-primary">
+                Entrar
+            </button>
+            <button type="button" id="closeAppBtn" class="btn btn-secondary">
+                Fechar
+            </button>
         </form>
-        
-        <div class="app-footer">
-            <p>Perains On Tecnologia © <span id="currentYear"></span></p>
-        </div>
+
+        <footer class="login-footer">
+            <p>Perains On Tecnologia &copy; <span id="currentYear">2025</span></p>
+        </footer>
     </div>
 
-    <script src="/js/indexScript.js"></script>
+    <script src="./js/indexScript.js"></script>
 </body>
 </html>
