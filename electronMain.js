@@ -1,15 +1,20 @@
 // electronMain.js
-const { app, BrowserWindow, ipcMain, dialog, Menu, session } = require("electron") // Adicionado session
+const { app, BrowserWindow, ipcMain, dialog, Menu, session } = require("electron")
 const path = require("path")
 const httpServer = require("http")
 const express = require("express")
-const fs = require("fs")
+const fs = require("fs") 
 
-let sqliteService
+// Novos serviços SQLite
+let sqliteMainService;
+let sqliteAdminService;
+let sqliteChatService;
+
 let whatsappService
 let websocketService
-let authRoutesModule
-let adminRoutesModule
+let authRoutesModule // Será a função exportada por authRoutes.js
+let adminRoutesModule // Será a função exportada por adminRoutes.js
+let chatRoutesModule // Adicionado para chatRoutes.js
 
 const PORT = process.env.ELECTRON_PORT || 3000
 
@@ -17,63 +22,58 @@ let mainWindow
 let chatWindows = {}
 let adminWindow
 let logsWindow
-let currentAdminInfo = null
+let currentAdminInfo = null 
 
 const MAX_LOG_BUFFER_SIZE = 500
 const logBuffer = []
 
 function sendLogToViewer(logString, level = "info") {
-  const formattedLog = `[${level.toUpperCase()}] ${new Date().toISOString()} - ${logString}`
-
-  logBuffer.push(formattedLog)
-  if (logBuffer.length > MAX_LOG_BUFFER_SIZE) {
-    logBuffer.shift()
+  const timestamp = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+  const formattedLog = `[${timestamp}] [${level.toUpperCase()}] ${logString}`;
+  logBuffer.push(formattedLog);
+  if (logBuffer.length > MAX_LOG_BUFFER_SIZE) logBuffer.shift();
+  if (logsWindow && !logsWindow.isDestroyed()) logsWindow.webContents.send("log-data", formattedLog);
+  
+  switch (level) {
+    case "error": console.error(formattedLog); break;
+    case "warn": console.warn(formattedLog); break;
+    case "debug": console.debug(formattedLog); break; 
+    default: console.log(formattedLog);
   }
-
-  if (logsWindow && !logsWindow.isDestroyed()) {
-    logsWindow.webContents.send("log-data", formattedLog)
-  }
-  if (level === "error") console.error(formattedLog)
-  else if (level === "warn") console.warn(formattedLog)
-  else console.log(formattedLog)
 }
 
 try {
   sendLogToViewer("[ElectronMain] Iniciando carregamento dos módulos de backend...", "debug");
-  sqliteService = require("./backend/services/sqliteService")
+  sqliteMainService = require("./backend/services/sqliteMain.js");
+  sqliteAdminService = require("./backend/services/sqliteAdmin.js");
+  sqliteChatService = require("./backend/services/sqliteChat.js");
+
   whatsappService = require("./backend/services/whatsappService")
   websocketService = require("./backend/services/websocketService")
   authRoutesModule = require("./backend/routes/authRoutes")
   adminRoutesModule = require("./backend/routes/adminRoutes")
+  chatRoutesModule = require("./backend/routes/chatRoutes") // Carrega o módulo de rotas de chat
   sendLogToViewer("[ElectronMain] Módulos de backend carregados.", "debug");
 
+  // Verifica se os módulos de serviço e os módulos de rota (como funções) foram carregados
   if (
-    !sqliteService ||
-    !whatsappService ||
-    !websocketService ||
-    !authRoutesModule ||
-    !authRoutesModule.router ||
-    !authRoutesModule.setLogger ||
-    !adminRoutesModule ||
-    !adminRoutesModule.router ||
-    !adminRoutesModule.setLogger
+    !sqliteMainService || !sqliteAdminService || !sqliteChatService ||
+    !whatsappService || !websocketService ||
+    typeof authRoutesModule !== 'function' || // Verifica se authRoutesModule é uma função
+    typeof adminRoutesModule !== 'function' || // Verifica se adminRoutesModule é uma função
+    typeof chatRoutesModule !== 'function'    // Verifica se chatRoutesModule é uma função
   ) {
-    throw new Error(
-      "Um ou mais módulos de backend ou suas exportações essenciais (router, setLogger) não foram encontrados.",
-    )
+    throw new Error("Um ou mais módulos de backend ou suas exportações essenciais não foram encontrados ou não são funções.");
   }
   sendLogToViewer("[ElectronMain] Verificação de exportações dos módulos de backend OK.", "debug");
 } catch (e) {
-  console.error("Erro CRÍTICO ao carregar módulos de backend:", e)
+  console.error("Erro CRÍTICO ao carregar módulos de backend:", e) 
   sendLogToViewer(`Erro CRÍTICO ao carregar módulos de backend: ${e.message}\n${e.stack}`, "error");
-  if (app.isReady()) {
-    dialog.showErrorBox(
-      "Erro de Módulo Crítico",
-      `Não foi possível carregar módulos de backend. A aplicação será encerrada. Detalhes: ${e.message}`,
-    )
+  if (app.isReady()) { 
+    dialog.showErrorBox("Erro de Módulo Crítico", `Não foi possível carregar módulos. Detalhes: ${e.message}`);
   }
-  app.quit()
-  process.exit(1)
+  if (app && typeof app.quit === 'function') app.quit();
+  else process.exit(1); 
 }
 
 function createMainWindow() {
@@ -82,28 +82,21 @@ function createMainWindow() {
     return
   }
   mainWindow = new BrowserWindow({
-    width: 450,
-    height: 700,
+    width: 450, height: 700,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-      devTools: process.env.NODE_ENV === "development",
+      contextIsolation: true, nodeIntegration: false,
+      devTools: process.env.NODE_ENV === "development", 
     },
-    icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
-    transparent: true,
-    frame: false,
-    resizable: false,
-    show: false,
-    backgroundColor: "#00000000",
-    hasShadow: false,
-    thickFrame: false,
+    icon: path.join(__dirname, "frontend/web/img/icons/logo.png"), 
+    transparent: true, frame: false, resizable: false, show: false, 
+    backgroundColor: "#00000000", hasShadow: false, thickFrame: false, 
   })
 
   mainWindow.webContents.on("did-finish-load", () => {
     sendLogToViewer("[createMainWindow] Evento did-finish-load disparado para mainWindow.", "debug")
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.show()
+      mainWindow.show() 
     }
   })
 
@@ -117,15 +110,15 @@ function createMainWindow() {
     }
   })
 
-  mainWindow.loadURL(`http://localhost:${PORT}/index.html`)
+  mainWindow.loadURL(`http://localhost:${PORT}/index.html`) 
   mainWindow.on("closed", () => {
-    mainWindow = null
+    mainWindow = null 
   })
   sendLogToViewer("Janela de login criada. Aguardando did-finish-load.")
 }
 
 function createChatWindow(agentInfo) {
-  const agentId = agentInfo.agent
+  const agentId = agentInfo.agent 
   const agentName = agentInfo.name || agentId
 
   if (chatWindows[agentId] && !chatWindows[agentId].isDestroyed()) {
@@ -133,16 +126,12 @@ function createChatWindow(agentInfo) {
     return
   }
   const newChatWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    width: 1200, height: 800, minWidth: 900, minHeight: 600,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"), contextIsolation: true,
+      nodeIntegration: false, devTools: process.env.NODE_ENV === "development",
     },
-    title: `Chat - Atendente: ${agentName}`,
+    title: `Chat - Usuário: ${agentName}`, 
     icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
   })
   newChatWindow.loadURL(
@@ -150,53 +139,36 @@ function createChatWindow(agentInfo) {
   )
   newChatWindow.on("closed", () => {
     delete chatWindows[agentId]
-    sendLogToViewer(`Janela de chat para o atendente ${agentName} (${agentId}) fechada.`)
+    sendLogToViewer(`Janela de chat para o usuário ${agentName} (${agentId}) fechada.`)
   })
   chatWindows[agentId] = newChatWindow
-  sendLogToViewer(`Janela de chat criada para o atendente: ${agentName} (${agentId})`)
+  sendLogToViewer(`Janela de chat criada para o usuário: ${agentName} (${agentId})`)
 }
 
 function createAdminWindow(adminInfoToUse) {
   if (!adminInfoToUse || typeof adminInfoToUse.name === "undefined") {
-    sendLogToViewer(
-      `[createAdminWindow] Erro: adminInfo inválido ou sem nome. adminInfo: ${JSON.stringify(adminInfoToUse)}`,
-      "error",
-    )
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.focus()
-    else createMainWindow()
-    return
+    sendLogToViewer(`[createAdminWindow] Erro: adminInfo inválido. adminInfo: ${JSON.stringify(adminInfoToUse)}`,"error");
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.focus(); else createMainWindow();
+    return;
   }
-
   if (adminWindow && !adminWindow.isDestroyed()) {
-    sendLogToViewer(`[createAdminWindow] Janela de admin já existe para ${adminInfoToUse.name}. Focando.`, "debug")
-    adminWindow.focus()
-    if (logsWindow && !logsWindow.isDestroyed()) {
-      logsWindow.close()
-    }
-    return
+    adminWindow.focus(); return;
   }
   adminWindow = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    minWidth: 800,
-    minHeight: 600,
+    width: 1000, height: 750, minWidth: 900, minHeight: 650, 
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"), contextIsolation: true,
+      nodeIntegration: false, devTools: process.env.NODE_ENV === "development",
     },
     title: `Admin - ${adminInfoToUse.name || "Administrador"}`,
     icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
   })
   adminWindow.loadURL(`http://localhost:${PORT}/admin.html`)
   adminWindow.on("closed", () => {
-    sendLogToViewer(
-      `[createAdminWindow] Janela de admin para ${currentAdminInfo ? currentAdminInfo.name : "N/A"} fechada.`,
-      "info",
-    )
+    sendLogToViewer(`[createAdminWindow] Janela de admin para ${currentAdminInfo ? currentAdminInfo.name : "N/A"} fechada.`, "info");
     adminWindow = null
   })
-  currentAdminInfo = adminInfoToUse
+  currentAdminInfo = adminInfoToUse 
   sendLogToViewer(`Janela de administração criada para: ${adminInfoToUse.name}`)
 }
 
@@ -206,114 +178,114 @@ function createLogsWindow() {
     return
   }
   logsWindow = new BrowserWindow({
-    width: 900,
-    height: 650,
-    title: "Logs do Sistema - Notary Connect",
+    width: 900, height: 650, title: "Logs do Sistema - Notary Connect",
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"), contextIsolation: true,
+      nodeIntegration: false, devTools: process.env.NODE_ENV === "development",
     },
     icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
   })
   logsWindow.loadURL(`http://localhost:${PORT}/logsViewer.html`)
-
   logsWindow.webContents.once("did-finish-load", () => {
     if (logsWindow && !logsWindow.isDestroyed()) {
       logsWindow.webContents.send("initial-logs-data", logBuffer)
-      sendLogToViewer(
-        `[createLogsWindow] Histórico de ${logBuffer.length} logs enviado para a janela de logs via 'initial-logs-data'.`,
-        "debug",
-      )
+      sendLogToViewer(`[createLogsWindow] Histórico de ${logBuffer.length} logs enviado.`, "debug")
     }
   })
-
-  logsWindow.on("closed", () => {
-    logsWindow = null
-  })
+  logsWindow.on("closed", () => { logsWindow = null })
   sendLogToViewer("Janela de logs criada.", "info")
 }
-
 function setupMenu() {
   const template = [
-    {
-      label: "Arquivo",
-      submenu: [
-        { label: "Ver Logs", click: () => createLogsWindow() },
-        { label: "Recarregar Janela", role: "reload" },
-        { label: "Forçar Recarregamento", role: "forceReload" },
-        { label: "Alternar Ferramentas de Desenvolvedor", role: "toggleDevTools" },
-        { type: "separator" },
-        { label: "Sair", role: "quit" },
-      ],
-    },
-    { label: "Editar", role: "editMenu" },
+    { label: "Arquivo", submenu: [
+        { label: "Ver Logs", click: () => createLogsWindow() }, { role: "reload" },
+        { role: "forceReload" }, { role: "toggleDevTools" }, { type: "separator" }, { role: "quit" }
+    ]}, { label: "Editar", role: "editMenu" }
   ]
-  const menu = Menu.buildFromTemplate(template)
-  Menu.setApplicationMenu(menu)
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-async function initializeDatabase() {
+
+async function initializeDatabases() {
   try {
-    if (sqliteService && typeof sqliteService.connect === "function") {
-      const dbConfig = require("./backend/config/dbConfigSqlite")
-      await sqliteService.connect(dbConfig.databasePath)
-      await sqliteService.createTablesIfNotExists()
-      await sqliteService.initializeDefaultAttendants()
-      await sqliteService.initializeDefaultConfigs()
-      sendLogToViewer("[DB Init] Banco de dados SQLite inicializado com sucesso.", "info")
-    } else {
-      throw new Error("sqliteService ou sua função connect não está definida.")
-    }
+    if (sqliteMainService && typeof sqliteMainService.connect === "function") {
+      await sqliteMainService.connect();
+      if(typeof sqliteMainService.createTablesIfNotExists === 'function') await sqliteMainService.createTablesIfNotExists();
+      if(typeof sqliteMainService.initializeDefaultConfigs === 'function') await sqliteMainService.initializeDefaultConfigs();
+    } else { throw new Error("sqliteMainService não está configurado ou não possui connect()."); }
+
+    if (sqliteAdminService && typeof sqliteAdminService.connect === "function") {
+      await sqliteAdminService.connect();
+      if(typeof sqliteAdminService.createTablesIfNotExists === 'function') await sqliteAdminService.createTablesIfNotExists();
+      if(typeof sqliteAdminService.initializeDefaultUsers === 'function') await sqliteAdminService.initializeDefaultUsers(); 
+    } else { throw new Error("sqliteAdminService não está configurado ou não possui connect()."); }
+
+    if (sqliteChatService && typeof sqliteChatService.connect === "function") {
+      await sqliteChatService.connect();
+      if(typeof sqliteChatService.createTablesIfNotExists === 'function') await sqliteChatService.createTablesIfNotExists();
+      if (typeof sqliteChatService.setAdminService === 'function' && sqliteAdminService) {
+        sqliteChatService.setAdminService(sqliteAdminService); // Injeta dependência
+      }
+    } else { throw new Error("sqliteChatService não está configurado ou não possui connect()."); }
+    
+    sendLogToViewer("[DB Init] Todos os bancos de dados SQLite inicializados com sucesso.", "info");
   } catch (dbError) {
-    sendLogToViewer(`Erro CRÍTICO durante a inicialização do banco de dados SQLite: ${dbError.message}`, "error")
-    dialog.showErrorBox(
-      "Erro de Banco de Dados",
-      `Não foi possível inicializar o banco de dados SQLite. A aplicação pode não funcionar corretamente.\n\nDetalhes: ${dbError.message}`,
-    )
-    app.quit()
-    process.exit(1)
+    sendLogToViewer(`Erro CRÍTICO durante a inicialização dos bancos de dados SQLite: ${dbError.message}\n${dbError.stack}`, "error");
+    dialog.showErrorBox("Erro de Banco de Dados", `Não foi possível inicializar. Detalhes: ${dbError.message}`);
+    app.quit();
+    process.exit(1);
   }
 }
+
 
 app.whenReady().then(async () => {
   sendLogToViewer("[AppReady] Evento 'whenReady' disparado.", "info");
 
-  // Configurar CSP
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
-      responseHeaders: {
-        ...details.responseHeaders,
+      responseHeaders: { ...details.responseHeaders,
         'Content-Security-Policy': [
-          `default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:${PORT}; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';`
+          `default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' ws://localhost:${PORT} wss://localhost:${PORT}; img-src 'self' data: https://*; object-src 'none'; frame-ancestors 'none';`
         ]
       }
     })
   });
-  sendLogToViewer("[AppReady] Content Security Policy configurada via onHeadersReceived.", "info");
+  sendLogToViewer("[AppReady] Content Security Policy configurada.", "info");
 
-  if (sqliteService && typeof sqliteService.setLogger === "function") {
-    sqliteService.setLogger(sendLogToViewer)
-    sendLogToViewer("[AppReady] Logger injetado no sqliteService.", "debug");
-  }
-  if (authRoutesModule && typeof authRoutesModule.setLogger === "function") {
-    authRoutesModule.setLogger(sendLogToViewer)
-    sendLogToViewer("[AppReady] Logger injetado no authRoutesModule.", "debug");
-  }
-  if (adminRoutesModule && typeof adminRoutesModule.setLogger === "function") {
-    adminRoutesModule.setLogger(sendLogToViewer)
-    sendLogToViewer("[AppReady] Logger injetado no adminRoutesModule.", "debug");
-  }
+  // Injeta o logger nos serviços de banco de dados
+  if (sqliteMainService && typeof sqliteMainService.setLogger === "function") sqliteMainService.setLogger(sendLogToViewer);
+  if (sqliteAdminService && typeof sqliteAdminService.setLogger === "function") sqliteAdminService.setLogger(sendLogToViewer);
+  if (sqliteChatService && typeof sqliteChatService.setLogger === "function") sqliteChatService.setLogger(sendLogToViewer);
+  
+  // Injeta o logger nos serviços de WhatsApp e WebSocket
+  if (whatsappService && typeof whatsappService.setLogger === 'function') whatsappService.setLogger(sendLogToViewer); 
+  if (websocketService && typeof websocketService.setLogger === 'function') websocketService.setLogger(sendLogToViewer); 
+
+  // O logger para os módulos de rota (authRoutesModule, adminRoutesModule, chatRoutesModule)
+  // será passado quando suas funções forem chamadas para obter os roteadores.
+
   setupMenu()
-
-  await initializeDatabase()
+  await initializeDatabases(); 
 
   const expressApp = express()
   expressApp.use(express.json())
+  // Serve arquivos estáticos da pasta 'uploads' para permitir acesso a mídias enviadas
+  const uploadsPath = path.join(__dirname, "uploads");
+  if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
+  expressApp.use('/uploads', express.static(uploadsPath)); // Rota para servir arquivos de uploads
+  
   const staticPath = path.join(__dirname, "frontend/web")
   expressApp.use(express.static(staticPath))
-  expressApp.use("/api/auth", authRoutesModule.router)
-  expressApp.use("/api/admin", adminRoutesModule.router)
+  
+  // Configura as rotas chamando as funções dos módulos e passando as dependências
+  const authRouter = authRoutesModule(sqliteAdminService, sendLogToViewer);
+  expressApp.use("/api/auth", authRouter); 
+  
+  const adminRouter = adminRoutesModule(sqliteAdminService, sqliteMainService, sqliteChatService, sendLogToViewer);
+  expressApp.use("/api/admin", adminRouter); 
+
+  const chatRouter = chatRoutesModule(sendLogToViewer); // Passa o logger para chatRoutes
+  expressApp.use("/api/chat", chatRouter); // Define o prefixo para as rotas de chat
 
   expressApp.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(staticPath, "index.html")))
   expressApp.get("/chat.html", (req, res) => res.sendFile(path.join(staticPath, "chat.html")))
@@ -322,49 +294,38 @@ app.whenReady().then(async () => {
 
   const internalServer = httpServer.createServer(expressApp)
 
-  // Logs de depuração antes de inicializar o WebSocketService
-  sendLogToViewer(`[AppReady] Verificando serviços para WebSocket:`, "debug");
-  sendLogToViewer(`[AppReady] typeof websocketService: ${typeof websocketService}`, "debug");
-  if (websocketService) {
-    sendLogToViewer(`[AppReady] typeof websocketService.initializeWebSocketServer: ${typeof websocketService.initializeWebSocketServer}`, "debug");
-  }
-  sendLogToViewer(`[AppReady] typeof whatsappService: ${typeof whatsappService}`, "debug");
-  sendLogToViewer(`[AppReady] typeof sqliteService: ${typeof sqliteService}`, "debug");
-
+  const dbServices = {
+    main: sqliteMainService,
+    admin: sqliteAdminService,
+    chat: sqliteChatService
+  };
 
   if (
-    websocketService &&
-    typeof websocketService.initializeWebSocketServer === "function" &&
-    whatsappService && // Verificando se whatsappService está definido
-    sqliteService     // Verificando se sqliteService está definido
+    websocketService && typeof websocketService.initializeWebSocketServer === "function" &&
+    whatsappService && dbServices.main && dbServices.admin && dbServices.chat
   ) {
-    websocketService.initializeWebSocketServer(internalServer, sendLogToViewer, whatsappService, sqliteService)
+    // Passa as instâncias dos serviços de DB para o websocketService
+    websocketService.initializeWebSocketServer(internalServer, sendLogToViewer, whatsappService, dbServices) 
     sendLogToViewer("Servidor WebSocket inicializado com sucesso.", "info")
   } else {
-    sendLogToViewer("Falha ao inicializar o servidor WebSocket: um ou mais serviços críticos ou a função initializeWebSocketServer não estão definidos.", "error")
-    // Log detalhado de qual condição falhou:
-    if (!websocketService) sendLogToViewer("[AppReady_WS_Error] websocketService não está definido.", "error");
-    if (websocketService && typeof websocketService.initializeWebSocketServer !== "function") sendLogToViewer("[AppReady_WS_Error] websocketService.initializeWebSocketServer não é uma função.", "error");
-    if (!whatsappService) sendLogToViewer("[AppReady_WS_Error] whatsappService não está definido.", "error");
-    if (!sqliteService) sendLogToViewer("[AppReady_WS_Error] sqliteService não está definido.", "error");
+    sendLogToViewer("Falha ao inicializar o servidor WebSocket: um ou mais serviços críticos não estão definidos.", "error")
   }
 
   try {
     if (
-      whatsappService &&
-      typeof whatsappService.connectToWhatsApp === "function" &&
-      websocketService &&
-      sqliteService
+      whatsappService && typeof whatsappService.connectToWhatsApp === "function" &&
+      websocketService && dbServices.main && dbServices.admin && dbServices.chat
     ) {
-      const appUserDataPath = app.getPath("userData")
+      const appUserDataPath = app.getPath("userData") 
       sendLogToViewer(`[electronMain] Caminho de dados do usuário para WhatsApp Service: ${appUserDataPath}`, "info")
-      await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath)
-      sendLogToViewer("Serviço WhatsApp (Baileys/WWJS) iniciado e tentando conectar ao WhatsApp.")
+      // Passa as instâncias dos serviços de DB para o whatsappService
+      await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, dbServices, appUserDataPath) 
+      sendLogToViewer("Serviço WhatsApp (whatsapp-web.js) iniciado e tentando conectar ao WhatsApp.")
     } else {
-      sendLogToViewer("Falha ao iniciar WhatsApp Service: um ou mais serviços não estão definidos ou connectToWhatsApp não é uma função.", "error")
+      sendLogToViewer("Falha ao iniciar WhatsApp Service: um ou mais serviços não estão definidos.", "error")
     }
   } catch (err) {
-    sendLogToViewer(`Falha CRÍTICA ao iniciar o serviço WhatsApp (Baileys/WWJS): ${err.message}.`, "error")
+    sendLogToViewer(`Falha CRÍTICA ao iniciar o serviço WhatsApp: ${err.message}.`, "error")
   }
 
   internalServer
@@ -374,12 +335,8 @@ app.whenReady().then(async () => {
     })
     .on("error", (err) => {
       sendLogToViewer(`Erro ao iniciar o servidor interno na porta ${PORT}: ${err.message}`, "error")
-      dialog.showErrorBox(
-        "Erro de Servidor",
-        `Não foi possível iniciar o servidor na porta ${PORT}. Verifique se a porta está em uso.\n\nDetalhes: ${err.message}`,
-      )
-      app.quit()
-      process.exit(1)
+      dialog.showErrorBox("Erro de Servidor",`Não foi possível iniciar o servidor. Detalhes: ${err.message}`);
+      app.quit(); process.exit(1);
     })
 
   app.on("activate", () => {
@@ -390,46 +347,31 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", async () => {
   sendLogToViewer("Todas as janelas foram fechadas.")
   if (process.platform !== "darwin") {
-    if (whatsappService && typeof whatsappService.getClient === "function") { // Ajustado para getClient
-      const whatsClient = whatsappService.getClient() // Ajustado para getClient
-      // A lógica de logout pode variar entre whatsapp-web.js e Baileys
-      // Para whatsapp-web.js, pode ser client.logout() ou client.destroy()
-      // Para Baileys, sock.logout()
+    if (whatsappService && typeof whatsappService.getClient === "function") { 
+      const whatsClient = whatsappService.getClient() 
       if (whatsClient && typeof whatsClient.logout === "function") {
         sendLogToViewer("Desconectando WhatsApp Service...")
-        try {
-          await whatsClient.logout()
-          sendLogToViewer("WhatsApp Service desconectado com sucesso.")
-        } catch (e) {
-          sendLogToViewer(`Erro ao desconectar WhatsApp Service: ${e.message}`, "error")
+        try { await whatsClient.logout(); sendLogToViewer("WhatsApp Service desconectado com sucesso.") } 
+        catch (e) { sendLogToViewer(`Erro ao desconectar WhatsApp Service (logout): ${e.message}`, "error");
           if (typeof whatsClient.destroy === 'function') {
-            try {
-              await whatsClient.destroy();
-              sendLogToViewer("WhatsApp Service (client) destruído após falha no logout.", "warn");
-            } catch (destroyErr) {
-              sendLogToViewer(`Erro ao destruir WhatsApp Service (client): ${destroyErr.message}`, "error");
-            }
+            try { await whatsClient.destroy(); sendLogToViewer("WhatsApp Service (client) destruído.", "warn");} 
+            catch (destroyErr) { sendLogToViewer(`Erro ao destruir WhatsApp Service (client): ${destroyErr.message}`, "error");}
           }
         }
       } else if (whatsClient && typeof whatsClient.destroy === 'function') {
-         sendLogToViewer("Método logout não encontrado, tentando destruir o cliente WhatsApp...", "warn");
-         try {
-            await whatsClient.destroy();
-            sendLogToViewer("Cliente WhatsApp destruído com sucesso.", "info");
-         } catch (e) {
-            sendLogToViewer(`Erro ao destruir cliente WhatsApp: ${e.message}`, "error");
-         }
-      } else {
-        sendLogToViewer("Cliente WhatsApp não disponível ou método logout/destroy não é função.", "info")
-      }
+         sendLogToViewer("Método logout não encontrado no cliente WhatsApp, tentando destruir...", "warn");
+         try { await whatsClient.destroy(); sendLogToViewer("Cliente WhatsApp destruído.", "info"); } 
+         catch (e) { sendLogToViewer(`Erro ao destruir cliente WhatsApp: ${e.message}`, "error");}
+      } else { sendLogToViewer("Cliente WhatsApp não disponível ou métodos logout/destroy não são funções.", "info") }
     }
 
     try {
-      if (sqliteService && typeof sqliteService.close === "function") {
-        await sqliteService.close()
-      }
+      if (sqliteMainService && typeof sqliteMainService.close === "function") await sqliteMainService.close();
+      if (sqliteAdminService && typeof sqliteAdminService.close === "function") await sqliteAdminService.close();
+      if (sqliteChatService && typeof sqliteChatService.close === "function") await sqliteChatService.close();
+      sendLogToViewer("[ElectronMain] Todas as conexões SQLite foram fechadas.", "info");
     } catch (dbCloseError) {
-      sendLogToViewer(`Erro ao fechar conexão SQLite: ${dbCloseError.message}`, "error")
+      sendLogToViewer(`Erro ao fechar conexões SQLite: ${dbCloseError.message}`, "error")
     }
 
     sendLogToViewer("Encerrando aplicação.")
@@ -438,11 +380,8 @@ app.on("window-all-closed", async () => {
 })
 
 ipcMain.on("control-bot", async (event, data) => {
-  const { action, sessionId: targetSessionIdReceived } = data
-  const currentSessionId = // whatsappService.sessionId é para Baileys, WWJS pode não ter um sessionId igual
-    (whatsappService && whatsappService.sessionId) // Adapte se whatsappService tiver uma propriedade similar
-      ? whatsappService.sessionId
-      : targetSessionIdReceived || "whatsapp-bot-session" // Fallback
+  const { action } = data;
+  const currentSessionId = whatsappService?.sessionId || "whatsapp-bot-session"; 
 
   sendLogToViewer(`[IPC control-bot] Ação recebida: ${action} para sessão: ${currentSessionId}`, "info")
 
@@ -458,20 +397,21 @@ ipcMain.on("control-bot", async (event, data) => {
     } else if (action === "restart") {
       sendLogToViewer("[IPC control-bot] Iniciando reinício do bot...", "info")
       try {
-        await whatsappService.fullLogoutAndCleanup() // Esta função deve lidar com a limpeza da sessão
+        await whatsappService.fullLogoutAndCleanup() 
         
         sendLogToViewer("[IPC control-bot] Tentando reconectar WhatsApp Service após limpeza completa...", "info")
         const appUserDataPath = app.getPath("userData")
-        await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, sqliteService, appUserDataPath)
+        const dbServices = { main: sqliteMainService, admin: sqliteAdminService, chat: sqliteChatService };
+        await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, dbServices, appUserDataPath)
 
-        websocketService.broadcastToAdmins({
+        websocketService.broadcastToAdmins({ 
           type: "status_update",
           clientId: currentSessionId, 
           payload: { status: "RESTARTING", reason: "Solicitado pelo administrador" },
         })
       } catch (restartError) {
         sendLogToViewer(`[IPC control-bot] Erro durante o reinício do bot: ${restartError.message}`, "error")
-        websocketService.broadcastToAdmins({
+        websocketService.broadcastToAdmins({ 
           type: "status_update",
           clientId: currentSessionId,
           payload: { status: "FATAL_ERROR", reason: `Erro durante reinício: ${restartError.message}` },
@@ -507,6 +447,7 @@ ipcMain.on("navigate", (event, receivedPayload) => {
     adminWindow.close()
     adminWindow = null
   }
+  
   if (logsWindow && !logsWindow.isDestroyed() && targetPage !== "logs" && targetPage !== "admin") {
     logsWindow.close()
     logsWindow = null
@@ -520,9 +461,6 @@ ipcMain.on("navigate", (event, receivedPayload) => {
       if (receivedAdminInfo && (!currentAdminInfo || currentAdminInfo.name !== receivedAdminInfo.name)) {
         currentAdminInfo = receivedAdminInfo
       }
-      if (logsWindow && !logsWindow.isDestroyed()) {
-        logsWindow.close()
-      }
       createAdminWindow(currentAdminInfo)
     } else {
       sendLogToViewer(
@@ -533,9 +471,9 @@ ipcMain.on("navigate", (event, receivedPayload) => {
       createMainWindow()
     }
   } else if (targetPage === "login") {
-    currentAdminInfo = null
+    currentAdminInfo = null 
     if (adminWindow && !adminWindow.isDestroyed()) adminWindow.close()
-    if (logsWindow && !logsWindow.isDestroyed()) logsWindow.close()
+    if (logsWindow && !logsWindow.isDestroyed()) logsWindow.close() 
     createMainWindow()
   } else if (targetPage === "logs") {
     createLogsWindow()
@@ -595,12 +533,12 @@ process.on("uncaughtException", (error, origin) => {
       )
     }
   } catch (e) {
-    // ignore
+    /* ignore */
   }
 })
 
 process.on("unhandledRejection", (reason, promise) => {
-  const errorMessage = `Rejeição de promessa não tratada no processo principal: ${reason instanceof Error ? reason.message : reason}\nStack: ${reason instanceof Error ? reason.stack : "N/A"}`
+  const errorMessage = `Rejeição de promessa não tratada no processo principal: ${reason instanceof Error ? reason.message : String(reason)}\nStack: ${reason instanceof Error ? reason.stack : "N/A"}`
   console.error(errorMessage)
   sendLogToViewer(errorMessage, "error")
 })

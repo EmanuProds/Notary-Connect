@@ -1,6 +1,6 @@
 // backend/services/whatsappService.js
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js")
-const qrcode = require("qrcode-terminal") 
+const qrcode = require("qrcode") 
 const fs = require("fs")
 const path = require("path")
 
