@@ -90,7 +90,7 @@ function createMainWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true, nodeIntegration: false,
-      devTools: process.env.NODE_ENV === "development", 
+      devTools: true, 
     },
     icon: path.join(__dirname, "frontend/web/img/icons/logo.svg"), 
     transparent: true, frame: false, resizable: false, show: false, 
@@ -134,7 +134,7 @@ function createChatWindow(agentInfo) {
     width: 1200, height: 800, minWidth: 900, minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"), contextIsolation: true,
-      nodeIntegration: false, devTools: process.env.NODE_ENV === "development",
+      nodeIntegration: false, devTools: true, 
     },
     title: `Chat - Usuário: ${agentName}`, 
     icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
@@ -164,11 +164,13 @@ function createAdminWindow(adminInfoToUse) {
     width: 1200, height: 800, minWidth: 900, minHeight: 600, 
     webPreferences: {
       preload: path.join(__dirname, "preload.js"), contextIsolation: true,
-      nodeIntegration: false, devTools: process.env.NODE_ENV === "development",
+      nodeIntegration: false, 
+      devTools: true, 
     },
     title: `Admin - ${adminInfoToUse.name || "Administrador"}`,
     icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
   })
+
   adminWindow.loadURL(`http://localhost:${PORT}/admin.html`)
   adminWindow.on("closed", () => {
     sendLogToViewer(`[createAdminWindow] Janela de admin para ${currentAdminInfo ? currentAdminInfo.name : "N/A"} fechada.`, "info");
@@ -188,7 +190,7 @@ function createLogsWindow() {
     width: 900, height: 650, title: "Logs do Sistema - Notary Connect",
     webPreferences: {
       preload: path.join(__dirname, "preload.js"), contextIsolation: true,
-      nodeIntegration: false, devTools: process.env.NODE_ENV === "development",
+      nodeIntegration: false, devTools: true, 
     },
     icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
   })
@@ -203,27 +205,11 @@ function createLogsWindow() {
   sendLogToViewer("Janela de logs criada.", "info")
 }
 
-// Configura o menu da aplicação (ou remove, se desejado)
+// Configura o menu da aplicação
 function setupMenu() {
-  // Para remover o menu completamente (Arquivo, Editar, etc.):
-  Menu.setApplicationMenu(null); 
-  // Se quiser um menu mínimo para desenvolvimento:
-  /*
-  const template = [
-    {
-      label: "Dev",
-      submenu: [
-        { role: "reload" },
-        { role: "forceReload" },
-        { role: "toggleDevTools" },
-        { type: "separator" },
-        { label: "Ver Logs", click: () => createLogsWindow() },
-      ],
-    },
-     { label: "App", submenu: [{ role: "quit" }] }
-  ];
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-  */
+  // Remove o menu da aplicação definindo-o como null
+  Menu.setApplicationMenu(null);
+  sendLogToViewer("Menu da aplicação removido.", "debug");
 }
 
 // Inicializa os bancos de dados
@@ -267,7 +253,7 @@ app.whenReady().then(async () => {
     callback({
       responseHeaders: { ...details.responseHeaders,
         'Content-Security-Policy': [
-          `default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' ws://localhost:${PORT} wss://localhost:${PORT}; img-src 'self' data: https://*; object-src 'none'; frame-ancestors 'none';`
+          `default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; connect-src 'self' ws://localhost:${PORT} wss://localhost:${PORT}; img-src 'self' data: https://*; object-src 'none'; frame-ancestors 'none';`
         ]
       }
     })
@@ -281,14 +267,12 @@ app.whenReady().then(async () => {
   if (whatsappService && typeof whatsappService.setLogger === 'function') whatsappService.setLogger(sendLogToViewer); 
   if (websocketService && typeof websocketService.setLogger === 'function') websocketService.setLogger(sendLogToViewer); 
 
-  setupMenu(); // Configura ou remove o menu da aplicação
-  await initializeDatabases(); // Inicializa os bancos de dados
+  setupMenu(); 
+  await initializeDatabases(); 
 
-  // Configura o servidor Express
   const expressApp = express()
   expressApp.use(express.json())
   
-  // Serve arquivos estáticos da pasta 'uploads'
   const uploadsPath = path.join(__dirname, "uploads");
   if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
   expressApp.use('/uploads', express.static(uploadsPath)); 
@@ -296,17 +280,15 @@ app.whenReady().then(async () => {
   const staticPath = path.join(__dirname, "frontend/web")
   expressApp.use(express.static(staticPath))
   
-  // Configura as rotas da API
-  const authRouter = authRoutesModule(sqliteAdminService, sendLogToViewer); // Passa dependências
+  const authRouter = authRoutesModule(sqliteAdminService, sendLogToViewer); 
   expressApp.use("/api/auth", authRouter); 
   
-  const adminRouter = adminRoutesModule(sqliteAdminService, sqliteMainService, sqliteChatService, sendLogToViewer); // Passa dependências
+  const adminRouter = adminRoutesModule(sqliteAdminService, sqliteMainService, sqliteChatService, sendLogToViewer); 
   expressApp.use("/api/admin", adminRouter); 
 
-  const chatRouter = chatRoutesModule(sendLogToViewer); // Passa logger
+  const chatRouter = chatRoutesModule(sendLogToViewer); 
   expressApp.use("/api/chat", chatRouter); 
 
-  // Rotas para servir as páginas HTML principais
   expressApp.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(staticPath, "index.html")))
   expressApp.get("/chat.html", (req, res) => res.sendFile(path.join(staticPath, "chat.html")))
   expressApp.get("/admin.html", (req, res) => res.sendFile(path.join(staticPath, "admin.html")))
@@ -320,7 +302,6 @@ app.whenReady().then(async () => {
     chat: sqliteChatService
   };
 
-  // Inicializa o serviço WebSocket
   if (
     websocketService && typeof websocketService.initializeWebSocketServer === "function" &&
     whatsappService && dbServices.main && dbServices.admin && dbServices.chat
@@ -331,7 +312,6 @@ app.whenReady().then(async () => {
     sendLogToViewer("Falha ao inicializar o servidor WebSocket: um ou mais serviços críticos não estão definidos.", "error")
   }
 
-  // Inicializa o serviço WhatsApp
   try {
     if (
       whatsappService && typeof whatsappService.connectToWhatsApp === "function" &&
@@ -348,11 +328,10 @@ app.whenReady().then(async () => {
     sendLogToViewer(`Falha CRÍTICA ao iniciar o serviço WhatsApp: ${err.message}.`, "error")
   }
 
-  // Inicia o servidor interno
   internalServer
     .listen(PORT, () => {
       sendLogToViewer(`Servidor HTTP e WebSocket interno rodando em http://localhost:${PORT}`)
-      createMainWindow() // Abre a janela de login
+      createMainWindow() 
     })
     .on("error", (err) => {
       sendLogToViewer(`Erro ao iniciar o servidor interno na porta ${PORT}: ${err.message}`, "error")
@@ -360,16 +339,14 @@ app.whenReady().then(async () => {
       app.quit(); process.exit(1);
     })
 
-  // Reativa a janela principal se o app for ativado e não houver janelas abertas (macOS)
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
   })
 })
 
-// Evento disparado quando todas as janelas são fechadas
 app.on("window-all-closed", async () => {
   sendLogToViewer("Todas as janelas foram fechadas.")
-  if (process.platform !== "darwin") { // No macOS, é comum o app continuar rodando
+  if (process.platform !== "darwin") { 
     if (whatsappService && typeof whatsappService.getClient === "function") { 
       const whatsClient = whatsappService.getClient() 
       if (whatsClient && typeof whatsClient.logout === "function") {
@@ -388,7 +365,6 @@ app.on("window-all-closed", async () => {
       } else { sendLogToViewer("Cliente WhatsApp não disponível ou métodos logout/destroy não são funções.", "info") }
     }
 
-    // Fecha conexões com os bancos de dados
     try {
       if (sqliteMainService && typeof sqliteMainService.close === "function") await sqliteMainService.close();
       if (sqliteAdminService && typeof sqliteAdminService.close === "function") await sqliteAdminService.close();
@@ -403,7 +379,6 @@ app.on("window-all-closed", async () => {
   }
 })
 
-// Manipuladores de IPC
 ipcMain.on("control-bot", async (event, data) => {
   const { action } = data;
   const currentSessionId = whatsappService?.sessionId || "whatsapp-bot-session"; 
@@ -459,7 +434,6 @@ ipcMain.on("navigate", (event, receivedPayload) => {
     "info",
   )
 
-  // Fecha janelas existentes conforme necessário
   if (mainWindow && !mainWindow.isDestroyed() && targetPage !== "login") {
     mainWindow.close()
     mainWindow = null
@@ -479,7 +453,6 @@ ipcMain.on("navigate", (event, receivedPayload) => {
     logsWindow = null
   }
 
-  // Abre a nova janela
   if (targetPage === "chat" && agentInfo && agentInfo.agent) {
     createChatWindow(agentInfo)
   } else if (targetPage === "admin") {
@@ -526,14 +499,25 @@ ipcMain.on("admin-logout", () => {
   currentAdminInfo = null
 })
 
-// MODIFICADO: Manipulador para abrir DevTools
+// Manipulador para abrir DevTools
 ipcMain.on("open-dev-tools", (event) => {
-  const senderWebContents = event.sender; // WebContents que enviou a mensagem
-  const windowInstance = BrowserWindow.fromWebContents(senderWebContents); // Obtém a BrowserWindow a partir do WebContents
+  sendLogToViewer("[IPC open-dev-tools] Mensagem recebida para abrir DevTools.", "debug");
+  const senderWebContents = event.sender; 
+  const windowInstance = BrowserWindow.fromWebContents(senderWebContents); 
 
   if (windowInstance && !windowInstance.isDestroyed()) {
-    windowInstance.webContents.openDevTools();
-    sendLogToViewer(`DevTools aberto para a janela: ${windowInstance.title}`, "info");
+    sendLogToViewer(`Tentando ABRIR DevTools para a janela: ${windowInstance.title} (modo detach)`, "debug");
+    if (!windowInstance.isFocused()) {
+        windowInstance.focus(); 
+        sendLogToViewer(`Janela ${windowInstance.title} focada antes de abrir DevTools.`, "debug");
+    }
+    // Apenas abre, não alterna. Se já estiver aberto, esta chamada pode não fazer nada ou abrir uma nova instância.
+    windowInstance.webContents.openDevTools({ mode: 'detach' }); 
+    
+    windowInstance.webContents.once('devtools-opened', () => {
+        sendLogToViewer(`DevTools efetivamente aberto para: ${windowInstance.title}.`, "info");
+    });
+    // Não há um evento 'devtools-already-opened', então este log pode não ser preciso se já estava aberto.
   } else {
     sendLogToViewer("Não foi possível encontrar a janela remetente para abrir DevTools ou a janela foi destruída.", "warn");
   }
