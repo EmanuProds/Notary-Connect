@@ -2,11 +2,10 @@
 const WebSocket = require("ws")
 const urlNode = require("url")
 
-// --- Declaração de Variáveis Globais do Módulo ---
-let sendLogGlobal; // Renomeado para evitar conflito com parâmetro de função
+let sendLogGlobal; 
 let whatsappServiceInstanceGlobal; 
 let sqliteServiceInstanceGlobal; 
-let wssInstance; // Renomeado para evitar conflito
+let wssInstance; 
 
 const adminClientsSet = new Set()
 const attendantClientsMap = new Map() 
@@ -17,21 +16,16 @@ const ClientTypeEnum = {
   ATTENDANT_CHAT: "attendant_chat",
 };
 
-// --- Definições de Funções Auxiliares (Definidas no Topo do Módulo) ---
-// Estas funções serão chamadas APENAS DEPOIS que sendLogGlobal estiver definido via initializeWebSocketServer
-
 function helperBroadcastToAdmins(data) {
-  if (!adminClientsSet || adminClientsSet.size === 0) {
-    return;
-  }
+  if (!adminClientsSet || adminClientsSet.size === 0) return;
   const message = JSON.stringify(data);
   adminClientsSet.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message, (err) => {
-        if (err && sendLogGlobal) sendLogGlobal(`[WS ADMIN] Erro ao enviar para admin: ${err.message}. Cliente: ${client._socket?.remoteAddress}`, "error");
+        if (err && sendLogGlobal) sendLogGlobal(`[WS ADMIN] Erro ao enviar para admin: ${err.message}.`, "error");
       });
     } else {
-      if (sendLogGlobal) sendLogGlobal(`[WS ADMIN] Cliente admin não está OPEN. Estado: ${client.readyState}. Removendo...`, "warn");
+      if (sendLogGlobal) sendLogGlobal(`[WS ADMIN] Cliente admin não está OPEN. Removendo...`, "warn");
       adminClientsSet.delete(client);
     }
   });
@@ -41,19 +35,20 @@ function helperSendMessageToAttendant(agentId, data) {
   const attendantClient = attendantClientsMap.get(agentId);
   if (attendantClient && attendantClient.readyState === WebSocket.OPEN) {
     const message = JSON.stringify(data);
+    if(sendLogGlobal) sendLogGlobal(`[WS CHAT] Enviando para atendente ${agentId} (Nome: ${attendantClient.agentName || 'N/A'}): ${message.substring(0,150)}...`, "debug");
     attendantClient.send(message, (err) => {
       if (err && sendLogGlobal) sendLogGlobal(`[WS CHAT] Erro ao enviar para atendente ${attendantClient.agentName || agentId}: ${err.message}`, "error");
     });
     return true;
   }
+  if(sendLogGlobal) sendLogGlobal(`[WS CHAT] Atendente ${agentId} não encontrado ou conexão não aberta para enviar mensagem.`, "warn");
   return false;
 }
 
 function helperBroadcastToAttendants(data, excludeAgentId = null) {
-  if (!attendantClientsMap || attendantClientsMap.size === 0) {
-    return;
-  }
+  if (!attendantClientsMap || attendantClientsMap.size === 0) return;
   const message = JSON.stringify(data);
+  if(sendLogGlobal) sendLogGlobal(`[WS CHAT] Transmitindo para ${attendantClientsMap.size} atendentes (exceto ${excludeAgentId || 'ninguém'}): ${message.substring(0,150)}...`, "debug");
   attendantClientsMap.forEach((client, currentAgentId) => {
     if (currentAgentId !== excludeAgentId) {
         if (client.readyState === WebSocket.OPEN) {
@@ -61,20 +56,17 @@ function helperBroadcastToAttendants(data, excludeAgentId = null) {
                 if (err && sendLogGlobal) sendLogGlobal(`[WS CHAT] Erro ao transmitir para atendente ${client.agentName || currentAgentId}: ${err.message}`, "error");
             });
         } else {
-            if (sendLogGlobal) sendLogGlobal(`[WS CHAT] Atendente ${client.agentName || currentAgentId} não está OPEN. Estado: ${client.readyState}. Removendo...`, "warn");
+            if (sendLogGlobal) sendLogGlobal(`[WS CHAT] Atendente ${client.agentName || currentAgentId} não está OPEN. Removendo...`, "warn");
             attendantClientsMap.delete(currentAgentId); 
         }
     }
   });
 }
 
-// --- Função Principal de Inicialização ---
-
-function initializeWebSocketServer(server, logFunction, wsAppInstance, dbAppInstance) {
-  // Atribui as instâncias globais DENTRO desta função, que é chamada após o módulo ser carregado
+function initializeWebSocketServer(server, logFunction, wsAppInstance, dbServices) {
   sendLogGlobal = logFunction; 
   whatsappServiceInstanceGlobal = wsAppInstance;
-  sqliteServiceInstanceGlobal = dbAppInstance;
+  sqliteServiceInstanceGlobal = dbServices; 
   
   wssInstance = new WebSocket.Server({ server, clientTracking: true });
 
@@ -128,8 +120,9 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbAppInst
     ws.on("message", async (messageBuffer) => {
       const messageString = messageBuffer.toString()
       const clientIdentifier = ws.agentName || ws.agentId || ws.clientType || "desconhecido";
+      let parsedMessage;
       try {
-        const parsedMessage = JSON.parse(messageString)
+        parsedMessage = JSON.parse(messageString)
         if(sendLogGlobal) sendLogGlobal(`[WS] << De ${clientIdentifier}: ${messageString.substring(0, 250)}`, "debug")
 
         switch (parsedMessage.type) {
@@ -137,43 +130,32 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbAppInst
             if (ws.clientType === ClientTypeEnum.ADMIN_QR) {
               if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'request_initial_status' para ${clientIdentifier}`, "debug");
               if (!whatsappServiceInstanceGlobal || typeof whatsappServiceInstanceGlobal.getCurrentStatusAndQR !== "function") {
-                const errorMsg = "[WS] Erro: Instância do WhatsApp Service ou getCurrentStatusAndQR não disponível.";
-                if(sendLogGlobal) sendLogGlobal(errorMsg, "error");
-                if (ws.readyState === WebSocket.OPEN) {
-                  ws.send(JSON.stringify({ type: "error", message: "Serviço WhatsApp indisponível." }));
-                }
+                if(sendLogGlobal) sendLogGlobal("[WS] Erro: WhatsApp Service ou getCurrentStatusAndQR não disponível.", "error");
+                if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "error", message: "Serviço WhatsApp indisponível." }));
                 return;
               }
               try {
                 const status = whatsappServiceInstanceGlobal.getCurrentStatusAndQR();
-                const response = {
-                    type: "initial_status",
-                    clientId: status.sessionId || "whatsapp-bot-session",
-                    payload: status,
-                };
+                const response = { type: "initial_status", clientId: status.sessionId || "whatsapp-bot-session", payload: status };
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify(response));
                     if(sendLogGlobal) sendLogGlobal(`[WS] >> Para ${clientIdentifier} (initial_status): ${JSON.stringify(response).substring(0,100)}...`, "debug");
-                } else {
-                    if(sendLogGlobal) sendLogGlobal(`[WS] WebSocket não estava aberto ao tentar enviar initial_status para ${clientIdentifier}`, "warn");
                 }
               } catch (statusError) {
                 if(sendLogGlobal) sendLogGlobal(`[WS] Erro ao obter status do WhatsApp: ${statusError.message}`, "error");
-                if (ws.readyState === WebSocket.OPEN) {
-                  ws.send(JSON.stringify({ type: "error", message: "Erro ao obter status do WhatsApp." }));
-                }
+                if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "error", message: "Erro ao obter status do WhatsApp." }));
               }
             }
             break
 
           case "send_chat_message":
             if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.payload) {
-              const { conversationId, to, text, media, id: originalMessageId } = parsedMessage.payload;
-              if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'send_chat_message' de ${clientIdentifier} (Username: ${ws.agentId}) para conversa ${conversationId}, Destinatário (to): ${to}`, "debug");
+              const { conversationId, to, text, media, id: originalMessageId } = parsedMessage.payload; 
+              if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'send_chat_message' de ${clientIdentifier} (Username: ${ws.agentId}) para ConvID ${conversationId}, Destinatário: ${to}, ID Local: ${originalMessageId}`, "debug");
 
               if (to && (text || media) && ws.agentId && conversationId) { 
                 if (!whatsappServiceInstanceGlobal || typeof whatsappServiceInstanceGlobal.sendWhatsAppMessage !== "function") {
-                  if(sendLogGlobal) sendLogGlobal("[WS] Erro: Instância do WhatsApp Service ou sendWhatsAppMessage não disponível.", "error");
+                  if(sendLogGlobal) sendLogGlobal("[WS] Erro: WhatsApp Service ou sendWhatsAppMessage não disponível.", "error");
                   if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "message_sent_ack", success: false, error: "Serviço WhatsApp indisponível.", originalMessageId }));
                   return;
                 }
@@ -181,35 +163,41 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbAppInst
                 let messageContentForWhatsApp = {};
                 if (text) messageContentForWhatsApp.text = text;
                 if (media) {
-                  if (media.type === 'image' && media.url) messageContentForWhatsApp.image = { url: media.url };
-                  if (media.type === 'document' && media.url) messageContentForWhatsApp.document = { url: media.url };
-                  if (media.caption) messageContentForWhatsApp.caption = media.caption;
+                  if (media.type === 'image' && media.url) messageContentForWhatsApp.image = { url: media.url, caption: media.caption };
+                  else if (media.type === 'document' && media.url) messageContentForWhatsApp.document = { url: media.url, filename: media.fileName, caption: media.caption };
+                  else if (media.type === 'audio' && media.url) messageContentForWhatsApp.audio = { url: media.url };
+                  else if (media.type === 'video' && media.url) messageContentForWhatsApp.video = { url: media.url, caption: media.caption };
+                  else {
+                     if(sendLogGlobal) sendLogGlobal(`[WS] Tipo de mídia não suportado ou URL ausente: ${JSON.stringify(media)}`, "warn");
+                     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "message_sent_ack", success: false, error: "Tipo de mídia não suportado ou URL ausente.", originalMessageId }));
+                     return;
+                  }
+                  if (media.caption && !messageContentForWhatsApp.caption) messageContentForWhatsApp.caption = media.caption;
                 }
                 
                 try {
                     const sentMessageDetails = await whatsappServiceInstanceGlobal.sendWhatsAppMessage(
-                      to, 
-                      messageContentForWhatsApp,
-                      ws.agentId, 
-                      conversationId,
-                      sqliteServiceInstanceGlobal, // Passa a instância global
+                      to, messageContentForWhatsApp, ws.agentId, conversationId, sqliteServiceInstanceGlobal.chat
                     );
+                    if(sendLogGlobal) sendLogGlobal(`[WS] sendWhatsAppMessage retornou: ${JSON.stringify(sentMessageDetails)}`, "debug");
 
                     if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ 
-                        type: 'message_sent_ack', 
-                        success: !!sentMessageDetails, 
-                        originalMessageId: originalMessageId, 
-                        sentMessageId: sentMessageDetails ? (sentMessageDetails.baileys_msg_id || sentMessageDetails.id) : null,
-                        timestamp: sentMessageDetails ? sentMessageDetails.timestamp : null
-                    }));
+                        ws.send(JSON.stringify({ 
+                            type: 'message_sent_ack', 
+                            success: !!sentMessageDetails, 
+                            originalMessageId: originalMessageId, 
+                            sentMessageId: sentMessageDetails ? (sentMessageDetails.message_platform_id || sentMessageDetails.id) : null, 
+                            timestamp: sentMessageDetails ? sentMessageDetails.timestamp : null,
+                            dbMessageId: sentMessageDetails ? sentMessageDetails.id : null 
+                        }));
+                         if(sendLogGlobal) sendLogGlobal(`[WS] >> message_sent_ack enviado para ${clientIdentifier}. Sucesso: ${!!sentMessageDetails}, ID Original: ${originalMessageId}`, "debug");
                     }
                 } catch (sendError) {
                     if(sendLogGlobal) sendLogGlobal(`[WS] Erro ao enviar mensagem via WhatsApp Service: ${sendError.message}`, "error");
                     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "message_sent_ack", success: false, error: "Falha ao enviar mensagem.", originalMessageId }));
                 }
               } else {
-                if(sendLogGlobal) sendLogGlobal(`[WS] send_chat_message inválido de ${ws.agentName}: 'to' (JID do cliente), ('text' ou 'media'), e 'conversationId' são obrigatórios. Payload: ${JSON.stringify(parsedMessage.payload)}`, "warn");
+                if(sendLogGlobal) sendLogGlobal(`[WS] send_chat_message inválido de ${ws.agentName}: 'to', ('text' ou 'media'), e 'conversationId' são obrigatórios. Payload: ${JSON.stringify(parsedMessage.payload)}`, "warn");
                 if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "message_sent_ack", success: false, error: "Dados da mensagem incompletos.", originalMessageId }));
               }
             }
@@ -217,18 +205,19 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbAppInst
           
           case "request_chat_list":
              if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && ws.agentId) { 
-                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'request_chat_list' para atendente ${clientIdentifier} (Username: ${ws.agentId})`, "debug");
-                if (!sqliteServiceInstanceGlobal || typeof sqliteServiceInstanceGlobal.getConversationsForAttendant !== 'function') {
-                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: sqliteServiceInstance.getConversationsForAttendant não disponível.', 'error');
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_list_response', payload: [], error: 'Serviço de banco de dados indisponível.', tabType: parsedMessage.tabType || 'active' }));
+                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'request_chat_list' para atendente ${clientIdentifier} (Username: ${ws.agentId}), aba: ${parsedMessage.tabType}`, "debug");
+                if (!sqliteServiceInstanceGlobal || !sqliteServiceInstanceGlobal.chat || typeof sqliteServiceInstanceGlobal.chat.getConversationsForUser !== 'function') {
+                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: sqliteServiceInstanceGlobal.chat.getConversationsForUser não disponível.', 'error');
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_list_response', payload: [], error: 'Serviço de banco de dados (chat) indisponível.', tabType: parsedMessage.tabType || 'active' }));
                     return;
                 }
                 try {
                     const tabType = parsedMessage.tabType || 'active';
-                    const chats = await sqliteServiceInstanceGlobal.getConversationsForAttendant(ws.agentId, tabType); 
+                    const chats = await sqliteServiceInstanceGlobal.chat.getConversationsForUser(ws.agentId, tabType, parsedMessage.searchTerm || null); 
                     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_list_response', payload: chats, tabType: tabType }));
+                    if(sendLogGlobal) sendLogGlobal(`[WS] >> Lista de chats (${chats.length} itens) enviada para ${clientIdentifier} para aba ${tabType}.`, "debug");
                 } catch (dbError) {
-                    if(sendLogGlobal) sendLogGlobal(`[WS] Erro ao buscar lista de chats: ${dbError.message}`, "error");
+                    if(sendLogGlobal) sendLogGlobal(`[WS] Erro ao buscar lista de chats para ${ws.agentId}: ${dbError.message}`, "error");
                     if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_list_response', payload: [], error: `Erro ao buscar chats: ${dbError.message}`, tabType: parsedMessage.tabType || 'active' }));
                 }
             }
@@ -236,143 +225,205 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbAppInst
 
         case 'request_chat_history':
             if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.conversationId) {
-                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'request_chat_history' para ${clientIdentifier}, conversa ${parsedMessage.conversationId}`, "debug");
-                 if (!sqliteServiceInstanceGlobal || typeof sqliteServiceInstanceGlobal.getConversationHistory !== 'function') {
-                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: sqliteServiceInstance.getConversationHistory não disponível.', 'error');
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_history_response', payload: [], error: 'Serviço de banco de dados indisponível.', conversationId: parsedMessage.conversationId }));
+                const requestedConvId = String(parsedMessage.conversationId); // Garante que é string
+                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'request_chat_history' para ${clientIdentifier}, conversa ${requestedConvId}`, "debug");
+                 if (!sqliteServiceInstanceGlobal || !sqliteServiceInstanceGlobal.chat || typeof sqliteServiceInstanceGlobal.chat.getConversationHistory !== 'function') {
+                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: sqliteServiceInstanceGlobal.chat.getConversationHistory não disponível.', 'error');
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_history_response', payload: [], error: 'Serviço de banco de dados (chat) indisponível.', conversationId: requestedConvId }));
                     return;
                 }
                 try {
-                    const history = await sqliteServiceInstanceGlobal.getConversationHistory(parsedMessage.conversationId, parsedMessage.limit, parsedMessage.offset);
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_history_response', payload: history, conversationId: parsedMessage.conversationId }));
+                    const history = await sqliteServiceInstanceGlobal.chat.getConversationHistory(requestedConvId, parsedMessage.limit, parsedMessage.offset);
+                    if (ws.readyState === WebSocket.OPEN) {
+                        // Envia o conversationId correto na resposta
+                        ws.send(JSON.stringify({ type: 'chat_history_response', payload: history, conversationId: requestedConvId }));
+                    }
+                    if(sendLogGlobal) sendLogGlobal(`[WS] >> Histórico do chat (${history.length} mensagens) enviado para ${clientIdentifier}, conversa ${requestedConvId}.`, "debug");
                 } catch (dbError) {
-                    if(sendLogGlobal) sendLogGlobal(`[WS] Erro ao buscar histórico do chat: ${dbError.message}`, "error");
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_history_response', payload: [], error: 'Erro ao buscar histórico.', conversationId: parsedMessage.conversationId }));
+                    if(sendLogGlobal) sendLogGlobal(`[WS] Erro ao buscar histórico do chat ${requestedConvId}: ${dbError.message}`, "error");
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'chat_history_response', payload: [], error: 'Erro ao buscar histórico.', conversationId: requestedConvId }));
                 }
+            } else {
+                 if(sendLogGlobal) sendLogGlobal(`[WS] 'request_chat_history' recebido sem conversationId ou de cliente não autorizado. Parsed: ${JSON.stringify(parsedMessage)}`, "warn");
             }
             break;
         
         case 'take_chat':
              if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.conversationId && ws.agentId) { 
-                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'take_chat' para ${clientIdentifier} (Username: ${ws.agentId}), conversa ${parsedMessage.conversationId}`, "debug");
-                if (!sqliteServiceInstanceGlobal || 
-                    typeof sqliteServiceInstanceGlobal.assignConversationToAttendant !== 'function' ||
-                    typeof sqliteServiceInstanceGlobal.getAttendantByUsername !== 'function') {
-                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: Funções do sqliteServiceInstance não disponíveis para take_chat.', 'error');
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'take_chat_response', success: false, error: 'Serviço de banco de dados indisponível.', conversationId: parsedMessage.conversationId }));
+                const convIdToTake = String(parsedMessage.conversationId);
+                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'take_chat' para ${clientIdentifier} (Username: ${ws.agentId}), conversa ${convIdToTake}`, "debug");
+                if (!sqliteServiceInstanceGlobal || !sqliteServiceInstanceGlobal.chat ||
+                    typeof sqliteServiceInstanceGlobal.chat.assignConversationToUser !== 'function' ||
+                    !sqliteServiceInstanceGlobal.admin || typeof sqliteServiceInstanceGlobal.admin.getUserByUsername !== 'function') { 
+                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: Funções do sqliteService (chat ou admin) não disponíveis para take_chat.', 'error');
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'take_chat_response', success: false, error: 'Serviço de banco de dados indisponível.', conversationId: convIdToTake }));
                     return;
                 }
                 try {
-                    const attendant = await sqliteServiceInstanceGlobal.getAttendantByUsername(ws.agentId);
+                    const attendant = await sqliteServiceInstanceGlobal.admin.getUserByUsername(ws.agentId); 
                     if (!attendant || !attendant.ID) {
                         if(sendLogGlobal) sendLogGlobal(`[WS] Erro: Atendente com username '${ws.agentId}' não encontrado no banco para 'take_chat'.`, 'error');
-                        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'take_chat_response', success: false, error: 'Atendente não registrado.', conversationId: parsedMessage.conversationId }));
+                        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'take_chat_response', success: false, error: 'Atendente não registrado.', conversationId: convIdToTake }));
                         return;
                     }
                     const numericAttendantId = attendant.ID;
-                    const assignedConversation = await sqliteServiceInstanceGlobal.assignConversationToAttendant(parsedMessage.conversationId, numericAttendantId, ws.agentName);
+                    // Passa o USERNAME do atendente (ws.agentId) para ser salvo em USER_USERNAME na CONVERSATIONS
+                    const assignedConversation = await sqliteServiceInstanceGlobal.chat.assignConversationToUser(convIdToTake, numericAttendantId, ws.agentId); 
                     const success = !!assignedConversation;
                     
                     if (ws.readyState === WebSocket.OPEN) {
                         ws.send(JSON.stringify({ 
                             type: 'take_chat_response', 
                             success, 
-                            conversationId: parsedMessage.conversationId, 
+                            conversationId: convIdToTake, 
                             agentId: ws.agentId, 
-                            agentName: ws.agentName, 
-                            conversation: assignedConversation 
+                            agentName: ws.agentName, // Nome completo do agente
+                            conversation: assignedConversation // Conversa atualizada do DB (com USER_USERNAME = ws.agentId)
                         }));
                     }
+                    if(sendLogGlobal) sendLogGlobal(`[WS] >> Resposta 'take_chat_response' (sucesso: ${success}) enviada para ${clientIdentifier}. Conversa retornada: ${JSON.stringify(assignedConversation).substring(0,100)}`, "debug");
 
                     if (success) {
-                        helperBroadcastToAttendants({ type: 'chat_taken_update', payload: { conversationId: parsedMessage.conversationId, agentId: ws.agentId, agentName: ws.agentName } }, ws.agentId);
+                        helperBroadcastToAttendants({ type: 'chat_taken_update', payload: { conversationId: convIdToTake, agentId: ws.agentId, agentName: ws.agentName } }, ws.agentId);
+                        if(sendLogGlobal) sendLogGlobal(`[WS] >> Notificação 'chat_taken_update' transmitida para outros atendentes.`, "debug");
                     } else {
-                        if(sendLogGlobal) sendLogGlobal(`[WS] Falha ao assumir chat ${parsedMessage.conversationId} por ${ws.agentName}. 'assignedConversation' retornou null.`, "warn");
+                        if(sendLogGlobal) sendLogGlobal(`[WS] Falha ao assumir chat ${convIdToTake} por ${ws.agentName}. 'assignedConversation' retornou null.`, "warn");
                     }
                 } catch (dbError) {
                     if(sendLogGlobal) sendLogGlobal(`[WS] Erro de banco de dados ao assumir chat: ${dbError.message}`, "error");
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'take_chat_response', success: false, error: 'Erro de banco de dados ao assumir chat.', conversationId: parsedMessage.conversationId }));
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'take_chat_response', success: false, error: 'Erro de banco de dados ao assumir chat.', conversationId: convIdToTake }));
                 }
             }
             break;
 
         case 'end_chat':
              if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.conversationId && ws.agentId) {
-                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'end_chat' para ${clientIdentifier} (Username: ${ws.agentId}), conversa ${parsedMessage.conversationId}`, "debug");
-                 if (!sqliteServiceInstanceGlobal || 
-                     typeof sqliteServiceInstanceGlobal.closeConversation !== 'function' ||
-                     typeof sqliteServiceInstanceGlobal.getAttendantByUsername !== 'function') { 
-                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: Funções do sqliteServiceInstance não disponíveis para end_chat.', 'error');
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success: false, error: 'Serviço de banco de dados indisponível.', conversationId: parsedMessage.conversationId }));
+                const convIdToEnd = String(parsedMessage.conversationId);
+                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'end_chat' para ${clientIdentifier} (Username: ${ws.agentId}), conversa ${convIdToEnd}`, "debug");
+                 if (!sqliteServiceInstanceGlobal || !sqliteServiceInstanceGlobal.chat || 
+                     typeof sqliteServiceInstanceGlobal.chat.closeConversation !== 'function' ||
+                     !sqliteServiceInstanceGlobal.admin || typeof sqliteServiceInstanceGlobal.admin.getUserByUsername !== 'function') { 
+                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: Funções do sqliteService (chat ou admin) não disponíveis para end_chat.', 'error');
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success: false, error: 'Serviço de banco de dados indisponível.', conversationId: convIdToEnd }));
                     return;
                 }
                 try {
-                    const attendant = await sqliteServiceInstanceGlobal.getAttendantByUsername(ws.agentId);
+                    const attendant = await sqliteServiceInstanceGlobal.admin.getUserByUsername(ws.agentId);
                     if (!attendant || !attendant.ID) {
                         if(sendLogGlobal) sendLogGlobal(`[WS] Erro: Atendente com username '${ws.agentId}' não encontrado para 'end_chat'.`, 'error');
-                        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success: false, error: 'Atendente não registrado.', conversationId: parsedMessage.conversationId }));
+                        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success: false, error: 'Atendente não registrado.', conversationId: convIdToEnd }));
                         return;
                     }
                     const numericAttendantId = attendant.ID;
-                    const closedConversation = await sqliteServiceInstanceGlobal.closeConversation(parsedMessage.conversationId, numericAttendantId);
+                    const closedConversation = await sqliteServiceInstanceGlobal.chat.closeConversation(convIdToEnd, numericAttendantId);
                     const success = !!closedConversation;
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success, conversationId: parsedMessage.conversationId }));
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success, conversationId: convIdToEnd }));
+                    if(sendLogGlobal) sendLogGlobal(`[WS] >> Resposta 'end_chat_response' (sucesso: ${success}) enviada para ${clientIdentifier}.`, "debug");
                     if (success) {
-                        helperBroadcastToAttendants({ type: 'chat_closed_update', payload: { conversationId: parsedMessage.conversationId, agentId: ws.agentId, agentName: ws.agentName } });
+                        helperBroadcastToAttendants({ type: 'chat_closed_update', payload: { conversationId: convIdToEnd, agentId: ws.agentId, agentName: ws.agentName } });
+                        if(sendLogGlobal) sendLogGlobal(`[WS] >> Notificação 'chat_closed_update' transmitida.`, "debug");
                     }
                 } catch (dbError) {
                     if(sendLogGlobal) sendLogGlobal(`[WS] Erro de banco de dados ao encerrar chat: ${dbError.message}`, "error");
-                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success: false, error: 'Erro de banco de dados ao encerrar chat.', conversationId: parsedMessage.conversationId }));
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end_chat_response', success: false, error: 'Erro de banco de dados ao encerrar chat.', conversationId: convIdToEnd }));
                 }
             }
             break;
         
         case 'mark_messages_as_read':
             if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.conversationId && ws.agentId) {
-                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'mark_messages_as_read' para ${clientIdentifier} (Username: ${ws.agentId}), conversa ${parsedMessage.conversationId}`, "debug");
-                if (!sqliteServiceInstanceGlobal || 
-                    typeof sqliteServiceInstanceGlobal.markMessagesAsReadByAgent !== 'function' ||
-                    typeof sqliteServiceInstanceGlobal.getAttendantByUsername !== 'function') {
-                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: Funções do sqliteServiceInstance não disponíveis para mark_messages_as_read.', 'error');
+                const convIdToMark = String(parsedMessage.conversationId);
+                if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'mark_messages_as_read' para ${clientIdentifier} (Username: ${ws.agentId}), conversa ${convIdToMark}`, "debug");
+                if (!sqliteServiceInstanceGlobal || !sqliteServiceInstanceGlobal.chat ||
+                    typeof sqliteServiceInstanceGlobal.chat.markMessagesAsReadByUser !== 'function' || 
+                    !sqliteServiceInstanceGlobal.admin || typeof sqliteServiceInstanceGlobal.admin.getUserByUsername !== 'function') {
+                    if(sendLogGlobal) sendLogGlobal('[WS] Erro: Funções do sqliteService (chat ou admin) não disponíveis para mark_messages_as_read.', 'error');
                     return;
                 }
                 try {
-                    const attendant = await sqliteServiceInstanceGlobal.getAttendantByUsername(ws.agentId);
+                    const attendant = await sqliteServiceInstanceGlobal.admin.getUserByUsername(ws.agentId);
                     if (!attendant || !attendant.ID) {
                          if(sendLogGlobal) sendLogGlobal(`[WS] Erro: Atendente com username '${ws.agentId}' não encontrado para 'mark_messages_as_read'.`, 'error');
                          return;
                     }
                     const numericAttendantId = attendant.ID;
-                    await sqliteServiceInstanceGlobal.markMessagesAsReadByAgent(parsedMessage.conversationId, numericAttendantId);
+                    await sqliteServiceInstanceGlobal.chat.markMessagesAsReadByUser(convIdToMark, numericAttendantId); 
+                    if(sendLogGlobal) sendLogGlobal(`[WS] Mensagens da conversa ${convIdToMark} marcadas como lidas pelo atendente ${ws.agentId}.`, "debug");
                 } catch (dbError) {
-                    if(sendLogGlobal) sendLogGlobal(`[WS] Erro de banco de dados ao marcar mensagens como lidas: ${dbError.message}`, "error");
+                    if(sendLogGlobal) sendLogGlobal(`[WS] Erro de banco de dados ao marcar mensagens como lidas (conv ${convIdToMark}): ${dbError.message}`, "error");
                 }
             }
             break;
         
         case 'agent_typing': 
             if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.conversationId && ws.agentId) {
-                if(sendLogGlobal) sendLogGlobal(`[WS] Atendente ${ws.agentName} ${parsedMessage.isTyping ? 'está digitando' : 'parou de digitar'} na conversa ${parsedMessage.conversationId}`, 'debug');
-                helperBroadcastToAdmins({ 
-                    type: 'agent_activity', 
-                    payload: { 
-                        agentId: ws.agentId, 
-                        agentName: ws.agentName, 
-                        conversationId: parsedMessage.conversationId,
-                        isTyping: parsedMessage.isTyping 
+                // Lógica para notificar cliente sobre digitação do agente (se necessário/implementado no WhatsApp Service)
+            }
+            break;
+        
+        case 'transfer_chat':
+            if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.conversationId && ws.agentId && parsedMessage.targetType && parsedMessage.targetId) {
+                const { conversationId, targetType, targetId, message: transferMessage } = parsedMessage;
+                sendLogGlobal(`[WS] Processando 'transfer_chat' de ${clientIdentifier} (Username: ${ws.agentId}) para ConvID ${conversationId}. TargetType: ${targetType}, TargetID: ${targetId}`, "debug");
+
+                if (!sqliteServiceInstanceGlobal || !sqliteServiceInstanceGlobal.chat || !sqliteServiceInstanceGlobal.admin) {
+                    sendLogGlobal('[WS] Erro: Serviços de DB (chat ou admin) não disponíveis para transfer_chat.', 'error');
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'transfer_chat_response', success: false, error: 'Serviço de banco de dados indisponível.', conversationId }));
+                    return;
+                }
+                try {
+                    const fromUser = await sqliteServiceInstanceGlobal.admin.getUserByUsername(ws.agentId);
+                    if (!fromUser) {
+                         sendLogGlobal(`[WS] Erro: Atendente de origem '${ws.agentId}' não encontrado para transfer_chat.`, 'error');
+                         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'transfer_chat_response', success: false, error: 'Atendente de origem não encontrado.', conversationId }));
+                         return;
                     }
-                });
-                if (whatsappServiceInstanceGlobal && typeof whatsappServiceInstanceGlobal.sendChatPresence === 'function' && sqliteServiceInstanceGlobal && typeof sqliteServiceInstanceGlobal.getConversationById === 'function') {
-                    // Esta linha estava causando o erro ReferenceError: broadcastToAdmins is not defined
-                    // A chamada correta é helperBroadcastToAdmins, e ela já está sendo feita acima.
-                    // A lógica de notificar o cliente sobre a digitação do agente é mais complexa e geralmente
-                    // não é feita diretamente aqui, mas sim através de uma função específica no whatsappService.
-                    // Removendo a linha problemática:
-                    // broadcastToAdmins({ type: 'agent_activity', payload: { /* ... */ } }); // LINHA REMOVIDA
-                    if(sendLogGlobal) sendLogGlobal(`[WS] Atividade de digitação do agente ${ws.agentName} registrada. Notificação para cliente (via sendChatPresence) não implementada neste ponto.`, 'debug');
+
+                    let transferResult;
+                    if (targetType === 'sector') {
+                        transferResult = await sqliteServiceInstanceGlobal.chat.transferConversationToSector(conversationId, targetId, fromUser.ID);
+                    } else if (targetType === 'attendant') {
+                        transferResult = await sqliteServiceInstanceGlobal.chat.transferConversationToUser(conversationId, targetId, fromUser.ID);
+                    } else {
+                        throw new Error(`Tipo de transferência '${targetType}' desconhecido.`);
+                    }
+
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ 
+                            type: 'transfer_chat_response', 
+                            success: transferResult.success, 
+                            conversationId: conversationId,
+                            message: transferResult.message || (transferResult.success ? "Transferência iniciada." : "Falha na transferência.")
+                        }));
+                    }
+                    
+                    if (transferResult.success && transferResult.conversation) {
+                        sendLogGlobal(`[WS] Transferência da ConvID ${conversationId} para ${targetType} ${targetId} bem-sucedida. Notificando...`, "info");
+                        helperBroadcastToAttendants({ type: 'pending_conversation', payload: transferResult.conversation }); 
+                        
+                        if (transferMessage && whatsappServiceInstanceGlobal && typeof whatsappServiceInstanceGlobal.sendWhatsAppMessage === 'function') {
+                            const originalConv = await sqliteServiceInstanceGlobal.chat.getConversationById(conversationId); 
+                            if (originalConv && originalConv.CLIENT_JID) {
+                                await whatsappServiceInstanceGlobal.sendWhatsAppMessage(
+                                    originalConv.CLIENT_JID,
+                                    `*Mensagem de Transferência (de ${ws.agentName})*:\n${transferMessage}`,
+                                    'SYSTEM_TRANSFER', 
+                                    conversationId,
+                                    sqliteServiceInstanceGlobal.chat
+                                );
+                            }
+                        }
+                    } else {
+                         sendLogGlobal(`[WS] Falha na transferência da ConvID ${conversationId}. Resultado: ${JSON.stringify(transferResult)}`, "warn");
+                    }
+
+                } catch (transferError) {
+                    sendLogGlobal(`[WS] Erro ao processar transferência da ConvID ${conversationId}: ${transferError.message}`, "error");
+                    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'transfer_chat_response', success: false, error: 'Erro ao processar transferência.', conversationId }));
                 }
             }
             break;
+
 
           default:
             if(sendLogGlobal) sendLogGlobal(`[WS] Tipo de mensagem WS NÃO TRATADA: ${parsedMessage.type} de ${clientIdentifier}`, "warn")
@@ -410,8 +461,9 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbAppInst
 
 module.exports = {
   initializeWebSocketServer,
-  broadcastToAdmins: helperBroadcastToAdmins, // Exporta a função local com o nome esperado
+  broadcastToAdmins: helperBroadcastToAdmins,
   sendMessageToAttendant: helperSendMessageToAttendant,
   broadcastToAttendants: helperBroadcastToAttendants,
-  ClientType: ClientTypeEnum, // Exporta o enum com o nome esperado
+  ClientType: ClientTypeEnum,
 };
+

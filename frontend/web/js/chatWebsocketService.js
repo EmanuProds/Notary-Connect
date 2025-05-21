@@ -11,7 +11,7 @@ const ChatWebsocketService = {
   pendingMessages: [],
 
   initialize(agentId, agentName) {
-    console.log("[ChatWebsocketService] Inicializando com agentId:", agentId, "agentName:", agentName);
+    console.log("[ChatWebsocketService] initialize: Inicializando com agentId:", agentId, "agentName:", agentName);
     this.agentId = agentId;
     this.agentName = agentName;
     this.connect();
@@ -20,10 +20,9 @@ const ChatWebsocketService = {
 
   connect() {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    // Certifique-se que window.location.host está correto (ex: localhost:3000)
     const wsUrl = `${protocol}//${window.location.host}/chat?agentId=${this.agentId}&agentName=${encodeURIComponent(this.agentName)}`;
 
-    console.log("[ChatWebsocketService] Conectando ao WebSocket:", wsUrl);
+    console.log("[ChatWebsocketService] connect: Conectando ao WebSocket:", wsUrl);
     this.socket = new WebSocket(wsUrl);
 
     this.socket.onopen = this.handleOpen.bind(this);
@@ -33,52 +32,67 @@ const ChatWebsocketService = {
   },
 
   handleOpen() {
-    console.log("[ChatWebsocketService] Conexão estabelecida");
+    console.log("[ChatWebsocketService] handleOpen: Conexão estabelecida.");
     this.isConnected = true;
     this.reconnectAttempts = 0;
 
     while (this.pendingMessages.length > 0) {
       const message = this.pendingMessages.shift();
-      this.sendMessageInternal(message); // Usar um método interno para enviar
+      console.log("[ChatWebsocketService] handleOpen: Enviando mensagem pendente:", message);
+      this.sendMessageInternal(message);
     }
-    // Solicitar lista de conversas ativas ao conectar
+    
     if (window.ChatActions && typeof window.ChatActions.loadConversations === 'function') {
-        setTimeout(() => { // Pequeno delay para garantir que o handler de mensagem esteja pronto
+        console.log("[ChatWebsocketService] handleOpen: Solicitando lista de conversas ativas.");
+        setTimeout(() => { 
             window.ChatActions.loadConversations("active");
         }, 200);
     }
   },
 
   handleMessage(event) {
+    let data;
     try {
-      const data = JSON.parse(event.data);
-      console.log("[ChatWebsocketService] Mensagem recebida:", data);
-
-      if (data.type === "new_message" && data.payload && data.payload.message && (data.payload.message.senderType === "CLIENT" || data.payload.message.SENDER_TYPE === "CLIENT")) {
-        if (window.NotificationService) {
-          window.NotificationService.playMessageSound();
-        }
-      }
-      if (data.type === "pending_conversation") { // Ajustado para corresponder ao backend
-        if (window.NotificationService) {
-          window.NotificationService.playNewChatSound();
-        }
-      }
-
-      // Encaminha para os callbacks registrados
-      if (data.type && this.callbacks[this.mapEventTypeToCallbackName(data.type)]) {
-        this.callbacks[this.mapEventTypeToCallbackName(data.type)](data.payload, data.tabType || (data.payload ? data.payload.conversationId : null));
-      } else {
-        console.warn(`[ChatWebsocketService] Nenhum callback registrado para o tipo de mensagem: ${data.type}`);
-      }
-
+      data = JSON.parse(event.data);
+      console.log("[ChatWebsocketService] handleMessage: Mensagem recebida do servidor:", data);
     } catch (error) {
-      console.error("[ChatWebsocketService] Erro ao processar mensagem:", error, "Dados recebidos:", event.data);
+      console.error("[ChatWebsocketService] handleMessage: Erro ao parsear mensagem JSON:", error, "Dados recebidos:", event.data);
+      return;
+    }
+
+    // Notificações sonoras
+    if (data.type === "new_message" && data.payload && data.payload.message && (data.payload.message.senderType === "CLIENT" || data.payload.message.SENDER_TYPE === "CLIENT")) {
+      if (window.NotificationService) window.NotificationService.playMessageSound();
+    }
+    if (data.type === "pending_conversation") {
+      if (window.NotificationService) window.NotificationService.playNewChatSound();
+    }
+
+    const callbackName = this.mapEventTypeToCallbackName(data.type);
+    if (data.type && this.callbacks[callbackName]) {
+      console.log(`[ChatWebsocketService] handleMessage: Chamando callback '${callbackName}'.`);
+      
+      // CORREÇÃO CRÍTICA AQUI:
+      if (data.type === 'chat_history_response') {
+        // Passa o payload (array de mensagens) e o conversationId (do nível superior)
+        console.log(`[ChatWebsocketService] handleMessage: Passando para ${callbackName} - payload: (array de mensagens), conversationId: ${data.conversationId}`);
+        this.callbacks[callbackName](data.payload, data.conversationId); 
+      } else if (data.type === 'chat_list_response') {
+        // Passa o payload (array de conversas) e o tabType
+        console.log(`[ChatWebsocketService] handleMessage: Passando para ${callbackName} - payload: (array de conversas), tabType: ${data.tabType}`);
+        this.callbacks[callbackName](data.payload, data.tabType);
+      } 
+      // Para outros eventos, o payload da mensagem WS (data.payload) é o que o handler espera
+      else {
+        console.log(`[ChatWebsocketService] handleMessage: Passando para ${callbackName} - payload da mensagem WS:`, data.payload);
+        this.callbacks[callbackName](data.payload); 
+      }
+    } else {
+      console.warn(`[ChatWebsocketService] handleMessage: Nenhum callback registrado para o tipo de mensagem: ${data.type}`);
     }
   },
 
   mapEventTypeToCallbackName(eventType) {
-    // Mapeia nomes de eventos para nomes de funções de callback para consistência
     const map = {
         'chat_list_response': 'onChatListReceived',
         'chat_history_response': 'onChatHistoryReceived',
@@ -88,38 +102,35 @@ const ChatWebsocketService = {
         'end_chat_response': 'onEndChatResponse',
         'chat_taken_update': 'onChatTakenUpdate',
         'chat_closed_update': 'onChatClosedUpdate',
-        'pending_conversation': 'onPendingConversation', // Adicionado
-        'client_typing': 'onClientTyping' // Adicionado
+        'pending_conversation': 'onPendingConversation',
+        'client_typing': 'onClientTyping'
     };
-    return map[eventType] || eventType; // Retorna o nome mapeado ou o original se não mapeado
+    return map[eventType] || eventType;
   },
 
   handleClose(event) {
+    console.log(`[ChatWebsocketService] handleClose: Conexão fechada. Limpa: ${event.wasClean}, Código: ${event.code}, Motivo: ${event.reason}`);
     this.isConnected = false;
-    if (event.wasClean) {
-      console.log(`[ChatWebsocketService] Conexão fechada normalmente, código=${event.code} motivo=${event.reason}`);
-    } else {
-      console.error("[ChatWebsocketService] Conexão interrompida (wasClean: false). Código:", event.code, "Motivo:", event.reason);
+    if (!event.wasClean) {
+      console.warn("[ChatWebsocketService] handleClose: Conexão não foi limpa. Tentando reconectar...");
       this.attemptReconnect();
     }
   },
 
   handleError(error) {
-    console.error("[ChatWebsocketService] Erro de WebSocket:", error);
-    // A reconexão é geralmente tratada pelo onclose quando um erro causa o fechamento.
+    console.error("[ChatWebsocketService] handleError: Erro de WebSocket:", error);
   },
 
   attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(
-        `[ChatWebsocketService] Tentando reconectar (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`,
-      );
+      const delay = this.reconnectDelay * this.reconnectAttempts;
+      console.log(`[ChatWebsocketService] attemptReconnect: Tentando reconectar em ${delay/1000}s (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
       setTimeout(() => {
         this.connect();
-      }, this.reconnectDelay * this.reconnectAttempts); // Aumenta o delay a cada tentativa
+      }, delay);
     } else {
-      console.error("[ChatWebsocketService] Número máximo de tentativas de reconexão atingido.");
+      console.error("[ChatWebsocketService] attemptReconnect: Número máximo de tentativas de reconexão atingido.");
       if (window.ChatDomElements && typeof window.ChatDomElements.showAlert === 'function') {
         window.ChatDomElements.showAlert("Não foi possível reconectar ao servidor. Por favor, recarregue a página.", "error");
       } else {
@@ -128,16 +139,17 @@ const ChatWebsocketService = {
     }
   },
 
-  sendMessageInternal(messageObject) { // Renomeado para evitar conflito de nome
+  sendMessageInternal(messageObject) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(messageObject));
-      console.log("[ChatWebsocketService] Mensagem enviada ao servidor:", messageObject);
+      const messageString = JSON.stringify(messageObject);
+      console.log("[ChatWebsocketService] sendMessageInternal: Enviando mensagem:", messageString.substring(0,150)+"...");
+      this.socket.send(messageString);
       return true;
     } else {
-      console.warn("[ChatWebsocketService] Não foi possível enviar mensagem: conexão não está aberta. Adicionando à fila.");
+      console.warn("[ChatWebsocketService] sendMessageInternal: Conexão não está aberta. Adicionando à fila. Mensagem:", messageObject);
       this.pendingMessages.push(messageObject);
-      if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
-          console.log("[ChatWebsocketService] Tentando reconectar devido à tentativa de envio com socket fechado.");
+      if (!this.socket || this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
+          console.log("[ChatWebsocketService] sendMessageInternal: Socket fechado ou fechando. Tentando reconectar.");
           this.attemptReconnect();
       }
       return false;
@@ -145,12 +157,12 @@ const ChatWebsocketService = {
   },
 
   registerCallbacks(callbacks) {
-    console.log("[ChatWebsocketService] Registrando callbacks:", Object.keys(callbacks));
+    console.log("[ChatWebsocketService] registerCallbacks: Registrando callbacks:", Object.keys(callbacks));
     this.callbacks = callbacks;
   },
 
   requestConversations(tabType = "active") {
-    console.log("[ChatWebsocketService] Solicitando lista de conversas:", tabType);
+    console.log(`[ChatWebsocketService] requestConversations: Solicitando lista de conversas para aba '${tabType}'.`);
     this.sendMessageInternal({
       type: "request_chat_list",
       tabType: tabType,
@@ -158,62 +170,50 @@ const ChatWebsocketService = {
   },
 
   requestChatHistory(conversationId, limit = 50, offset = 0) {
-    console.log("[ChatWebsocketService] Solicitando histórico da conversa:", conversationId);
+    console.log(`[ChatWebsocketService] requestChatHistory: Solicitando histórico para ConvID ${conversationId}.`);
     this.sendMessageInternal({
       type: "request_chat_history",
-      conversationId: conversationId,
+      conversationId: conversationId, 
       limit: limit,
       offset: offset
     });
   },
 
-  // CORRIGIDO: Adicionado recipientJid e usado no payload.to
-  sendTextMessage(conversationId, recipientJid, text) {
-    console.log("[ChatWebsocketService] Enviando mensagem de texto para conversa:", conversationId, "Destinatário:", recipientJid);
-    const localId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  sendTextMessage(conversationId, recipientJid, text, localMessageId) { 
+    console.log(`[ChatWebsocketService] sendTextMessage: Enviando para ConvID ${conversationId}, JID ${recipientJid}, ID Local ${localMessageId}. Texto: "${text.substring(0,30)}..."`);
     this.sendMessageInternal({
       type: "send_chat_message",
       payload: {
         conversationId: conversationId,
-        to: recipientJid, // Usar o JID do destinatário aqui
+        to: recipientJid,
         text: text,
-        id: localId, 
+        id: localMessageId, 
       },
     });
-    // Opcional: retornar o ID local para o ChatActions/UI poder rastrear
-    return localId;
+    return localMessageId; 
   },
 
-  sendFileMessage(conversationId, recipientJid, file, caption = "") {
-    console.log("[ChatWebsocketService] Preparando para enviar arquivo:", file.name, "para:", recipientJid);
-    // A lógica de upload real do arquivo deve ocorrer antes (ex: para um S3 ou servidor local)
-    // e então a URL do arquivo é enviada.
-    // Se for enviar o arquivo diretamente via WebSocket (não recomendado para arquivos grandes),
-    // precisaria de uma lógica de chunking ou envio como ArrayBuffer/Base64.
-
-    // Exemplo simplificado assumindo que 'file' é um objeto com 'url' e 'type' (e opcionalmente 'fileName')
-    // Esta parte precisará ser integrada com seu sistema de upload de arquivos.
-    // Por agora, vamos simular o envio de um payload que o backend espera.
-    const localId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  sendFileMessage(conversationId, recipientJid, fileData, localMessageId) { 
+    console.log(`[ChatWebsocketService] sendFileMessage: Enviando arquivo para ConvID ${conversationId}, JID ${recipientJid}, ID Local ${localMessageId}. Dados do arquivo:`, fileData);
     this.sendMessageInternal({
-        type: "send_chat_message", // O backend pode tratar isso como uma mensagem de mídia
+        type: "send_chat_message",
         payload: {
             conversationId: conversationId,
             to: recipientJid,
-            media: { // Estrutura de exemplo para mídia
-                url: file.url, // Supondo que 'file' tenha uma URL após upload
-                type: file.type, // ex: 'image/jpeg', 'application/pdf'
-                fileName: file.name,
+            media: { 
+                url: fileData.url, 
+                type: fileData.type,
+                fileName: fileData.name, 
             },
-            text: caption, // Legenda para a mídia
-            id: localId,
+            text: fileData.caption || "", 
+            id: localMessageId,
         }
     });
-    return localId;
+    return localMessageId;
   },
 
   takeChat(conversationId) {
-    console.log("[ChatWebsocketService] Assumindo conversa:", conversationId);
+    console.log(`[ChatWebsocketService] takeChat: Assumindo ConvID ${conversationId}.`);
     this.sendMessageInternal({
       type: "take_chat",
       conversationId: conversationId,
@@ -221,7 +221,7 @@ const ChatWebsocketService = {
   },
 
   endChat(conversationId) {
-    console.log("[ChatWebsocketService] Encerrando conversa:", conversationId);
+    console.log(`[ChatWebsocketService] endChat: Encerrando ConvID ${conversationId}.`);
     this.sendMessageInternal({
       type: "end_chat",
       conversationId: conversationId,
@@ -229,7 +229,7 @@ const ChatWebsocketService = {
   },
 
   markMessagesAsRead(conversationId) {
-    console.log("[ChatWebsocketService] Marcando mensagens como lidas para conversa:", conversationId);
+    console.log(`[ChatWebsocketService] markMessagesAsRead: Marcando mensagens como lidas para ConvID ${conversationId}.`);
     this.sendMessageInternal({
       type: "mark_messages_as_read",
       conversationId: conversationId,
@@ -237,7 +237,6 @@ const ChatWebsocketService = {
   },
 
   sendTypingStatus(conversationId, isTyping) {
-    // console.log(`[ChatWebsocketService] Enviando status de digitação: ${isTyping} para conversa ${conversationId}`);
     this.sendMessageInternal({
       type: "agent_typing",
       conversationId: conversationId,
@@ -246,7 +245,7 @@ const ChatWebsocketService = {
   },
 
   transferChatToSector(conversationId, sectorId, message = null) {
-    console.log("[ChatWebsocketService] Transferindo conversa", conversationId, "para setor:", sectorId);
+    console.log(`[ChatWebsocketService] transferChatToSector: Transferindo ConvID ${conversationId} para setor ${sectorId}.`);
     this.sendMessageInternal({
       type: "transfer_chat",
       conversationId: conversationId,
@@ -257,7 +256,7 @@ const ChatWebsocketService = {
   },
 
   transferChatToAttendant(conversationId, attendantId, message = null) {
-    console.log("[ChatWebsocketService] Transferindo conversa", conversationId, "para atendente:", attendantId);
+    console.log(`[ChatWebsocketService] transferChatToAttendant: Transferindo ConvID ${conversationId} para atendente ${attendantId}.`);
     this.sendMessageInternal({
       type: "transfer_chat",
       conversationId: conversationId,
@@ -268,7 +267,6 @@ const ChatWebsocketService = {
   },
 };
 
-// Exportar para uso global, se não estiver usando módulos ES6/CommonJS explicitamente nos scripts do navegador
 if (typeof window !== 'undefined') {
     window.ChatWebsocketService = ChatWebsocketService;
 }

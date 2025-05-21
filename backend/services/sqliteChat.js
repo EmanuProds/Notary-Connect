@@ -28,13 +28,10 @@ function log(message, level = "info", service = "SQLite-Chat") {
 async function connect() { 
   return new Promise((resolve, reject) => {
     if (db && db.open) {
-      log("Usando conexão existente.", "debug");
       resolve(db);
       return;
     }
     const dbPath = dbConfig.chatDbPath; 
-    log(`Tentando conectar ao chatDbPath: ${dbPath}`, "debug"); 
-
     if (!dbPath || typeof dbPath !== 'string') { 
         const errMsg = `Caminho para chatDbPath inválido ou não definido. Recebido: ${dbPath}`;
         log(errMsg, "error");
@@ -43,15 +40,13 @@ async function connect() {
     const dbDir = path.dirname(dbPath);
     try {
         if (!fs.existsSync(dbDir)) {
-            log(`Criando diretório para chat DB: ${dbDir}`, "info");
             fs.mkdirSync(dbDir, { recursive: true });
         }
     } catch (mkdirError) {
         log(`Erro ao criar diretório ${dbDir}: ${mkdirError.message}`, "error");
         return reject(mkdirError);
     }
-
-    db = new sqlite3.Database(dbPath, async (err) => { // Tornar callback async
+    db = new sqlite3.Database(dbPath, async (err) => { 
       if (err) {
         log(`Erro ao conectar a ${dbPath}: ${err.message}`, "error");
         return reject(err);
@@ -59,14 +54,8 @@ async function connect() {
       log(`Conectado a ${dbPath}`, "info");
       try {
         await new Promise((res, rej) => db.run("PRAGMA journal_mode=WAL;", e => e ? rej(e) : res()));
-        log("PRAGMA journal_mode=WAL configurado.", "debug");
-
         await new Promise((res, rej) => db.run("PRAGMA foreign_keys = ON;", e => e ? rej(e) : res()));
-        log("PRAGMA foreign_keys habilitado.", "debug");
-        
-        await new Promise((res, rej) => db.run("PRAGMA busy_timeout = 7500;", e => e ? rej(e) : res())); // 7.5 segundos
-        log("PRAGMA busy_timeout definido para 7500ms.", "debug");
-        
+        await new Promise((res, rej) => db.run("PRAGMA busy_timeout = 7500;", e => e ? rej(e) : res())); 
         resolve(db);
       } catch (pragmaErr) {
         log(`Erro ao configurar PRAGMAs para ${dbPath}: ${pragmaErr.message}`, "error");
@@ -109,26 +98,6 @@ function runQuery(sql, params = []) {
     });
   });
 }
-async function columnExists(tableName, columnName) {
-    const columns = await allQuery(`PRAGMA table_info(${tableName})`);
-    return columns.some(col => col.name === columnName);
-}
-async function addColumnIfNotExists(tableName, columnName, columnDefinition) {
-    const exists = await columnExists(tableName, columnName);
-    if (!exists) {
-        try {
-            await runQuery(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
-            log(`Coluna '${columnName}' adicionada à tabela '${tableName}'.`, 'info');
-        } catch (error) {
-            if (!error.message.includes("duplicate column name")) {
-                 log(`Erro ao adicionar coluna '${columnName}' à tabela '${tableName}': ${error.message}`, 'error');
-                 throw error; 
-            } else {
-                 log(`Aviso: Tentativa de adicionar coluna duplicada '${columnName}' à tabela '${tableName}'. Ignorando.`, 'warn');
-            }
-        }
-    }
-}
 
 async function createTablesIfNotExists() {
   const createClientsTable = `
@@ -140,7 +109,7 @@ async function createTablesIfNotExists() {
   const createConversationsTable = `
     CREATE TABLE IF NOT EXISTS CONVERSATIONS (
       ID INTEGER PRIMARY KEY AUTOINCREMENT, CLIENT_ID INTEGER NOT NULL, CLIENT_JID TEXT, 
-      USER_ID INTEGER, USER_USERNAME TEXT, 
+      USER_ID INTEGER, USER_USERNAME TEXT, -- Este deve ser o USERNAME/ID do agente
       STATUS TEXT DEFAULT 'pending' NOT NULL, 
       SECTOR TEXT, TRANSFER_HISTORY TEXT, CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
       UPDATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP, CLOSED_AT DATETIME,
@@ -157,21 +126,8 @@ async function createTablesIfNotExists() {
     );`;
 
   await runQuery(createClientsTable); log("Tabela CLIENTS verificada/criada.", "info");
-  await addColumnIfNotExists('CLIENTS', 'CPF_ID', 'TEXT');
-  await addColumnIfNotExists('CLIENTS', 'PHONE', 'TEXT'); 
-  await addColumnIfNotExists('CLIENTS', 'PROFILE_PIC', 'TEXT'); 
-  
   await runQuery(createConversationsTable); log("Tabela CONVERSATIONS verificada/criada.", "info");
-  await addColumnIfNotExists('CONVERSATIONS', 'CLIENT_ID', 'INTEGER NOT NULL REFERENCES CLIENTS(ID) ON DELETE CASCADE');
-  await addColumnIfNotExists('CONVERSATIONS', 'CLIENT_JID', 'TEXT');
-  await addColumnIfNotExists('CONVERSATIONS', 'LAST_MESSAGE_TIMESTAMP', 'DATETIME');
-  await addColumnIfNotExists('CONVERSATIONS', 'UNREAD_MESSAGES', 'INTEGER DEFAULT 0');
-  await addColumnIfNotExists('CONVERSATIONS', 'USER_ID', 'INTEGER'); 
-  await addColumnIfNotExists('CONVERSATIONS', 'USER_USERNAME', 'TEXT'); 
-  
   await runQuery(createMessagesTable); log("Tabela MESSAGES verificada/criada.", "info");
-  await addColumnIfNotExists('MESSAGES', 'MESSAGE_PLATFORM_ID', 'TEXT UNIQUE');
-  await addColumnIfNotExists('MESSAGES', 'READ_BY_USER', 'INTEGER DEFAULT 0 NOT NULL'); 
 }
 
 async function getClientByWhatsappId(whatsappId) { 
@@ -180,22 +136,25 @@ async function getClientByWhatsappId(whatsappId) {
 }
 
 async function findOrCreateConversation(clientJid, clientName = null, clientProfilePic = null, clientPhone = null, clientCpfId = null) { 
+  log(`[findOrCreateConversation] Iniciando para JID: ${clientJid}, Nome: ${clientName}`, "debug");
   try {
     let client = await getClientByWhatsappId(clientJid);
     if (!client) {
+      log(`[findOrCreateConversation] Cliente não encontrado para JID ${clientJid}. Criando novo...`, "debug");
       const insertClientResult = await runQuery(
         "INSERT INTO CLIENTS (WHATSAPP_ID, NAME, PHONE, CPF_ID, PROFILE_PIC, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
         [clientJid, clientName, clientPhone, clientCpfId, clientProfilePic]
       );
       client = { ID: insertClientResult.lastID, WHATSAPP_ID: clientJid, NAME: clientName, PHONE: clientPhone, CPF_ID: clientCpfId, PROFILE_PIC: clientProfilePic };
-      log(`Novo cliente criado: ${clientName || clientJid}`, "info");
+      log(`[findOrCreateConversation] Novo cliente criado: ID ${client.ID}, Nome: ${clientName || clientJid}`, "info");
     } else {
+      log(`[findOrCreateConversation] Cliente encontrado: ID ${client.ID}, Nome: ${client.NAME}`, "debug");
       if ((clientName && client.NAME !== clientName) || (clientPhone && client.PHONE !== clientPhone) || 
           (clientProfilePic && client.PROFILE_PIC !== clientProfilePic) || (clientCpfId && client.CPF_ID !== clientCpfId)) {
         await runQuery("UPDATE CLIENTS SET NAME = ?, PHONE = ?, CPF_ID = ?, PROFILE_PIC = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?",
           [clientName || client.NAME, clientPhone || client.PHONE, clientCpfId || client.CPF_ID, clientProfilePic || client.PROFILE_PIC, client.ID]
         );
-        log(`Informações do cliente ${clientJid} atualizadas.`, "debug");
+        log(`[findOrCreateConversation] Informações do cliente ${clientJid} atualizadas.`, "debug");
       }
     }
 
@@ -205,16 +164,17 @@ async function findOrCreateConversation(clientJid, clientName = null, clientProf
     );
 
     if (conversation) {
-      log(`Conversa existente encontrada para cliente ${client.ID} (JID: ${clientJid}). ID da Conversa: ${conversation.ID}`, "debug");
+      log(`[findOrCreateConversation] Conversa existente (não fechada) encontrada para cliente ${client.ID}. ID da Conversa: ${conversation.ID}, Status: ${conversation.STATUS}, Atendente: ${conversation.USER_USERNAME}`, "debug");
       return { client, conversation, isNew: false };
     }
 
+    log(`[findOrCreateConversation] Nenhuma conversa ativa/pendente encontrada para cliente ${client.ID}. Criando nova conversa...`, "debug");
     const insertConversationResult = await runQuery(
       "INSERT INTO CONVERSATIONS (CLIENT_ID, CLIENT_JID, STATUS, CREATED_AT, UPDATED_AT, LAST_MESSAGE_TIMESTAMP) VALUES (?, ?, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
       [client.ID, clientJid]
     );
     conversation = await getQuery("SELECT * FROM CONVERSATIONS WHERE ID = ?", [insertConversationResult.lastID]);
-    log(`Nova conversa criada para cliente ${client.ID} (JID: ${clientJid}). ID da Conversa: ${conversation.ID}`, "info");
+    log(`[findOrCreateConversation] Nova conversa criada para cliente ${client.ID}. ID da Conversa: ${conversation.ID}`, "info");
     return { client, conversation, isNew: true };
 
   } catch (error) {
@@ -225,22 +185,27 @@ async function findOrCreateConversation(clientJid, clientName = null, clientProf
 
 async function saveMessage(messageData) { 
   const { conversationId, message_platform_id, senderType, senderId, messageType, content, mediaUrl = null, timestamp } = messageData;
+  log(`[saveMessage] Salvando mensagem para ConvID ${conversationId}. PlatformID: ${message_platform_id}, Sender: ${senderType}/${senderId}, Tipo: ${messageType}`, "debug");
   if (typeof conversationId === 'undefined' || conversationId === null) {
     log(`ERRO FATAL: Tentativa de salvar mensagem sem conversationId. Dados: ${JSON.stringify(messageData)}`, "error");
     throw new Error("conversationId não pode ser nulo ao salvar mensagem.");
   }
   const sql = `INSERT INTO MESSAGES (CONVERSATION_ID, MESSAGE_PLATFORM_ID, SENDER_TYPE, SENDER_ID, MESSAGE_TYPE, CONTENT, MEDIA_URL, TIMESTAMP, READ_BY_CLIENT, READ_BY_USER) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
   const readByClient = senderType === "AGENT" || senderType === "SYSTEM" || senderType === "BOT" ? 0 : 1;
-  const readByUser = senderType === "CLIENT" ? 0 : 1;
+  const readByUser = senderType === "CLIENT" ? 0 : 1; 
   const messageTimestamp = timestamp || new Date().toISOString();
   try {
     const result = await runQuery(sql, [conversationId, message_platform_id, senderType, senderId, messageType, content, mediaUrl, messageTimestamp, readByClient, readByUser]);
-    await runQuery("UPDATE CONVERSATIONS SET LAST_MESSAGE_TIMESTAMP = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?", [messageTimestamp, conversationId]);
-    if (senderType === 'CLIENT' && !readByUser) { 
-        await runQuery("UPDATE CONVERSATIONS SET UNREAD_MESSAGES = UNREAD_MESSAGES + 1 WHERE ID = ?", [conversationId]);
+    log(`[saveMessage] Mensagem salva no DB. ID DB: ${result.lastID}, Platform ID: ${message_platform_id}. Atualizando conversa...`, "debug");
+    
+    let unreadIncrementSql = "";
+    if (senderType === 'CLIENT') { 
+        unreadIncrementSql = ", UNREAD_MESSAGES = UNREAD_MESSAGES + 1";
     }
-    log(`Mensagem salva. DB ID: ${result.lastID}, Platform ID: ${message_platform_id}`, "debug");
-    return { id: result.lastID, ...messageData, timestamp: messageTimestamp };
+    await runQuery(`UPDATE CONVERSATIONS SET LAST_MESSAGE_TIMESTAMP = ?, UPDATED_AT = CURRENT_TIMESTAMP ${unreadIncrementSql} WHERE ID = ?`, [messageTimestamp, conversationId]);
+    log(`[saveMessage] Conversa ${conversationId} atualizada. Incremento não lidas (se cliente): ${unreadIncrementSql !== ""}`, "debug");
+
+    return { id: result.lastID, ...messageData, timestamp: messageTimestamp, READ_BY_USER: readByUser, READ_BY_CLIENT: readByClient };
   } catch (error) {
     log(`Erro ao salvar mensagem (Platform ID: ${message_platform_id}, ConvID: ${conversationId}): ${error.message}`, "error");
     if (error.message.includes("UNIQUE constraint failed: MESSAGES.MESSAGE_PLATFORM_ID")) {
@@ -252,25 +217,39 @@ async function saveMessage(messageData) {
 }
 
 async function getConversationHistory(conversationId, limit = 100, offset = 0) { 
+  log(`[getConversationHistory] Buscando histórico para ConvID ${conversationId}, Limite: ${limit}, Offset: ${offset}`, "debug");
+  // CORREÇÃO: Removido o JOIN com USERS. O nome do agente será buscado separadamente.
   const sql = `
-    SELECT m.*, c.NAME as CLIENT_NAME, c.PHONE as CLIENT_PHONE, c.WHATSAPP_ID as CLIENT_WHATSAPP_ID
+    SELECT m.*, 
+           c.NAME as CLIENT_NAME, c.PHONE as CLIENT_PHONE, c.WHATSAPP_ID as CLIENT_WHATSAPP_ID, c.PROFILE_PIC as CLIENT_PROFILE_PIC
     FROM MESSAGES m
-    LEFT JOIN CONVERSATIONS conv ON m.CONVERSATION_ID = conv.ID
-    LEFT JOIN CLIENTS c ON conv.CLIENT_ID = c.ID
+    JOIN CONVERSATIONS conv ON m.CONVERSATION_ID = conv.ID
+    JOIN CLIENTS c ON conv.CLIENT_ID = c.ID
     WHERE m.CONVERSATION_ID = ?
     ORDER BY m.TIMESTAMP ASC
     LIMIT ? OFFSET ?
   `;
   try {
     const messages = await allQuery(sql, [conversationId, limit, offset]);
+    // Adicionar AGENT_NAME se SENDER_TYPE for 'AGENT'
     if (sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getUserByUsername === 'function') {
-        for (let msg of messages) {
-            if (msg.SENDER_TYPE === 'AGENT' && msg.SENDER_ID) { 
-                const user = await sqliteAdminServiceInstance.getUserByUsername(msg.SENDER_ID);
-                if (user) msg.USER_NAME = user.NAME; 
+      for (let msg of messages) {
+        if (msg.SENDER_TYPE === 'AGENT' && msg.SENDER_ID) { // SENDER_ID deve ser o USERNAME do agente
+          try {
+            const agent = await sqliteAdminServiceInstance.getUserByUsername(msg.SENDER_ID);
+            if (agent) {
+              msg.AGENT_NAME = agent.NAME; // Adiciona o nome completo do agente
+            } else {
+              msg.AGENT_NAME = msg.SENDER_ID; // Fallback para username se não encontrar
             }
+          } catch (userError) {
+            log(`[getConversationHistory] Erro ao buscar nome do agente para SENDER_ID ${msg.SENDER_ID}: ${userError.message}`, "warn");
+            msg.AGENT_NAME = msg.SENDER_ID; // Fallback
+          }
         }
+      }
     }
+    log(`[getConversationHistory] Histórico para ConvID ${conversationId} recuperado (${messages.length} mensagens).`, "debug");
     return messages;
   } catch (error) {
     log(`Erro ao buscar histórico da conversa ${conversationId}: ${error.message}`, "error");
@@ -279,18 +258,23 @@ async function getConversationHistory(conversationId, limit = 100, offset = 0) {
 }
 
 async function getConversationsForUser(userUsername, tabType = "active", searchTerm = null) { 
-  log(`Buscando conversas para usuário ${userUsername}, aba: ${tabType}, busca: ${searchTerm || 'Nenhuma'}`, 'debug');
+  log(`[getConversationsForUser] Buscando conversas para usuário ${userUsername}, aba: ${tabType}, busca: ${searchTerm || 'Nenhuma'}`, 'debug');
   
   let numericUserId = null;
+  let userSectors = []; 
+  let userDetails = null;
+
   if (sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getUserByUsername === 'function') {
-      const user = await sqliteAdminServiceInstance.getUserByUsername(userUsername);
-      if (!user) {
-          log(`Usuário ${userUsername} não encontrado ao buscar conversas.`, "warn");
+      userDetails = await sqliteAdminServiceInstance.getUserByUsername(userUsername); 
+      if (!userDetails) {
+          log(`[getConversationsForUser] Usuário ${userUsername} não encontrado. Retornando lista vazia.`, "warn");
           return [];
       }
-      numericUserId = user.ID;
+      numericUserId = userDetails.ID;
+      userSectors = userDetails.SECTOR || []; 
+      log(`[getConversationsForUser] Usuário ${userUsername} (ID: ${numericUserId}) encontrado. Setores (keys): ${userSectors.join(', ')}`, "debug");
   } else {
-      log(`sqliteAdminServiceInstance não configurado ou getUserByUsername não é função. Não é possível buscar ID numérico para ${userUsername}.`, "warn");
+      log(`[getConversationsForUser] sqliteAdminServiceInstance não configurado ou getUserByUsername não é função. Não é possível buscar ID/setores para ${userUsername}.`, "warn");
       return [];
   }
 
@@ -301,7 +285,7 @@ async function getConversationsForUser(userUsername, tabType = "active", searchT
       conv.LAST_MESSAGE_TIMESTAMP, conv.UNREAD_MESSAGES,
       c.NAME as CLIENT_NAME, c.PHONE as CLIENT_PHONE, c.WHATSAPP_ID as CLIENT_WHATSAPP_ID,
       c.PROFILE_PIC as CLIENT_PROFILE_PIC, 
-      conv.USER_USERNAME as USER_NAME_ASSIGNED, 
+      -- USER_USERNAME já é o username/ID do agente. O nome completo (USER_NAME_ASSIGNED) será adicionado depois.
       (SELECT CONTENT FROM MESSAGES m WHERE m.CONVERSATION_ID = conv.ID ORDER BY m.TIMESTAMP DESC LIMIT 1) as LAST_MESSAGE,
       (SELECT MESSAGE_TYPE FROM MESSAGES m WHERE m.CONVERSATION_ID = conv.ID ORDER BY m.TIMESTAMP DESC LIMIT 1) as LAST_MESSAGE_TYPE,
       (SELECT STRFTIME('%Y-%m-%dT%H:%M:%fZ', m.TIMESTAMP) FROM MESSAGES m WHERE m.CONVERSATION_ID = conv.ID ORDER BY m.TIMESTAMP DESC LIMIT 1) as LAST_MESSAGE_TIME_FORMATTED
@@ -314,14 +298,32 @@ async function getConversationsForUser(userUsername, tabType = "active", searchT
   const conditions = [];
 
   if (tabType === 'active') {
-    conditions.push("( (conv.STATUS = 'pending' AND conv.USER_ID IS NULL) OR (conv.STATUS = 'active' AND conv.USER_ID = ?) )");
+    let pendingConditions = " (conv.STATUS = 'pending' AND conv.USER_ID IS NULL ";
+    if (userSectors.length > 0) {
+        const sectorNames = [];
+        if (sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getSectorByKey === 'function') {
+            for (const sectorKey of userSectors) {
+                const sectorObj = await sqliteAdminServiceInstance.getSectorByKey(sectorKey);
+                if (sectorObj) sectorNames.push(sectorObj.SECTOR_NAME);
+            }
+        }
+        if (sectorNames.length > 0) {
+            pendingConditions += ` AND (conv.SECTOR IN (${sectorNames.map(() => '?').join(',')}) OR conv.SECTOR IS NULL OR conv.SECTOR = '') `;
+            params.push(...sectorNames);
+        } else {
+            pendingConditions += ` AND (conv.SECTOR IS NULL OR conv.SECTOR = '') `;
+        }
+    } else {
+        pendingConditions += ` AND (conv.SECTOR IS NULL OR conv.SECTOR = '') `; 
+    }
+    pendingConditions += ") ";
+    conditions.push(`( ${pendingConditions} OR (conv.STATUS = 'active' AND conv.USER_ID = ?) )`);
     params.push(numericUserId); 
   } else if (tabType === 'closed') {
-    conditions.push("conv.STATUS = 'closed' AND conv.USER_ID = ?");
+    conditions.push("conv.STATUS = 'closed' AND conv.USER_ID = ?"); 
     params.push(numericUserId); 
   } else { 
-    conditions.push("( (conv.STATUS = 'pending' AND conv.USER_ID IS NULL) OR conv.USER_ID = ? )");
-    params.push(numericUserId); 
+    conditions.push("1=1"); 
   }
 
   if (searchTerm) {
@@ -329,19 +331,29 @@ async function getConversationsForUser(userUsername, tabType = "active", searchT
     params.push(`%${searchTerm}%`); params.push(`%${searchTerm}%`); params.push(`%${searchTerm}%`);
   }
 
-  sql += conditions.length > 0 ? conditions.join(" AND ") : " 1=1 ";
+  sql += conditions.length > 0 ? conditions.join(" AND ") : " 1=0 "; 
   sql += ` ORDER BY conv.LAST_MESSAGE_TIMESTAMP DESC`;
+
+  log(`[getConversationsForUser] SQL: ${sql}`, "debug");
+  log(`[getConversationsForUser] Parâmetros: ${JSON.stringify(params)}`, "debug");
 
   try {
     const conversations = await allQuery(sql, params);
-    if (sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getUserById === 'function') {
+    if (sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getUserByUsername === 'function') {
         for (let conv of conversations) {
-            if (conv.USER_ID) {
-                const assignedUser = await sqliteAdminServiceInstance.getUserById(conv.USER_ID);
-                if (assignedUser) conv.USER_NAME_ASSIGNED = assignedUser.NAME;
+            if (conv.USER_USERNAME) { 
+                const assignedUser = await sqliteAdminServiceInstance.getUserByUsername(conv.USER_USERNAME);
+                if (assignedUser) {
+                    conv.USER_NAME_ASSIGNED = assignedUser.NAME; 
+                } else {
+                    conv.USER_NAME_ASSIGNED = conv.USER_USERNAME; 
+                }
+            } else {
+                conv.USER_NAME_ASSIGNED = null;
             }
         }
     }
+    log(`[getConversationsForUser] Encontradas ${conversations.length} conversas para ${userUsername}.`, "debug");
     return conversations.map(conv => ({
         ...conv, 
         LAST_MESSAGE_TIME: conv.LAST_MESSAGE_TIME_FORMATTED || conv.LAST_MESSAGE_TIMESTAMP, 
@@ -352,35 +364,37 @@ async function getConversationsForUser(userUsername, tabType = "active", searchT
   }
 }
 
-async function assignConversationToUser(conversationId, numericUserId, userUsername) { 
-  log(`Tentando atribuir conversa ID ${conversationId} ao usuário ID ${numericUserId} (Username: ${userUsername})`, 'debug');
+// agentUsername é o USERNAME/ID do agente (ex: "LUCIENE")
+async function assignConversationToUser(conversationId, numericAgentId, agentUsername) { 
+  log(`[assignConversationToUser] Tentando atribuir ConvID ${conversationId} ao AgenteID ${numericAgentId} (Username: ${agentUsername})`, 'debug');
+  // CORREÇÃO: Garantir que USER_USERNAME seja atualizado com agentUsername
   const sql = `
     UPDATE CONVERSATIONS
     SET USER_ID = ?, USER_USERNAME = ?, STATUS = 'active', UPDATED_AT = CURRENT_TIMESTAMP, UNREAD_MESSAGES = 0
-    WHERE ID = ? AND (STATUS = 'pending' OR USER_ID IS NULL OR (USER_ID != ? AND STATUS = 'active') )
+    WHERE ID = ? AND (STATUS = 'pending' OR USER_ID IS NULL OR (USER_ID != ? AND STATUS = 'active') ) 
   `; 
   try {
-    const result = await runQuery(sql, [numericUserId, userUsername, conversationId, numericUserId]);
+    const result = await runQuery(sql, [numericAgentId, agentUsername, conversationId, numericAgentId]);
     if (result.changes > 0) {
-        log(`Conversa ID ${conversationId} atribuída ao usuário ${userUsername} (ID: ${numericUserId})`, "info");
+        log(`[assignConversationToUser] ConvID ${conversationId} atribuída ao Agente ${agentUsername} (ID: ${numericAgentId})`, "info");
         return await getConversationById(conversationId); 
     }
     
     const currentConv = await getConversationById(conversationId);
-    if (currentConv && currentConv.USER_ID === numericUserId && currentConv.STATUS === 'active') {
-        log(`Conversa ID ${conversationId} já estava atribuída ao usuário ${userUsername} e ativa. Retornando dados atuais.`, "info");
+    if (currentConv && currentConv.USER_ID === numericAgentId && currentConv.STATUS === 'active') {
+        log(`[assignConversationToUser] ConvID ${conversationId} já estava atribuída ao Agente ${agentUsername} e ativa. Retornando dados atuais.`, "info");
         return currentConv; 
     }
-    log(`Conversa ID ${conversationId} não pôde ser atribuída ao usuário ${userUsername} (ID: ${numericUserId}). Changes: ${result.changes}. Status atual: ${currentConv?.STATUS}, Usuário atual: ${currentConv?.USER_ID}`, "warn");
+    log(`[assignConversationToUser] ConvID ${conversationId} não pôde ser atribuída ao Agente ${agentUsername}. Changes: ${result.changes}. Status: ${currentConv?.STATUS}, Agente Atual: ${currentConv?.USER_USERNAME}`, "warn");
     return null;
   } catch (error) {
-    log(`Erro ao atribuir conversa ID ${conversationId} ao usuário ${userUsername}: ${error.message}`, "error");
+    log(`Erro ao atribuir ConvID ${conversationId} ao Agente ${agentUsername}: ${error.message}`, "error");
     throw error;
   }
 }
 
 async function closeConversation(conversationId, numericUserId) { 
-  log(`Tentando fechar conversa ID ${conversationId} pelo usuário ID ${numericUserId}`, 'debug');
+  log(`[closeConversation] Tentando fechar ConvID ${conversationId} pelo UserID ${numericUserId}`, 'debug');
   const sql = `
     UPDATE CONVERSATIONS
     SET STATUS = 'closed', CLOSED_AT = CURRENT_TIMESTAMP, UPDATED_AT = CURRENT_TIMESTAMP
@@ -389,19 +403,19 @@ async function closeConversation(conversationId, numericUserId) {
   try {
     const result = await runQuery(sql, [conversationId, numericUserId]);
     if (result.changes > 0) {
-        log(`Conversa ID ${conversationId} encerrada pelo usuário ID ${numericUserId}`, "info");
+        log(`[closeConversation] ConvID ${conversationId} encerrada pelo UserID ${numericUserId}`, "info");
         return await getConversationById(conversationId); 
     }
-    log(`Conversa ID ${conversationId} não pôde ser encerrada (não ativa ou não pertence ao usuário ID ${numericUserId}).`, "warn");
+    log(`[closeConversation] ConvID ${conversationId} não pôde ser encerrada (não ativa ou não pertence ao UserID ${numericUserId}).`, "warn");
     return null;
   } catch (error) {
-    log(`Erro ao encerrar conversa ID ${conversationId}: ${error.message}`, "error");
+    log(`Erro ao encerrar ConvID ${conversationId}: ${error.message}`, "error");
     throw error;
   }
 }
 
 async function markMessagesAsReadByUser(conversationId, numericUserId) { 
-  log(`Marcando mensagens como lidas para conv ID ${conversationId} pelo usuário ID ${numericUserId}`, 'debug');
+  log(`[markMessagesAsReadByUser] Marcando mensagens como lidas para ConvID ${conversationId} pelo UserID ${numericUserId}`, 'debug');
   const updateMessagesSql = `
     UPDATE MESSAGES
     SET READ_BY_USER = 1 
@@ -415,23 +429,26 @@ async function markMessagesAsReadByUser(conversationId, numericUserId) {
   try {
     const messageChanges = await runQuery(updateMessagesSql, [conversationId]);
     const conv = await getQuery("SELECT USER_ID FROM CONVERSATIONS WHERE ID = ?", [conversationId]);
+    
     if (conv && conv.USER_ID === numericUserId) {
         await runQuery(updateConversationSql, [conversationId, numericUserId]);
+        log(`[markMessagesAsReadByUser] Contador UNREAD_MESSAGES da ConvID ${conversationId} zerado.`, "debug");
     } else if (conv) {
-        log(`Usuário ${numericUserId} tentou marcar mensagens como lidas para conversa ${conversationId} que pertence a ${conv.USER_ID}. Mensagens marcadas, mas contador de não lidas da conversa não foi zerado globalmente por este usuário.`, "warn");
+        log(`[markMessagesAsReadByUser] UserID ${numericUserId} marcou mensagens como lidas para ConvID ${conversationId}, mas não é o dono (Dono: ${conv.USER_ID}). Contador UNREAD_MESSAGES da conversa não foi zerado globalmente.`, "warn");
     }
 
     if (messageChanges.changes > 0) {
-      log(`${messageChanges.changes} mensagens marcadas como lidas pelo usuário na conversa ${conversationId}.`, "debug");
+      log(`[markMessagesAsReadByUser] ${messageChanges.changes} mensagens marcadas como lidas pelo usuário na ConvID ${conversationId}.`, "debug");
     }
     return messageChanges.changes;
   } catch (error) {
-    log(`Erro ao marcar mensagens como lidas (conv ID ${conversationId}): ${error.message}`, "error");
+    log(`Erro ao marcar mensagens como lidas (ConvID ${conversationId}): ${error.message}`, "error");
     throw error;
   }
 }
 
 async function getConversationById(conversationId) {
+  log(`[getConversationById] Buscando ConvID ${conversationId}`, "debug");
   const sql = `
     SELECT conv.*, 
            c.NAME as CLIENT_NAME, c.PHONE as CLIENT_PHONE, c.WHATSAPP_ID as CLIENT_WHATSAPP_ID,
@@ -442,34 +459,40 @@ async function getConversationById(conversationId) {
   `;
   try {
     const conversation = await getQuery(sql, [conversationId]);
-    if (conversation && conversation.USER_ID && sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getUserById === 'function') {
-        const user = await sqliteAdminServiceInstance.getUserById(conversation.USER_ID);
-        if (user) {
-            conversation.USER_NAME_ASSIGNED = user.NAME;
-            if(!conversation.USER_USERNAME) conversation.USER_USERNAME = user.USERNAME;
+    if (conversation) {
+        log(`[getConversationById] ConvID ${conversationId} encontrada. USER_ID: ${conversation.USER_ID}, USER_USERNAME: ${conversation.USER_USERNAME}`, "debug");
+        // USER_USERNAME já é o username/ID do agente. O nome completo (USER_NAME_ASSIGNED) é buscado se necessário.
+        if (conversation.USER_USERNAME && sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getUserByUsername === 'function') {
+            const agentDetails = await sqliteAdminServiceInstance.getUserByUsername(conversation.USER_USERNAME);
+            if (agentDetails) {
+                conversation.USER_NAME_ASSIGNED = agentDetails.NAME; 
+            } else {
+                conversation.USER_NAME_ASSIGNED = conversation.USER_USERNAME; 
+            }
         } else {
-            log(`Usuário ID ${conversation.USER_ID} não encontrado no serviço admin para conversa ${conversationId}.`, "warn");
+            conversation.USER_NAME_ASSIGNED = null;
         }
-    } else if (conversation && conversation.USER_ID) {
-        log(`sqliteAdminServiceInstance não disponível para buscar nome do usuário para conversa ${conversationId}.`, "warn");
+    } else {
+        log(`[getConversationById] ConvID ${conversationId} não encontrada.`, "warn");
     }
     return conversation;
   } catch (error) {
-    log(`Erro ao buscar conversa ID ${conversationId}: ${error.message}`, "error");
+    log(`Erro ao buscar ConvID ${conversationId}: ${error.message}`, "error");
     throw error;
   }
 }
 
 async function transferConversationToSector(conversationId, sectorKey, fromUserId) { 
+    log(`[transferConversationToSector] Transferindo ConvID ${conversationId} para Setor Key ${sectorKey} (de UserID ${fromUserId})`, "debug");
     try {
         if (!sqliteAdminServiceInstance || typeof sqliteAdminServiceInstance.getSectorByKey !== 'function') { 
-            log(`sqliteAdminServiceInstance não disponível para buscar setor ${sectorKey}.`, "error");
-            return false;
+            log(`[transferConversationToSector] sqliteAdminServiceInstance não disponível para buscar setor ${sectorKey}.`, "error");
+            return { success: false, message: "Serviço admin não disponível."};
         }
         const sector = await sqliteAdminServiceInstance.getSectorByKey(sectorKey);
         if (!sector) {
-          log(`Setor KEY ${sectorKey} não encontrado para transferência`, "error");
-          return false;
+          log(`[transferConversationToSector] Setor KEY ${sectorKey} não encontrado para transferência`, "error");
+          return { success: false, message: `Setor ${sectorKey} não encontrado.`};
         }
         const transferRecord = JSON.stringify({
           timestamp: new Date().toISOString(),
@@ -480,51 +503,60 @@ async function transferConversationToSector(conversationId, sectorKey, fromUserI
         const sql = `
           UPDATE CONVERSATIONS SET
             USER_ID = NULL, USER_USERNAME = NULL, STATUS = 'pending', 
-            SECTOR = ?,
-            TRANSFER_HISTORY = IFNULL(TRANSFER_HISTORY, '') || CASE WHEN TRANSFER_HISTORY = '' THEN '' ELSE ',' END || ?,
-            UPDATED_AT = CURRENT_TIMESTAMP
+            SECTOR = ?, 
+            TRANSFER_HISTORY = IFNULL(TRANSFER_HISTORY, '') || CASE WHEN TRANSFER_HISTORY = '' THEN '' ELSE x'0A' END || ?,
+            UPDATED_AT = CURRENT_TIMESTAMP,
+            UNREAD_MESSAGES = 1 
           WHERE ID = ?
         `;
         await runQuery(sql, [sector.SECTOR_NAME, transferRecord, conversationId]);
-        log(`Conversa ID ${conversationId} transferida para o setor ${sector.SECTOR_NAME}`, "info");
-        return true;
+        log(`[transferConversationToSector] ConvID ${conversationId} transferida para o setor ${sector.SECTOR_NAME}`, "info");
+        return { success: true, conversation: await getConversationById(conversationId) };
     } catch (error) {
         log(`Erro ao transferir conversa para setor: ${error.message}`, "error");
-        return false;
+        return { success: false, message: error.message };
     }
 }
-async function transferConversationToUser(conversationId, targetUserId, fromUserId) { 
+async function transferConversationToUser(conversationId, targetAgentUsername, fromUserId) { 
+    log(`[transferConversationToUser] Transferindo ConvID ${conversationId} para Agente Username ${targetAgentUsername} (de UserID ${fromUserId})`, "debug");
     try {
-        if (!sqliteAdminServiceInstance || typeof sqliteAdminServiceInstance.getUserById !== 'function') {
-            log(`sqliteAdminServiceInstance não disponível para buscar usuário ${targetUserId}.`, "error");
-            return false;
+        if (!sqliteAdminServiceInstance || typeof sqliteAdminServiceInstance.getUserByUsername !== 'function') {
+            log(`[transferConversationToUser] sqliteAdminServiceInstance não disponível para buscar usuário ${targetAgentUsername}.`, "error");
+            return { success: false, message: "Serviço admin não disponível."};
         }
-        const targetUser = await sqliteAdminServiceInstance.getUserById(targetUserId); 
+        const targetUser = await sqliteAdminServiceInstance.getUserByUsername(targetAgentUsername); 
         if (!targetUser) {
-          log(`Usuário ID ${targetUserId} não encontrado para transferência`, "error");
-          return false;
+          log(`[transferConversationToUser] Agente Username ${targetAgentUsername} não encontrado para transferência`, "error");
+          return { success: false, message: `Atendente ${targetAgentUsername} não encontrado.`};
         }
         const transferRecord = JSON.stringify({
           timestamp: new Date().toISOString(),
           fromUserId: fromUserId,
-          toUserId: targetUserId,
-          toUserName: targetUser.NAME,
+          toUserId: targetUser.ID,
+          toUserName: targetUser.USERNAME, 
         });
         const sql = `
           UPDATE CONVERSATIONS SET
             USER_ID = ?, USER_USERNAME = ?, STATUS = 'active', 
             SECTOR = ?, 
-            TRANSFER_HISTORY = IFNULL(TRANSFER_HISTORY, '') || CASE WHEN TRANSFER_HISTORY = '' THEN '' ELSE ',' END || ?,
-            UPDATED_AT = CURRENT_TIMESTAMP
+            TRANSFER_HISTORY = IFNULL(TRANSFER_HISTORY, '') || CASE WHEN TRANSFER_HISTORY = '' THEN '' ELSE x'0A' END || ?,
+            UPDATED_AT = CURRENT_TIMESTAMP,
+            UNREAD_MESSAGES = 1 
           WHERE ID = ?
         `;
-        const targetSector = targetUser.SECTOR && targetUser.SECTOR.length > 0 ? targetUser.SECTOR[0] : null; 
-        await runQuery(sql, [targetUserId, targetUser.USERNAME, targetSector, transferRecord, conversationId]);
-        log(`Conversa ID ${conversationId} transferida para o usuário ${targetUser.NAME}`, "info");
-        return true;
+        const targetUserPrimarySectorKey = targetUser.SECTOR && targetUser.SECTOR.length > 0 ? targetUser.SECTOR[0] : null; 
+        let targetSectorName = null;
+        if (targetUserPrimarySectorKey && sqliteAdminServiceInstance && typeof sqliteAdminServiceInstance.getSectorByKey === 'function') {
+            const sectorObj = await sqliteAdminServiceInstance.getSectorByKey(targetUserPrimarySectorKey);
+            if (sectorObj) targetSectorName = sectorObj.SECTOR_NAME;
+        }
+
+        await runQuery(sql, [targetUser.ID, targetUser.USERNAME, targetSectorName, transferRecord, conversationId]);
+        log(`[transferConversationToUser] ConvID ${conversationId} transferida para o agente ${targetUser.USERNAME}`, "info");
+        return { success: true, conversation: await getConversationById(conversationId) };
     } catch (error) {
-        log(`Erro ao transferir conversa para usuário: ${error.message}`, "error");
-        return false;
+        log(`Erro ao transferir conversa para agente: ${error.message}`, "error");
+        return { success: false, message: error.message };
     }
 }
 
@@ -547,3 +579,4 @@ module.exports = {
   transferConversationToSector,
   transferConversationToUser,
 };
+

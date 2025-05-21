@@ -103,7 +103,7 @@ function createMainWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true, nodeIntegration: false,
-      devTools: true, // Habilita DevTools
+      devTools: true, 
     },
     icon: path.join(__dirname, "frontend/web/img/icons/logo.svg"),
     transparent: true, frame: false, resizable: false, show: false,
@@ -158,11 +158,40 @@ function createChatWindow(agentInfo) {
     width: 1200, height: 800, minWidth: 900, minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"), contextIsolation: true,
-      nodeIntegration: false, devTools: true,
+      nodeIntegration: false, devTools: true, // DevTools habilitado por padrão
     },
     title: `Chat - Usuário: ${agentName}`,
     icon: path.join(__dirname, "frontend/web/img/icons/logo.png"),
   })
+
+  // Adiciona menu de contexto para DevTools na janela de chat
+  newChatWindow.webContents.on('context-menu', (event, params) => {
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Inspecionar Elemento',
+        click: () => {
+          newChatWindow.webContents.inspectElement(params.x, params.y);
+        },
+      },
+      { type: 'separator' },
+      {
+        label: 'Abrir DevTools',
+        click: () => {
+          newChatWindow.webContents.openDevTools({ mode: 'detach' });
+        },
+      },
+      {
+        label: 'Recarregar',
+        accelerator: 'CmdOrCtrl+R',
+        click: () => {
+          newChatWindow.webContents.reload();
+        }
+      }
+    ]);
+    contextMenu.popup(newChatWindow);
+  });
+  sendLogToViewer(`[createChatWindow] Menu de contexto adicionado à janela de chat para ${agentName}.`, "debug");
+
 
   const chatUrl = `http://localhost:${PORT}/chat.html?agentId=${encodeURIComponent(agentId)}&agentName=${encodeURIComponent(agentName)}`;
   sendLogToViewer(`[createChatWindow] Carregando URL para ${agentName}: ${chatUrl}`, "debug");
@@ -257,8 +286,10 @@ function createLogsWindow() {
  */
 function setupMenu() {
   sendLogToViewer("[setupMenu] Configurando o menu da aplicação.", "debug");
-  Menu.setApplicationMenu(null); // Remove o menu padrão do Electron
-  sendLogToViewer("[setupMenu] Menu da aplicação removido (definido como null).", "debug");
+  // Menu.setApplicationMenu(null); // Remove o menu padrão do Electron
+  // Vamos manter o menu padrão por enquanto para facilitar o acesso ao DevTools globalmente
+  // Se quiser remover depois, descomente a linha acima.
+  sendLogToViewer("[setupMenu] Menu da aplicação mantido (padrão do Electron).", "debug");
 }
 
 /**
@@ -327,19 +358,16 @@ app.whenReady().then(async () => {
   if (sqliteMainService && typeof sqliteMainService.setLogger === "function") sqliteMainService.setLogger(sendLogToViewer);
   if (sqliteAdminService && typeof sqliteAdminService.setLogger === "function") sqliteAdminService.setLogger(sendLogToViewer);
   if (sqliteChatService && typeof sqliteChatService.setLogger === "function") sqliteChatService.setLogger(sendLogToViewer);
-  if (whatsappService && typeof whatsappService.setLogger === 'function') whatsappService.setLogger(sendLogToViewer);
-  if (websocketService && typeof websocketService.setLogger === 'function') websocketService.setLogger(sendLogToViewer);
+  // Não é necessário para whatsappService e websocketService se eles já usam sendLogToViewer diretamente ou via parâmetro
   sendLogToViewer("[AppReady] Logger injetado nos serviços.", "debug");
 
-  setupMenu(); // Configura (remove) o menu da aplicação
-  await initializeDatabases(); // Inicializa os bancos de dados
+  setupMenu(); 
+  await initializeDatabases(); 
 
-  // Configuração do servidor Express para servir arquivos estáticos e rotas da API
   const expressApp = express()
-  expressApp.use(express.json()) // Middleware para parsear JSON
+  expressApp.use(express.json()) 
   sendLogToViewer("[AppReady] Servidor Express inicializado e configurado para JSON.", "debug");
 
-  // Configura pasta de uploads
   const uploadsPath = path.join(__dirname, "uploads");
   if (!fs.existsSync(uploadsPath)) {
     fs.mkdirSync(uploadsPath, { recursive: true });
@@ -348,12 +376,10 @@ app.whenReady().then(async () => {
   expressApp.use('/uploads', express.static(uploadsPath));
   sendLogToViewer(`[AppReady] Pasta de uploads servida estaticamente em /uploads. Path: ${uploadsPath}`, "debug");
 
-  // Configura pasta de arquivos estáticos do frontend
   const staticPath = path.join(__dirname, "frontend/web")
   expressApp.use(express.static(staticPath))
   sendLogToViewer(`[AppReady] Pasta de arquivos estáticos servida. Path: ${staticPath}`, "debug");
 
-  // Configura rotas da API
   sendLogToViewer("[AppReady] Configurando rotas da API...", "debug");
   const authRouter = authRoutesModule(sqliteAdminService, sendLogToViewer);
   expressApp.use("/api/auth", authRouter);
@@ -367,14 +393,12 @@ app.whenReady().then(async () => {
   expressApp.use("/api/chat", chatRouter);
   sendLogToViewer("[AppReady] Rotas de chat (/api/chat) configuradas.", "debug");
 
-  // Rotas para servir as páginas HTML principais
   expressApp.get(["/", "/index.html"], (req, res) => res.sendFile(path.join(staticPath, "index.html")))
   expressApp.get("/chat.html", (req, res) => res.sendFile(path.join(staticPath, "chat.html")))
   expressApp.get("/admin.html", (req, res) => res.sendFile(path.join(staticPath, "admin.html")))
   expressApp.get("/logsViewer.html", (req, res) => res.sendFile(path.join(staticPath, "logsViewer.html")))
   sendLogToViewer("[AppReady] Rotas GET para arquivos HTML configuradas.", "debug");
 
-  // Cria servidor HTTP e inicializa WebSocket e WhatsApp Service
   const internalServer = httpServer.createServer(expressApp)
   sendLogToViewer("[AppReady] Servidor HTTP interno criado.", "debug");
 
@@ -391,7 +415,7 @@ app.whenReady().then(async () => {
     websocketService.initializeWebSocketServer(internalServer, sendLogToViewer, whatsappService, dbServices)
     sendLogToViewer("[AppReady] Servidor WebSocket inicializado com sucesso.", "info")
   } else {
-    sendLogToViewer("[AppReady] Falha ao inicializar o servidor WebSocket: um ou mais serviços críticos (WebSocket, WhatsApp, DBs) não estão definidos ou inicializados corretamente.", "error")
+    sendLogToViewer("[AppReady] Falha ao inicializar o servidor WebSocket: um ou mais serviços críticos não estão definidos.", "error")
   }
 
   try {
@@ -404,17 +428,16 @@ app.whenReady().then(async () => {
       await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, dbServices, appUserDataPath)
       sendLogToViewer("[AppReady] Serviço WhatsApp (whatsapp-web.js) iniciado e tentando conectar ao WhatsApp.", "info")
     } else {
-      sendLogToViewer("[AppReady] Falha ao iniciar WhatsApp Service: um ou mais serviços (WhatsApp, WebSocket, DBs) não estão definidos ou inicializados corretamente.", "error")
+      sendLogToViewer("[AppReady] Falha ao iniciar WhatsApp Service: um ou mais serviços não estão definidos.", "error")
     }
   } catch (err) {
     sendLogToViewer(`[AppReady] Falha CRÍTICA ao iniciar o serviço WhatsApp: ${err.message}. Stack: ${err.stack}`, "error")
   }
 
-  // Inicia o servidor HTTP
   internalServer
     .listen(PORT, () => {
       sendLogToViewer(`[AppReady] Servidor HTTP e WebSocket interno rodando em http://localhost:${PORT}`, "info")
-      createMainWindow() // Cria a janela principal após o servidor iniciar
+      createMainWindow() 
     })
     .on("error", (err) => {
       sendLogToViewer(`[AppReady] Erro ao iniciar o servidor interno na porta ${PORT}: ${err.message}`, "error")
@@ -422,7 +445,6 @@ app.whenReady().then(async () => {
       app.quit(); process.exit(1);
     })
 
-  // Evento 'activate' (macOS): recria a janela principal se não houver janelas abertas.
   app.on("activate", () => {
     sendLogToViewer("[AppActivate] Evento 'activate' disparado.", "debug");
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -432,54 +454,41 @@ app.whenReady().then(async () => {
   })
 })
 
-// Evento 'window-all-closed': encerra a aplicação quando todas as janelas são fechadas (exceto no macOS).
 app.on("window-all-closed", async () => {
-  sendLogToViewer("[WindowAllClosed] Evento 'window-all-closed' disparado. Todas as janelas foram fechadas.", "info")
-  if (process.platform !== "darwin") { // 'darwin' é o macOS
+  sendLogToViewer("[WindowAllClosed] Evento 'window-all-closed' disparado.", "info")
+  if (process.platform !== "darwin") { 
     sendLogToViewer("[WindowAllClosed] Plataforma não é macOS. Encerrando aplicação.", "info");
 
-    // Tenta desconectar o cliente WhatsApp
     if (whatsappService && typeof whatsappService.getClient === "function") {
       const whatsClient = whatsappService.getClient()
-      if (whatsClient && typeof whatsClient.logout === "function") {
-        sendLogToViewer("[WindowAllClosed] Desconectando WhatsApp Service (logout)...", "info")
+      if (whatsClient) {
+         sendLogToViewer("[WindowAllClosed] Tentando desconectar/destruir cliente WhatsApp...", "info")
         try {
-          await whatsClient.logout();
-          sendLogToViewer("[WindowAllClosed] WhatsApp Service desconectado (logout) com sucesso.", "info")
-        }
-        catch (e) {
-          sendLogToViewer(`[WindowAllClosed] Erro ao desconectar WhatsApp Service (logout): ${e.message}. Tentando destroy()...`, "error");
-          if (typeof whatsClient.destroy === 'function') {
-            try {
-              await whatsClient.destroy();
-              sendLogToViewer("[WindowAllClosed] WhatsApp Service (client) destruído após falha no logout.", "warn");
-            }
-            catch (destroyErr) {
-              sendLogToViewer(`[WindowAllClosed] Erro ao destruir WhatsApp Service (client) após falha no logout: ${destroyErr.message}`, "error");
-            }
+          if (typeof whatsClient.getState === 'function' && await whatsClient.getState() === 'CONNECTED') {
+             if (typeof whatsClient.logout === 'function') {
+                await whatsClient.logout();
+                sendLogToViewer("[WindowAllClosed] WhatsApp Service desconectado (logout).", "info")
+             } else if (typeof whatsClient.destroy === 'function') {
+                await whatsClient.destroy();
+                sendLogToViewer("[WindowAllClosed] WhatsApp Service destruído (sem logout).", "warn")
+             }
+            
+          } else if (typeof whatsClient.destroy === 'function') {
+             await whatsClient.destroy();
+             sendLogToViewer("[WindowAllClosed] WhatsApp Service destruído (não estava conectado).", "info")
           }
+        } catch (e) {
+          sendLogToViewer(`[WindowAllClosed] Erro ao desconectar/destruir WhatsApp Service: ${e.message}.`, "error");
         }
-      } else if (whatsClient && typeof whatsClient.destroy === 'function') {
-         sendLogToViewer("[WindowAllClosed] Método logout não encontrado no cliente WhatsApp, tentando destruir...", "warn");
-         try {
-           await whatsClient.destroy();
-           sendLogToViewer("[WindowAllClosed] Cliente WhatsApp destruído com sucesso.", "info");
-         }
-         catch (e) {
-           sendLogToViewer(`[WindowAllClosed] Erro ao destruir cliente WhatsApp: ${e.message}`, "error");
-         }
-      } else {
-         sendLogToViewer("[WindowAllClosed] Cliente WhatsApp não disponível ou métodos logout/destroy não são funções. Não foi possível desconectar/destruir.", "info")
       }
     }
 
-    // Fecha conexões com os bancos de dados
     try {
       sendLogToViewer("[WindowAllClosed] Fechando conexões com bancos de dados SQLite...", "info");
       if (sqliteMainService && typeof sqliteMainService.close === "function") await sqliteMainService.close();
       if (sqliteAdminService && typeof sqliteAdminService.close === "function") await sqliteAdminService.close();
       if (sqliteChatService && typeof sqliteChatService.close === "function") await sqliteChatService.close();
-      sendLogToViewer("[WindowAllClosed] Todas as conexões SQLite foram fechadas com sucesso.", "info");
+      sendLogToViewer("[WindowAllClosed] Todas as conexões SQLite foram fechadas.", "info");
     } catch (dbCloseError) {
       sendLogToViewer(`[WindowAllClosed] Erro ao fechar conexões SQLite: ${dbCloseError.message}`, "error")
     }
@@ -487,43 +496,37 @@ app.on("window-all-closed", async () => {
     sendLogToViewer("[WindowAllClosed] Encerrando aplicação (app.quit()).", "info")
     app.quit()
   } else {
-    sendLogToViewer("[WindowAllClosed] Plataforma é macOS. Aplicação não será encerrada automaticamente.", "info");
+    sendLogToViewer("[WindowAllClosed] Plataforma é macOS. Aplicação não será encerrada.", "info");
   }
 })
 
-// Manipulador IPC para controlar o bot (pausar/reiniciar)
 ipcMain.on("control-bot", async (event, data) => {
   const { action } = data;
   const currentSessionId = whatsappService?.sessionId || "whatsapp-bot-session";
   sendLogToViewer(`[IPC control-bot] Ação recebida: '${action}' para sessão: '${currentSessionId}'`, "info")
 
   if (!whatsappService || !websocketService) {
-    sendLogToViewer("[IPC control-bot] Erro: Um ou mais serviços (WhatsApp, WebSocket) não estão disponíveis para controlar o bot.", "error")
+    sendLogToViewer("[IPC control-bot] Erro: Serviços WhatsApp/WebSocket não disponíveis.", "error")
     return
   }
 
   try {
     if (action === "pause") {
       const isNowPaused = await whatsappService.togglePauseBot()
-      sendLogToViewer(`[IPC control-bot] Bot ${isNowPaused ? "pausado" : "retomado"} através do IPC.`, "info")
+      sendLogToViewer(`[IPC control-bot] Bot ${isNowPaused ? "pausado" : "retomado"}.`, "info")
     } else if (action === "restart") {
-      sendLogToViewer("[IPC control-bot] Iniciando reinício do bot via IPC...", "info")
+      sendLogToViewer("[IPC control-bot] Iniciando reinício do bot...", "info")
       try {
         await whatsappService.fullLogoutAndCleanup()
         sendLogToViewer("[IPC control-bot] Limpeza completa do WhatsApp Service realizada.", "info")
 
-        sendLogToViewer("[IPC control-bot] Tentando reconectar WhatsApp Service após limpeza completa...", "info")
+        sendLogToViewer("[IPC control-bot] Tentando reconectar WhatsApp Service...", "info")
         const appUserDataPath = app.getPath("userData")
         const dbServices = { main: sqliteMainService, admin: sqliteAdminService, chat: sqliteChatService };
         await whatsappService.connectToWhatsApp(sendLogToViewer, websocketService, dbServices, appUserDataPath)
         sendLogToViewer("[IPC control-bot] WhatsApp Service reconectado.", "info")
 
-        websocketService.broadcastToAdmins({
-          type: "status_update",
-          clientId: currentSessionId,
-          payload: { status: "RESTARTING", reason: "Solicitado pelo administrador via IPC" },
-        })
-        sendLogToViewer("[IPC control-bot] Notificação de reinício enviada aos admins.", "info")
+        // Não precisa mais enviar 'RESTARTING' aqui, pois connectToWhatsApp já envia os status corretos (QR_CODE, AUTHENTICATED, READY)
       } catch (restartError) {
         sendLogToViewer(`[IPC control-bot] Erro CRÍTICO durante o reinício do bot: ${restartError.message}. Stack: ${restartError.stack}`, "error")
         websocketService.broadcastToAdmins({
@@ -533,52 +536,47 @@ ipcMain.on("control-bot", async (event, data) => {
         })
       }
     } else {
-      sendLogToViewer(`[IPC control-bot] Ação desconhecida recebida: '${action}'`, "warn")
+      sendLogToViewer(`[IPC control-bot] Ação desconhecida: '${action}'`, "warn")
     }
   } catch (error) {
     sendLogToViewer(`[IPC control-bot] Erro ao executar ação '${action}': ${error.message}. Stack: ${error.stack}`, "error")
   }
 })
 
-// Manipulador IPC para navegação entre janelas/páginas
 ipcMain.on("navigate", (event, receivedPayload) => {
   sendLogToViewer(`[IPC Navigate] Mensagem 'navigate' recebida. Payload: ${JSON.stringify(receivedPayload)}`, "debug")
   const { targetPage, agentInfo, adminInfo: receivedAdminInfo } = receivedPayload
   sendLogToViewer(
-    `[IPC Navigate] Tentando navegar para: '${targetPage}'. AgentInfo: ${JSON.stringify(agentInfo)}. AdminInfo Recebido: ${JSON.stringify(receivedAdminInfo)}. currentAdminInfo antes da navegação: ${JSON.stringify(currentAdminInfo)}`,
+    `[IPC Navigate] Tentando navegar para: '${targetPage}'. AgentInfo: ${JSON.stringify(agentInfo)}. AdminInfo Recebido: ${JSON.stringify(receivedAdminInfo)}. currentAdminInfo: ${JSON.stringify(currentAdminInfo)}`,
     "info",
   )
 
-  // Fecha janelas existentes conforme necessário antes de abrir a nova
   if (mainWindow && !mainWindow.isDestroyed() && targetPage !== "login") {
     sendLogToViewer(`[IPC Navigate] Fechando mainWindow para navegação para '${targetPage}'.`, "debug");
-    mainWindow.close()
-    mainWindow = null
+    mainWindow.close(); mainWindow = null;
   }
-  Object.values(chatWindows).forEach((win) => {
+  Object.keys(chatWindows).forEach((key) => {
+    const win = chatWindows[key];
     if (win && !win.isDestroyed() && targetPage !== "chat") {
-      sendLogToViewer(`[IPC Navigate] Fechando janela de chat para navegação para '${targetPage}'.`, "debug");
-      win.close()
+      sendLogToViewer(`[IPC Navigate] Fechando janela de chat para ${key} para navegação para '${targetPage}'.`, "debug");
+      win.close(); delete chatWindows[key];
     }
-  })
-  if (targetPage !== "chat") {
+  });
+  if (targetPage !== "chat" && Object.keys(chatWindows).length > 0) {
     sendLogToViewer(`[IPC Navigate] Limpando objeto chatWindows pois targetPage não é 'chat'.`, "debug");
-    chatWindows = {}
+    chatWindows = {};
   }
 
   if (adminWindow && !adminWindow.isDestroyed() && targetPage !== "admin" && targetPage !== "logs") {
     sendLogToViewer(`[IPC Navigate] Fechando adminWindow para navegação para '${targetPage}'.`, "debug");
-    adminWindow.close()
-    adminWindow = null
+    adminWindow.close(); adminWindow = null;
   }
 
   if (logsWindow && !logsWindow.isDestroyed() && targetPage !== "logs" && targetPage !== "admin") {
     sendLogToViewer(`[IPC Navigate] Fechando logsWindow para navegação para '${targetPage}'.`, "debug");
-    logsWindow.close()
-    logsWindow = null
+    logsWindow.close(); logsWindow = null;
   }
 
-  // Abre a nova janela/página
   if (targetPage === "chat" && agentInfo && agentInfo.agent) {
     sendLogToViewer(`[IPC Navigate] Navegando para 'chat' com agentInfo: ${JSON.stringify(agentInfo)}`, "debug");
     createChatWindow(agentInfo)
@@ -586,125 +584,85 @@ ipcMain.on("navigate", (event, receivedPayload) => {
     const adminDataToUse = receivedAdminInfo || currentAdminInfo
     sendLogToViewer(`[IPC Navigate] Navegando para 'admin'. adminDataToUse: ${JSON.stringify(adminDataToUse)}`, "debug");
     if (adminDataToUse && typeof adminDataToUse.name !== "undefined") {
-      if (receivedAdminInfo && (!currentAdminInfo || currentAdminInfo.name !== receivedAdminInfo.name)) {
-        currentAdminInfo = receivedAdminInfo // Atualiza currentAdminInfo se um novo foi recebido
+      if (receivedAdminInfo && (!currentAdminInfo || currentAdminInfo.agent !== receivedAdminInfo.agent)) { // Compara pelo 'agent' (username) que é mais único
+        currentAdminInfo = receivedAdminInfo 
         sendLogToViewer(`[IPC Navigate] currentAdminInfo atualizado para: ${JSON.stringify(currentAdminInfo)}`, "debug");
       }
-      createAdminWindow(currentAdminInfo)
+      createAdminWindow(currentAdminInfo) // Usa o currentAdminInfo atualizado ou o já existente
     } else {
-      sendLogToViewer(
-        `[IPC Navigate] Informação do admin não disponível ou inválida para abrir a página 'admin'. Redirecionando para 'login'. adminDataToUse: ${JSON.stringify(adminDataToUse)}`,
-        "warn",
-      )
+      sendLogToViewer(`[IPC Navigate] Informação do admin não disponível para 'admin'. Redirecionando para 'login'.`, "warn")
       currentAdminInfo = null
       createMainWindow()
     }
   } else if (targetPage === "login") {
     sendLogToViewer("[IPC Navigate] Navegando para 'login'.", "debug");
-    currentAdminInfo = null // Limpa adminInfo ao ir para login
-    if (adminWindow && !adminWindow.isDestroyed()) {
-      sendLogToViewer("[IPC Navigate] Fechando adminWindow ao navegar para 'login'.", "debug");
-      adminWindow.close()
-    }
-    if (logsWindow && !logsWindow.isDestroyed()) {
-      sendLogToViewer("[IPC Navigate] Fechando logsWindow ao navegar para 'login'.", "debug");
-      logsWindow.close()
-    }
+    currentAdminInfo = null 
+    if (adminWindow && !adminWindow.isDestroyed()) { adminWindow.close(); adminWindow = null; }
+    if (logsWindow && !logsWindow.isDestroyed()) { logsWindow.close(); logsWindow = null; }
+    Object.keys(chatWindows).forEach(key => { if(chatWindows[key] && !chatWindows[key].isDestroyed()) chatWindows[key].close(); });
+    chatWindows = {};
     createMainWindow()
   } else if (targetPage === "logs") {
     sendLogToViewer("[IPC Navigate] Navegando para 'logs'.", "debug");
     createLogsWindow()
   } else {
-    sendLogToViewer(
-      `[IPC Navigate] Falha na navegação: Página de destino '${targetPage}' desconhecida ou informações insuficientes fornecidas.`,
-      "warn",
-    )
-    // Se nenhuma janela principal estiver ativa e a navegação falhar (e não for para login), reabre a de login
+    sendLogToViewer(`[IPC Navigate] Falha: Página '${targetPage}' desconhecida.`, "warn")
     if (!mainWindow || (mainWindow && mainWindow.isDestroyed())) {
-      if (targetPage !== "login") {
-        sendLogToViewer(
-          `[IPC Navigate] Nenhuma janela principal ativa após falha de navegação para '${targetPage}'. Reabrindo janela de login como fallback.`,
-          "warn",
-        )
-        createMainWindow()
-      }
+      if (targetPage !== "login") createMainWindow();
     }
   }
 })
 
-// Manipulador IPC para logout do administrador
 ipcMain.on("admin-logout", () => {
-  sendLogToViewer("[IPC admin-logout] Mensagem 'admin-logout' recebida. Limpando currentAdminInfo.", "info")
+  sendLogToViewer("[IPC admin-logout] Mensagem 'admin-logout' recebida.", "info")
   currentAdminInfo = null
 })
 
-// Manipulador IPC para abrir DevTools na janela que enviou a mensagem
 ipcMain.on("open-dev-tools", (event) => {
   sendLogToViewer("[IPC open-dev-tools] Mensagem 'open-dev-tools' recebida.", "debug");
   const senderWebContents = event.sender;
   const windowInstance = BrowserWindow.fromWebContents(senderWebContents);
 
   if (windowInstance && !windowInstance.isDestroyed()) {
-    sendLogToViewer(`[IPC open-dev-tools] Tentando ABRIR DevTools para a janela: '${windowInstance.title}' (modo detach)`, "debug");
-    if (!windowInstance.isFocused()) {
-        windowInstance.focus();
-        sendLogToViewer(`[IPC open-dev-tools] Janela '${windowInstance.title}' focada antes de abrir DevTools.`, "debug");
-    }
-    windowInstance.webContents.openDevTools({ mode: 'detach' }); // Abre DevTools em janela separada
+    sendLogToViewer(`[IPC open-dev-tools] Abrindo DevTools para: '${windowInstance.title}'`, "debug");
+    if (!windowInstance.isFocused()) windowInstance.focus();
+    windowInstance.webContents.openDevTools({ mode: 'detach' });
     windowInstance.webContents.once('devtools-opened', () => {
-        sendLogToViewer(`[IPC open-dev-tools] DevTools efetivamente aberto para: '${windowInstance.title}'.`, "info");
+        sendLogToViewer(`[IPC open-dev-tools] DevTools aberto para: '${windowInstance.title}'.`, "info");
     });
   } else {
-    sendLogToViewer("[IPC open-dev-tools] Não foi possível encontrar a janela remetente para abrir DevTools ou a janela foi destruída.", "warn");
+    sendLogToViewer("[IPC open-dev-tools] Janela remetente não encontrada/destruída.", "warn");
   }
 });
 
-// Manipulador IPC para enviar o buffer de logs iniciais para a janela de logs quando ela solicita
 ipcMain.on("request-initial-logs", (event) => {
-  sendLogToViewer("[IPC request-initial-logs] Janela de logs solicitou histórico de logs.", "debug")
+  // sendLogToViewer("[IPC request-initial-logs] Janela de logs solicitou histórico.", "debug")
   if (event.sender && !event.sender.isDestroyed()) {
     event.sender.send("initial-logs-data", logBuffer)
-    sendLogToViewer(`[IPC request-initial-logs] Enviado ${logBuffer.length} logs iniciais para a janela solicitante.`, "debug");
+    // sendLogToViewer(`[IPC request-initial-logs] Enviado ${logBuffer.length} logs iniciais.`, "debug");
   } else {
-    sendLogToViewer("[IPC request-initial-logs] Remetente inválido ou destruído. Não foi possível enviar logs iniciais.", "warn");
+    // sendLogToViewer("[IPC request-initial-logs] Remetente inválido/destruído.", "warn");
   }
 })
 
-// Manipulador IPC para fechar a aplicação
 ipcMain.on("close-app", () => {
-  sendLogToViewer("[IPC close-app] Solicitação para fechar a aplicação ('close-app') recebida. Encerrando...", "info")
+  sendLogToViewer("[IPC close-app] Solicitação para fechar a aplicação.", "info")
   app.quit()
 })
 
-// Tratamento global de exceções não capturadas no processo principal
 process.on("uncaughtException", (error, origin) => {
-  const errorMessage = `Exceção NÃO CAPTURADA no processo principal: ${error.message}\nOrigem: ${origin}\nStack: ${error.stack}`
-  // Usar console.error diretamente aqui, pois sendLogToViewer pode falhar se o erro for muito fundamental
+  const errorMessage = `Exceção NÃO CAPTURADA: ${error.message}\nOrigem: ${origin}\nStack: ${error.stack}`
   console.error(errorMessage)
-  // Tentar logar com sendLogToViewer também, se possível
   try { sendLogToViewer(errorMessage, "error"); } catch (logError) { console.error("Falha ao usar sendLogToViewer para uncaughtException:", logError); }
-
   try {
-    if (app.isReady()) {
-      dialog.showErrorBox(
-        "Erro Inesperado no Processo Principal",
-        `Ocorreu um erro crítico não tratado. A aplicação pode precisar ser reiniciada.\nDetalhes: ${error.message}`,
-      )
-    }
-  } catch (e) {
-    console.error("Falha ao mostrar showErrorBox para uncaughtException:", e);
-  }
-  // Considerar encerrar a aplicação em caso de exceção não capturada para evitar estado inconsistente.
-  // app.quit(); // Descomentar se desejar que a aplicação encerre nesses casos.
+    if (app.isReady()) dialog.showErrorBox("Erro Inesperado",`Detalhes: ${error.message}`);
+  } catch (e) { console.error("Falha ao mostrar showErrorBox para uncaughtException:", e); }
 })
 
-// Tratamento global de rejeições de promessas não tratadas no processo principal
 process.on("unhandledRejection", (reason, promise) => {
   const reasonMessage = reason instanceof Error ? reason.message : String(reason);
   const reasonStack = reason instanceof Error ? reason.stack : "N/A";
-  const errorMessage = `Rejeição de Promessa NÃO TRATADA no processo principal: ${reasonMessage}\nStack: ${reasonStack}`
-  // Usar console.error diretamente
+  const errorMessage = `Rejeição de Promessa NÃO TRATADA: ${reasonMessage}\nStack: ${reasonStack}`
   console.error(errorMessage);
-  // Tentar logar com sendLogToViewer
   try { sendLogToViewer(errorMessage, "error"); } catch (logError) { console.error("Falha ao usar sendLogToViewer para unhandledRejection:", logError); }
 })
