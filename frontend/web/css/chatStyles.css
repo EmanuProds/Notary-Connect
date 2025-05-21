@@ -136,13 +136,8 @@ body {
     display: flex;
     width: 100%;
     height: 100%;
-    max-width: 1600px;
-    max-height: 100vh;
-    background-color: var(--container-bg-color);
-    box-shadow: var(--card-shadow);
-    border-radius: var(--border-radius);
     overflow: hidden;
-    transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    transition: all 0.3s ease;
 }
 
 /* --- Barra Lateral (Sidebar) --- */
@@ -1017,9 +1012,6 @@ html[data-theme="dark"] .icon-button.primary i {
 
     .chat-container.chat-active .sidebar {
         display: none;
-    }
-    .chat-container.chat-active .chat-area {
-        /* width: 100%; */ /* Não é mais necessário se sidebar está display:none */
     }
     .back-to-sidebar-button {
         display: none;

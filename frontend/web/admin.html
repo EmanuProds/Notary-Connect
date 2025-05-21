@@ -2,7 +2,7 @@
 <html lang="pt-BR" data-theme="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Administração</title>
+    <title>Notary Connect - Administração</title>
     <link rel="stylesheet" href="./css/adminStyles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -12,14 +12,14 @@
         <aside class="admin-sidebar">
             <div class="sidebar-header">
                 <img src="./img/icons/logo.svg" alt="Logo do Projeto" class="logo" onerror="this.src='https://placehold.co/40x40/FFFFFF/3498DB?text=L'">
-                <h1>Painel Admin</h1>
+                <h1>Administração do Sistema</h1>
             </div>
             <nav class="nav-list">
                 <ul>
                     <li>
                         <a href="#" class="nav-item active" data-section="roboSection">
                             <img src="./img/icons/robot.svg" alt="Ícone Robô" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-robot fa-icon" style="display:none;"></i> Robô / QR Code
+                            <i class="fas fa-robot fa-icon" style="display:none;"></i> Robô do WhatsApp
                         </a>
                     </li>
                     <li>
@@ -58,7 +58,7 @@
                 </button>
                  <button id="openDevToolsBtnAdmin" class="button-link">
                     <img src="./img/icons/devtools.svg" alt="Ícone DevTools" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                    <i class="fas fa-tools fa-icon" style="display:none;"></i> Ferramentas Dev
+                    <i class="fas fa-tools fa-icon" style="display:none;"></i> Ferramentas DevTools
                 </button>
                 <button id="logoutBtn" class="button-link">
                     <img src="./img/icons/logout.svg" alt="Ícone Logout" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
@@ -70,24 +70,24 @@
         <main class="admin-content">
             <section id="roboSection" class="content-section active">
                 <header class="section-header">
-                    <h2>Status do Robô e QR Code</h2>
+                    <h2>Status do Robô e Código QR</h2>
                 </header>
                 <div class="section-body columns">
                     <div class="column">
                         <div class="card">
-                            <h3>QR Code WhatsApp</h3>
+                            <h3>Código QR WhatsApp</h3>
                             <div id="qrDisplay" class="qr-code-display">
-                                <p>Aguardando QR Code...</p>
+                                <p>Aguardando Código QR...</p>
                             </div>
                             <p id="qrStatusText" class="status-text">Inicializando...</p>
                             <div id="botActions" class="bot-actions" style="display: none;">
                                 <button id="pauseBotBtn" class="button icon-button">
                                      <img src="./img/icons/pause.svg" alt="Pausar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                                     <i class="fas fa-pause fa-icon" style="display:none;"></i> Pausar Bot
+                                     <i class="fas fa-pause fa-icon" style="display:none;"></i> Pausar Robô
                                 </button>
                                 <button id="restartBotBtn" class="button icon-button danger">
                                     <img src="./img/icons/restart.svg" alt="Reiniciar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                                    <i class="fas fa-redo fa-icon" style="display:none;"></i> Reiniciar Bot
+                                    <i class="fas fa-redo fa-icon" style="display:none;"></i> Reiniciar Robô
                                 </button>
                             </div>
                         </div>
@@ -169,7 +169,7 @@
                             <input type="number" id="config_bot_response_delay" name="bot_response_delay" value="1000" min="0">
                         </div>
                          <div class="form-group full-width">
-                            <label for="config_bot_working_days">Dias de Funcionamento do Robô (0=Dom, 6=Sáb):</label>
+                            <label for="config_bot_working_days">Dias de Funcionamento do Robô (0 = Domingo, 6 = Sábado):</label>
                             <input type="text" id="config_bot_working_days" name="bot_working_days" placeholder="Ex: 1,2,3,4,5">
                         </div>
                         <div class="form-group">

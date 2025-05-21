@@ -1,104 +1,107 @@
 // frontend/web/js/adminResponses.js
-document.addEventListener("DOMContentLoaded", () => {
+(function() { // IIFE para encapsular o escopo
+  console.log("[AdminResponses] Script adminResponses.js INICIADO (execução direta).");
+
   const responsesSection = document.getElementById("respostasSection");
-  if (!responsesSection) return;
+  if (!responsesSection) {
+    console.warn("[AdminResponses] Seção de respostas ('respostasSection') não encontrada no DOM. Script encerrado.");
+    return;
+  }
+  console.log("[AdminResponses] Seção de respostas encontrada.");
 
   const responseList = document.getElementById("responseList");
   const responseForm = document.getElementById("responseForm");
   const responseModal = document.getElementById("responseModal");
   const closeModalBtn = document.getElementById("closeResponseModal");
-  const cancelResponseBtn = document.getElementById("cancelResponseBtn"); // Botão de cancelar
-  const saveResponseBtn = document.getElementById("saveResponseBtn");
+  const cancelResponseBtn = document.getElementById("cancelResponseBtn");
+  const saveResponseBtn = document.getElementById("saveResponseBtn"); // Usado para verificar se o botão existe, o evento é no form
   const addResponseBtn = document.getElementById("addResponseBtn");
   const responseSearchInput = document.getElementById("responseSearchInput");
+
+  if (!responseList || !responseForm || !responseModal || !closeModalBtn || !cancelResponseBtn || !saveResponseBtn || !addResponseBtn || !responseSearchInput) {
+    console.error("[AdminResponses] ERRO CRÍTICO: Um ou mais elementos da UI para Respostas Automáticas não foram encontrados. Verifique os IDs no HTML.");
+    return;
+  }
+  console.log("[AdminResponses] Todos os elementos da UI para Respostas Automáticas foram referenciados.");
 
   let currentResponseId = null;
   let allResponses = [];
 
   async function loadResponses() {
+    console.log("[AdminResponses] loadResponses: Iniciando carregamento de respostas...");
     try {
+      console.log("[AdminResponses] loadResponses: Realizando fetch para /api/admin/responses");
       const response = await fetch("/api/admin/responses");
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      console.log("[AdminResponses] loadResponses: Resposta do fetch recebida, status:", response.status);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `Erro HTTP: ${response.status}` }));
+        console.error("[AdminResponses] loadResponses: Erro na resposta do fetch:", errorData.message || `Erro HTTP: ${response.status}`);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+      console.log("[AdminResponses] loadResponses: Dados JSON parseados:", data);
 
       if (data.success) {
         allResponses = data.data;
+        console.log("[AdminResponses] loadResponses: Respostas carregadas com sucesso:", allResponses.length, "respostas.");
         renderResponseList(allResponses);
       } else {
+        console.warn("[AdminResponses] loadResponses: Erro ao carregar respostas (data.success = false):", data.message);
         showAlert("Erro ao carregar respostas: " + (data.message || "Erro desconhecido"), "error");
       }
     } catch (error) {
-      console.error("Erro ao carregar respostas:", error);
+      console.error("[AdminResponses] loadResponses: Falha crítica ao carregar respostas:", error);
       showAlert("Erro de rede ou servidor ao carregar respostas.", "error");
     }
   }
 
   function renderResponseList(responses) {
-    if (!responseList) return;
+    console.log("[AdminResponses] renderResponseList: Renderizando lista com", responses ? responses.length : 0, "respostas.");
+    if (!responseList) {
+        console.error("[AdminResponses] renderResponseList: Elemento responseList não encontrado.");
+        return;
+    }
     responseList.innerHTML = "";
 
     if (!responses || responses.length === 0) {
+      console.log("[AdminResponses] renderResponseList: Nenhuma resposta para renderizar.");
       responseList.innerHTML = '<div class="empty-state">Nenhuma resposta automática encontrada. Clique em "Nova Resposta" para adicionar.</div>';
       return;
     }
 
     responses.forEach((resp) => {
       const responseItem = document.createElement("div");
-      responseItem.className = "response-item";
+      responseItem.className = "response-item list-item"; // Adicionando classe genérica 'list-item'
       responseItem.dataset.id = resp.ID;
 
       const activeClass = resp.ACTIVE ? "active" : "inactive";
       const statusText = resp.ACTIVE ? "Ativo" : "Inativo";
-
-      // Formatando delays para exibição
       const typingDelayText = resp.TYPING_DELAY_MS !== null && resp.TYPING_DELAY_MS !== undefined ? `${resp.TYPING_DELAY_MS}ms` : 'Padrão';
       const sendDelayText = resp.RESPONSE_DELAY_MS !== null && resp.RESPONSE_DELAY_MS !== undefined ? `${resp.RESPONSE_DELAY_MS}ms` : 'Padrão';
 
-
       responseItem.innerHTML = `
-        <div class="response-header">
-          <h3 class="response-name">${escapeHTML(resp.RESPONSE_NAME)}</h3>
-          <div class="response-actions">
-            <span class="response-status ${activeClass}">${statusText}</span>
-            <button class="btn-edit" data-id="${resp.ID}" aria-label="Editar">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <div class="list-item-header">
+          <h4>${escapeHTML(resp.RESPONSE_NAME)}</h4>
+          <div class="item-actions">
+            <span class="status-badge ${activeClass}">${statusText}</span>
+            <button class="icon-button btn-edit-response" data-id="${resp.ID}" aria-label="Editar">
+              <i class="fas fa-edit"></i>
             </button>
-            <button class="btn-delete" data-id="${resp.ID}" aria-label="Excluir">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+            <button class="icon-button btn-delete-response" data-id="${resp.ID}" aria-label="Excluir">
+              <i class="fas fa-trash-alt"></i>
             </button>
           </div>
         </div>
-        <div class="response-details">
-          <div class="response-detail">
-            <span class="detail-label">Chave:</span>
-            <span class="detail-value code">${escapeHTML(resp.RESPONSE_KEY)}</span>
-          </div>
-          <div class="response-detail">
-            <span class="detail-label">Padrão/Gatilho:</span>
-            <span class="detail-value code">${escapeHTML(resp.PATTERN)}</span>
-          </div>
-          <div class="response-detail">
-            <span class="detail-label">Prioridade:</span>
-            <span class="detail-value">${resp.PRIORITY}</span>
-          </div>
-          <div class="response-detail">
-            <span class="detail-label">Simular Digitação:</span>
-            <span class="detail-value">${typingDelayText}</span>
-          </div>
-           <div class="response-detail">
-            <span class="detail-label">Atraso Envio:</span>
-            <span class="detail-value">${sendDelayText}</span>
-          </div>
-          <div class="response-detail">
-            <span class="detail-label">Horário Agendado:</span>
-            <span class="detail-value">${resp.START_TIME || '--:--'} - ${resp.END_TIME || '--:--'}</span>
-          </div>
-           <div class="response-detail">
-            <span class="detail-label">Dias Ativos:</span>
-            <span class="detail-value">${formatAllowedDays(resp.ALLOWED_DAYS)}</span>
-          </div>
+        <div class="list-item-body response-details">
+          <p><strong>Chave:</strong> <code class="code">${escapeHTML(resp.RESPONSE_KEY)}</code></p>
+          <p><strong>Padrão/Gatilho:</strong> <code class="code">${escapeHTML(resp.PATTERN)}</code></p>
+          <p><strong>Prioridade:</strong> ${resp.PRIORITY}</p>
+          <p><strong>Simular Digitação:</strong> ${typingDelayText}</p>
+          <p><strong>Atraso Envio:</strong> ${sendDelayText}</p>
+          <p><strong>Horário:</strong> ${resp.START_TIME || '--:--'} - ${resp.END_TIME || '--:--'}</p>
+          <p><strong>Dias Ativos:</strong> ${formatAllowedDays(resp.ALLOWED_DAYS)}</p>
           <div class="response-preview">
-            <span class="detail-label">Texto da Resposta:</span>
+            <strong>Texto da Resposta:</strong>
             <div class="preview-text">${formatMessagePreview(resp.RESPONSE_TEXT)}</div>
           </div>
         </div>
@@ -106,10 +109,12 @@ document.addEventListener("DOMContentLoaded", () => {
       responseList.appendChild(responseItem);
     });
 
-    addEventListenersToButtons();
+    addEventListenersToItemButtons();
+    console.log("[AdminResponses] renderResponseList: Lista de respostas renderizada.");
   }
   
   function formatAllowedDays(daysString) {
+    // console.log("[AdminResponses] formatAllowedDays: Formatando dias:", daysString);
     if (!daysString) return "Todos os dias";
     const daysMap = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     const activeDays = daysString.split(',')
@@ -120,42 +125,60 @@ document.addEventListener("DOMContentLoaded", () => {
     return activeDays || "Nenhum especificado";
   }
 
-
-  function addEventListenersToButtons() {
-    document.querySelectorAll(".btn-edit").forEach((btn) => {
-      btn.addEventListener("click", (e) => editResponse(e.currentTarget.dataset.id));
-    });
-    document.querySelectorAll(".btn-delete").forEach((btn) => {
+  function addEventListenersToItemButtons() {
+    console.log("[AdminResponses] addEventListenersToItemButtons: Adicionando listeners aos botões de editar/excluir.");
+    document.querySelectorAll(".btn-edit-response").forEach((btn) => {
       btn.addEventListener("click", (e) => {
+        console.log("[AdminResponses] Botão EDITAR resposta clicado, ID:", e.currentTarget.dataset.id);
+        editResponse(e.currentTarget.dataset.id);
+      });
+    });
+    document.querySelectorAll(".btn-delete-response").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const responseId = e.currentTarget.dataset.id;
+        console.log("[AdminResponses] Botão EXCLUIR resposta clicado, ID:", responseId);
         if (confirm("Tem certeza que deseja excluir esta resposta automática? Esta ação não pode ser desfeita.")) {
-          deleteResponse(e.currentTarget.dataset.id);
+          console.log("[AdminResponses] Confirmação de exclusão para ID:", responseId);
+          deleteResponse(responseId);
+        } else {
+          console.log("[AdminResponses] Exclusão cancelada para ID:", responseId);
         }
       });
     });
   }
 
   function formatMessagePreview(text) {
+    // console.log("[AdminResponses] formatMessagePreview: Formatando preview do texto.");
     if (!text) return "";
     let preview = text.length > 150 ? text.substring(0, 147) + "..." : text;
     preview = escapeHTML(preview);
     preview = preview
       .replace(/\*(.*?)\*/g, "<strong>$1</strong>")
-      .replace(/_(.*?)_/g, "<em>$1</em>") // Suporte para itálico com underscores
-      .replace(/~(.*?)~/g, "<del>$1</del>") // Suporte para tachado com tils
-      .replace(/```(.*?)```/gs, "<pre class='code-block'><code>$1</code></pre>") // Bloco de código
-      .replace(/`(.*?)`/g, "<code class='inline-code'>$1</code>") // Código inline
+      .replace(/_(.*?)_/g, "<em>$1</em>")
+      .replace(/~(.*?)~/g, "<del>$1</del>")
+      .replace(/```(.*?)```/gs, "<pre class='code-block'><code>$1</code></pre>")
+      .replace(/`(.*?)`/g, "<code class='inline-code'>$1</code>")
       .replace(/\n/g, "<br>");
     return preview;
   }
 
   async function editResponse(id) {
+    console.log(`[AdminResponses] editResponse: Editando resposta ID: ${id}`);
     try {
+      console.log(`[AdminResponses] editResponse: Realizando fetch para /api/admin/responses/${id}`);
       const response = await fetch(`/api/admin/responses/${id}`);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      console.log(`[AdminResponses] editResponse: Resposta do fetch para ID ${id}, status:`, response.status);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `Erro HTTP: ${response.status}` }));
+        console.error(`[AdminResponses] editResponse: Erro na resposta do fetch para ID ${id}:`, errorData.message || `Erro HTTP: ${response.status}`);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+      console.log(`[AdminResponses] editResponse: Dados JSON parseados para ID ${id}:`, data);
 
       if (data.success && data.data) {
         const respData = data.data;
+        console.log(`[AdminResponses] editResponse: Populando formulário com dados da resposta ID ${id}.`);
         document.getElementById("responseId").value = respData.ID;
         document.getElementById("responseKey").value = respData.RESPONSE_KEY;
         document.getElementById("responseName").value = respData.RESPONSE_NAME;
@@ -166,49 +189,59 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("responseStartTime").value = respData.START_TIME || "";
         document.getElementById("responseEndTime").value = respData.END_TIME || "";
         document.getElementById("responseAllowedDays").value = respData.ALLOWED_DAYS || "0,1,2,3,4,5,6";
-        // Novos campos de delay
         document.getElementById("responseTypingDelay").value = respData.TYPING_DELAY_MS !== null ? respData.TYPING_DELAY_MS : 1000;
         document.getElementById("responseSendDelay").value = respData.RESPONSE_DELAY_MS !== null ? respData.RESPONSE_DELAY_MS : 500;
-
 
         document.getElementById("responseModalTitle").textContent = "Editar Resposta Automática";
         currentResponseId = respData.ID;
         responseModal.classList.add("show");
+        console.log(`[AdminResponses] editResponse: Modal de edição exibido para resposta ID ${id}.`);
       } else {
+        console.warn(`[AdminResponses] editResponse: Erro ao carregar dados da resposta ID ${id} (data.success = false ou sem data):`, data.message);
         showAlert("Erro ao carregar dados da resposta: " + (data.message || "Resposta não encontrada."), "error");
       }
     } catch (error) {
-      console.error("Erro ao carregar dados da resposta:", error);
+      console.error(`[AdminResponses] editResponse: Falha crítica ao carregar dados da resposta ID ${id}:`, error);
       showAlert("Erro de rede ou servidor ao carregar dados da resposta.", "error");
     }
   }
 
   function addNewResponse() {
-    responseForm.reset();
+    console.log("[AdminResponses] addNewResponse: Abrindo modal para nova resposta.");
+    if (responseForm) responseForm.reset(); else console.error("[AdminResponses] addNewResponse: responseForm é nulo!");
     document.getElementById("responseId").value = "";
     document.getElementById("responseActive").checked = true;
     document.getElementById("responsePriority").value = "0";
-    document.getElementById("responseStartTime").value = ""; // Vazio por padrão
-    document.getElementById("responseEndTime").value = "";   // Vazio por padrão
-    document.getElementById("responseAllowedDays").value = "0,1,2,3,4,5,6"; // Todos os dias por padrão
-    // Valores padrão para novos campos de delay
-    document.getElementById("responseTypingDelay").value = 1000; // Padrão de 1 segundo
-    document.getElementById("responseSendDelay").value = 500;   // Padrão de 0.5 segundos
-
+    document.getElementById("responseStartTime").value = "";
+    document.getElementById("responseEndTime").value = "";
+    document.getElementById("responseAllowedDays").value = "0,1,2,3,4,5,6";
+    document.getElementById("responseTypingDelay").value = 1000;
+    document.getElementById("responseSendDelay").value = 500;
 
     document.getElementById("responseModalTitle").textContent = "Nova Resposta Automática";
     currentResponseId = null;
-    responseModal.classList.add("show");
-    document.getElementById("responseKey").focus(); // Foco no primeiro campo
+    if (responseModal) responseModal.classList.add("show"); else console.error("[AdminResponses] addNewResponse: responseModal é nulo!");
+    document.getElementById("responseKey").focus();
+    console.log("[AdminResponses] addNewResponse: Modal para nova resposta exibido.");
   }
 
-  async function saveResponse() {
+  async function saveResponse(event) {
+    console.log("[AdminResponses] saveResponse: Função saveResponse INICIADA.");
+     if (event) {
+        console.log("[AdminResponses] saveResponse: Evento de submit recebido, prevenindo default.");
+        event.preventDefault(); // Previne o submit padrão do formulário
+    } else {
+        console.warn("[AdminResponses] saveResponse: Função chamada sem evento (provavelmente clique direto no botão).");
+    }
+
     const responseKey = document.getElementById("responseKey").value.trim();
     const responseName = document.getElementById("responseName").value.trim();
     const responsePattern = document.getElementById("responsePattern").value.trim();
     const responseText = document.getElementById("responseText").value.trim();
+    console.log("[AdminResponses] saveResponse: Dados brutos do formulário:", { responseKey, responseName, responsePattern, responseText });
 
     if (!responseKey || !responseName || !responsePattern || !responseText) {
+      console.warn("[AdminResponses] saveResponse: Campos obrigatórios não preenchidos.");
       showAlert("Chave, Nome, Padrão/Gatilho e Texto da Resposta são obrigatórios.", "warning");
       return;
     }
@@ -220,75 +253,89 @@ document.addEventListener("DOMContentLoaded", () => {
       response_text: responseText,
       active: document.getElementById("responseActive").checked,
       priority: parseInt(document.getElementById("responsePriority").value, 10) || 0,
-      start_time: document.getElementById("responseStartTime").value || null, // Envia null se vazio
-      end_time: document.getElementById("responseEndTime").value || null,     // Envia null se vazio
+      start_time: document.getElementById("responseStartTime").value || null,
+      end_time: document.getElementById("responseEndTime").value || null,
       allowed_days: document.getElementById("responseAllowedDays").value,
-      // Novos campos de delay
       typing_delay_ms: parseInt(document.getElementById("responseTypingDelay").value, 10),
       response_delay_ms: parseInt(document.getElementById("responseSendDelay").value, 10)
     };
+    console.log("[AdminResponses] saveResponse: Dados formatados para envio:", JSON.stringify(responseData));
     
-    // Validação dos delays
     if (isNaN(responseData.typing_delay_ms) || responseData.typing_delay_ms < 0) {
-        showAlert("Tempo de simulação de digitação inválido.", "warning");
-        return;
+        showAlert("Tempo de simulação de digitação inválido.", "warning"); return;
     }
     if (isNaN(responseData.response_delay_ms) || responseData.response_delay_ms < 0) {
-        showAlert("Atraso para envio inválido.", "warning");
-        return;
+        showAlert("Atraso para envio inválido.", "warning"); return;
     }
-
 
     try {
       const url = currentResponseId ? `/api/admin/responses/${currentResponseId}` : "/api/admin/responses";
       const method = currentResponseId ? "PUT" : "POST";
+      console.log(`[AdminResponses] saveResponse: Enviando ${method} para ${url}`);
 
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(responseData),
       });
+      console.log(`[AdminResponses] saveResponse: Resposta do fetch para ${url}, status:`, response.status);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
+        const errorData = await response.json().catch(() => ({ message: `Erro HTTP: ${response.status}` }));
+        console.error(`[AdminResponses] saveResponse: Erro na resposta do fetch (${url}):`, errorData.message || `Erro HTTP: ${response.status}`);
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log("[AdminResponses] saveResponse: Resultado do backend:", data);
 
       if (data.success) {
         showAlert(currentResponseId ? "Resposta atualizada com sucesso!" : "Resposta criada com sucesso!", "success");
-        responseModal.classList.remove("show");
+        if (responseModal) responseModal.classList.remove("show"); else console.error("[AdminResponses] saveResponse: responseModal é nulo ao tentar fechar.");
         loadResponses();
+        console.log("[AdminResponses] saveResponse: Resposta salva com sucesso, modal fechado, lista recarregada.");
       } else {
+        console.warn("[AdminResponses] saveResponse: Erro ao salvar resposta (backend informou erro):", data.message);
         showAlert("Erro ao salvar resposta: " + (data.message || "Erro desconhecido do servidor."), "error");
       }
     } catch (error) {
-      console.error("Erro ao salvar resposta:", error);
+      console.error("[AdminResponses] saveResponse: Falha crítica ao salvar resposta:", error);
       showAlert(`Erro de rede ou servidor ao salvar resposta: ${error.message}`, "error");
     }
+    console.log("[AdminResponses] saveResponse: Função saveResponse CONCLUÍDA.");
   }
 
   async function deleteResponse(id) {
+    console.log(`[AdminResponses] deleteResponse: Excluindo resposta ID: ${id}`);
     try {
+      console.log(`[AdminResponses] deleteResponse: Realizando fetch DELETE para /api/admin/responses/${id}`);
       const response = await fetch(`/api/admin/responses/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      console.log(`[AdminResponses] deleteResponse: Resposta do fetch DELETE para ID ${id}, status:`, response.status);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `Erro HTTP: ${response.status}` }));
+        console.error(`[AdminResponses] deleteResponse: Erro na resposta do fetch DELETE para ID ${id}:`, errorData.message || `Erro HTTP: ${response.status}`);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+      console.log(`[AdminResponses] deleteResponse: Resultado do backend para exclusão ID ${id}:`, data);
 
       if (data.success) {
         showAlert("Resposta excluída com sucesso!", "success");
         loadResponses();
+        console.log(`[AdminResponses] deleteResponse: Resposta ID ${id} excluída, lista recarregada.`);
       } else {
+        console.warn(`[AdminResponses] deleteResponse: Erro ao excluir resposta ID ${id} (backend informou erro):`, data.message);
         showAlert("Erro ao excluir resposta: " + (data.message || "Erro desconhecido."), "error");
       }
     } catch (error) {
-      console.error("Erro ao excluir resposta:", error);
+      console.error(`[AdminResponses] deleteResponse: Falha crítica ao excluir resposta ID ${id}:`, error);
       showAlert("Erro de rede ou servidor ao excluir resposta.", "error");
     }
   }
 
   function filterResponses() {
     const searchTerm = responseSearchInput.value.toLowerCase();
+    console.log("[AdminResponses] filterResponses: Filtrando respostas com termo:", searchTerm);
     if (!searchTerm) {
       renderResponseList(allResponses);
       return;
@@ -301,23 +348,20 @@ document.addEventListener("DOMContentLoaded", () => {
         resp.RESPONSE_TEXT.toLowerCase().includes(searchTerm)
     );
     renderResponseList(filtered);
+    console.log("[AdminResponses] filterResponses: Filtro aplicado, renderizadas", filtered.length, "respostas.");
   }
 
   function showAlert(message, type = "info", duration = 3000) {
-    const alertContainer = document.getElementById("alertContainer") || document.body; // Fallback para body
+    console.log(`[AdminResponses] showAlert: Tipo: ${type}, Mensagem: ${message}`);
+    const alertContainer = document.getElementById("alertContainer") || document.body;
     const alertElement = document.createElement("div");
     alertElement.className = `alert alert-${type}`;
     alertElement.textContent = message;
     alertContainer.appendChild(alertElement);
-
-    // Força reflow para aplicar a transição de entrada
-    requestAnimationFrame(() => {
-        alertElement.classList.add("show");
-    });
-
+    requestAnimationFrame(() => { alertElement.classList.add("show"); });
     setTimeout(() => {
       alertElement.classList.remove("show");
-      setTimeout(() => alertElement.remove(), 300); // Tempo para a transição de saída
+      setTimeout(() => alertElement.remove(), 300);
     }, duration);
   }
 
@@ -326,20 +370,45 @@ document.addEventListener("DOMContentLoaded", () => {
     return str.replace(/[&<>"']/g, (match) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[match]);
   }
 
+  console.log("[AdminResponses] Adicionando event listeners principais...");
   if (addResponseBtn) addResponseBtn.addEventListener("click", addNewResponse);
-  if (closeModalBtn) closeModalBtn.addEventListener("click", () => responseModal.classList.remove("show"));
-  if (cancelResponseBtn) cancelResponseBtn.addEventListener("click", () => responseModal.classList.remove("show"));
-  if (saveResponseBtn) saveResponseBtn.addEventListener("click", saveResponse);
+  if (closeModalBtn) closeModalBtn.addEventListener("click", () => {
+    console.log("[AdminResponses] Botão Fechar Modal clicado.");
+    if (responseModal) responseModal.classList.remove("show");
+  });
+  if (cancelResponseBtn) cancelResponseBtn.addEventListener("click", () => {
+    console.log("[AdminResponses] Botão Cancelar Modal clicado.");
+    if (responseModal) responseModal.classList.remove("show");
+  });
+  
+  // O evento de salvar é no submit do formulário
+  if (responseForm) {
+    responseForm.addEventListener("submit", saveResponse);
+    console.log("[AdminResponses] Event listener de 'submit' ADICIONADO ao responseForm.");
+  } else {
+    console.error("[AdminResponses] responseForm não encontrado, não foi possível adicionar event listener de submit.");
+    // Se o responseForm não existe, o saveResponseBtn (se existir) não terá efeito se for type="submit"
+    // Se o saveResponseBtn for type="button", o listener abaixo seria necessário.
+    // if (saveResponseBtn) saveResponseBtn.addEventListener("click", saveResponse);
+  }
+
   if (responseSearchInput) responseSearchInput.addEventListener("input", filterResponses);
 
   window.addEventListener("click", (e) => {
-    if (e.target === responseModal) responseModal.classList.remove("show");
+    if (responseModal && e.target === responseModal) {
+      console.log("[AdminResponses] Clique fora do modal detectado.");
+      responseModal.classList.remove("show");
+    }
   });
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && responseModal.classList.contains('show')) {
+    if (responseModal && e.key === 'Escape' && responseModal.classList.contains('show')) {
+        console.log("[AdminResponses] Tecla Escape pressionada, fechando modal.");
         responseModal.classList.remove('show');
     }
   });
+  console.log("[AdminResponses] Event listeners principais adicionados.");
 
+  console.log("[AdminResponses] Chamando loadResponses() para carregar respostas iniciais.");
   loadResponses();
-});
+  console.log("[AdminResponses] Script de respostas (adminResponses.js) finalizado sua execução inicial.");
+})(); // Fim da IIFE
