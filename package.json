@@ -1,5 +1,5 @@
 {
-    "name": "notary-connect-electron",
+    "name": "notary-connect",
     "version": "1.0.0",
     "description": "Sistema de atendimento para Cartórios via Web e WhatsApp com Electron",
     "author": "Emanuel da Costa Pereira",
@@ -12,7 +12,7 @@
         "gtk": "cross-env GTK_PATH=/usr/lib/x86_64-linux-gnu/gtk-3.0 ELECTRON_DISABLE_GPU=1 ELECTRON_NO_SANDBOX=1 PORT=3000 ELECTRON_PORT=3000 electron . --no-sandbox"
     },
     "build": {
-        "appId": "com.notaryconnect.electronapp",
+        "appId": "com.notaryconnect.desktop",
         "productName": "Notary Connect",
         "files": [
             "electronMain.js",

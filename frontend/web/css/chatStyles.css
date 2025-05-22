@@ -3,53 +3,55 @@
 
 :root {
     --font-family: 'Inter', sans-serif;
-    --border-radius: 8px;
+    --border-radius: 8px; /* Aumentado para melhor estética */
     --header-height: 60px;
-    --input-area-height: auto;
+    --input-area-height: auto; /* Altura dinâmica para a área de input */
     --sidebar-width: 360px;
     --avatar-size: 40px;
     --transition-speed: 0.2s;
 
     /* Tema Claro (Padrão) */
-    --body-bg-color: #f0f0f0;
+    --body-bg-color: #f0f2f5; /* Cinza mais claro, similar ao WhatsApp Web */
     --container-bg-color: #ffffff;
-    --sidebar-bg-color: #f5f5f5;
-    --chat-area-bg-color: #ffffff;
-    --header-footer-bg-color: #f5f5f5; /* Para cabeçalhos e rodapés de seções */
-    --text-primary-color: #2e3436;
-    --text-secondary-color: #7f8c8d;
+    --sidebar-bg-color: #f5f5f5; /* Um pouco mais escuro que o corpo */
+    --chat-area-bg-color: #e5ddd5; /* Fundo padrão WhatsApp */
+    --header-footer-bg-color: #f0f2f5;
+    --text-primary-color: #0f172a; /* Preto suave */
+    --text-secondary-color: #64748b; /* Cinza para textos secundários */
     --text-on-accent-color: #ffffff;
-    --border-main-color: #d3d7cf;
-    --border-light-color: #e0e0e0;
-    --accent-color: #3498db;
-    --accent-hover-color: #2980b9;
-    --accent-active-color: #2577a7;
-    --input-bg-color: #ffffff; /* Inputs geralmente brancos */
-    --input-border-color: #d3d7cf;
+    --border-main-color: #d1d5db; /* Cinza claro para bordas principais */
+    --border-light-color: #e5e7eb; /* Cinza muito claro para divisórias */
+    --accent-color: #0ea5e9; /* Azul céu */
+    --accent-hover-color: #0284c7;
+    --accent-active-color: #0369a1;
+    --input-bg-color: #ffffff;
+    --input-border-color: #cbd5e1;
     --input-focus-border-color: var(--accent-color);
-    --input-focus-shadow-color: rgba(52, 152, 219, 0.2);
-    --message-sent-bg-color: #dcf8c6;
+    --input-focus-shadow-color: rgba(14, 165, 233, 0.2);
+    --message-sent-bg-color: #dcf8c6; /* Verde claro WhatsApp */
     --message-received-bg-color: #ffffff;
-    --message-system-bg-color: #f0f2f5;
-    --active-item-bg-color: #e0e0e0;
-    --hover-item-bg-color: #e8e8e8;
-    --unread-badge-bg-color: #25d366;
+    --message-system-bg-color: #e2e8f0; /* Cinza claro para mensagens do sistema */
+    --text-on-message-sent: #0f172a;
+    --text-on-message-received: #0f172a;
+    --active-item-bg-color: #dbeafe; /* Azul muito claro para item ativo */
+    --hover-item-bg-color: #f1f5f9; /* Cinza muito claro para hover */
+    --unread-badge-bg-color: #25d366; /* Verde WhatsApp */
     --unread-badge-text-color: #ffffff;
-    --error-color: #e74c3c;
-    --success-color: #2ecc71;
-    --warning-color: #f39c12;
-    --warning-text-color: #333333;
+    --error-color: #ef4444; /* Vermelho */
+    --success-color: #22c55e; /* Verde */
+    --warning-color: #f59e0b; /* Âmbar */
+    --warning-text-color: #0f172a;
     --link-color: var(--accent-color);
-    --icon-color: #7f8c8d;
+    --icon-color: #64748b;
     --icon-hover-color: var(--text-primary-color);
     --icon-active-color: var(--accent-color);
-    --button-secondary-bg: #e9e9e9;
-    --button-secondary-hover-bg: #dcdcdc;
+    --button-secondary-bg: #e2e8f0;
+    --button-secondary-hover-bg: #cbd5e1;
     --button-secondary-text: var(--text-primary-color);
-    --button-secondary-border: #c0c0c0;
+    --button-secondary-border: #cbd5e1;
     --scrollbar-track-color: rgba(0,0,0,0.05);
-    --scrollbar-thumb-color: #d3d7cf;
-    --scrollbar-thumb-hover-color: #b0b0b0;
+    --scrollbar-thumb-color: #cbd5e1;
+    --scrollbar-thumb-hover-color: #94a3b8;
     --modal-overlay-bg-color: rgba(0,0,0,0.5);
     --modal-content-bg-color: #ffffff;
     --welcome-logo-opacity: 0.8;
@@ -57,59 +59,61 @@
     --welcome-version-text-color: var(--border-main-color);
     --typing-indicator-text-color: var(--text-secondary-color);
     --card-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
-    --avatar-placeholder-bg: #E0E0E0;
+    --avatar-placeholder-bg: #e0e0e0;
     --avatar-placeholder-text: #757575;
 }
 
 html[data-theme="dark"] {
-    --body-bg-color: #1e1e1e;
-    --container-bg-color: #2c2c2c;
-    --sidebar-bg-color: #252525;
-    --chat-area-bg-color: #222222; /* Fundo da área de chat um pouco diferente */
-    --header-footer-bg-color: #252525;
-    --text-primary-color: #eeeeec;
-    --text-secondary-color: #a0a0a0;
+    --body-bg-color: #0f172a; /* Azul escuro profundo */
+    --container-bg-color: #1e293b; /* Azul acinzentado escuro */
+    --sidebar-bg-color: #1e293b;
+    --chat-area-bg-color: #0d1418; /* Fundo escuro WhatsApp */
+    --header-footer-bg-color: #1e293b;
+    --text-primary-color: #f1f5f9; /* Branco suave */
+    --text-secondary-color: #94a3b8; /* Cinza claro */
     --text-on-accent-color: #ffffff;
-    --border-main-color: #4a4a4a;
-    --border-light-color: #3c3c3c;
-    --accent-color: #5294e2;
-    --accent-hover-color: #4284d2;
-    --accent-active-color: #3274c2;
-    --input-bg-color: #3a3a3a;
-    --input-border-color: #5c5c5c;
+    --border-main-color: #334155; /* Cinza azulado escuro */
+    --border-light-color: #475569; /* Cinza azulado médio */
+    --accent-color: #38bdf8; /* Azul céu mais brilhante */
+    --accent-hover-color: #0ea5e9;
+    --accent-active-color: #0284c7;
+    --input-bg-color: #334155;
+    --input-border-color: #475569;
     --input-focus-border-color: var(--accent-color);
-    --input-focus-shadow-color: rgba(82, 148, 226, 0.25);
+    --input-focus-shadow-color: rgba(56, 189, 248, 0.25);
     --message-sent-bg-color: #075e54; /* Verde escuro WhatsApp */
-    --message-received-bg-color: #3a3a3a;
-    --message-system-bg-color: #333333;
-    --active-item-bg-color: #3f3f3f;
-    --hover-item-bg-color: #454545;
-    --unread-badge-bg-color: #128c7e; /* Verde escuro WhatsApp para badge */
+    --message-received-bg-color: #2c394b; /* Azul acinzentado para recebidas */
+    --message-system-bg-color: #1e293b;
+    --text-on-message-sent: #f1f5f9;
+    --text-on-message-received: #f1f5f9;
+    --active-item-bg-color: #334155;
+    --hover-item-bg-color: #475569;
+    --unread-badge-bg-color: #128c7e;
     --unread-badge-text-color: #ffffff;
-    --error-color: #ff7b72;
-    --success-color: #57e3a3;
-    --warning-color: #f8d766;
-    --warning-text-color: #333333;
+    --error-color: #f87171; /* Vermelho mais claro */
+    --success-color: #4ade80; /* Verde mais claro */
+    --warning-color: #facc15; /* Amarelo mais claro */
+    --warning-text-color: #0f172a;
     --link-color: var(--accent-color);
-    --icon-color: #a0a0a0;
+    --icon-color: #94a3b8;
     --icon-hover-color: var(--text-primary-color);
     --icon-active-color: var(--accent-color);
-    --button-secondary-bg: #4a4a4a;
-    --button-secondary-hover-bg: #5a5a5a;
+    --button-secondary-bg: #334155;
+    --button-secondary-hover-bg: #475569;
     --button-secondary-text: var(--text-primary-color);
-    --button-secondary-border: #5c5c5c;
+    --button-secondary-border: #475569;
     --scrollbar-track-color: rgba(255,255,255,0.08);
-    --scrollbar-thumb-color: #555555;
-    --scrollbar-thumb-hover-color: #6e6e6e;
+    --scrollbar-thumb-color: #475569;
+    --scrollbar-thumb-hover-color: #64748b;
     --modal-overlay-bg-color: rgba(0,0,0,0.7);
-    --modal-content-bg-color: #2c2c2c;
+    --modal-content-bg-color: #1e293b;
     --welcome-logo-opacity: 0.7;
     --welcome-text-color: var(--text-secondary-color);
     --welcome-version-text-color: var(--border-main-color);
     --typing-indicator-text-color: var(--text-secondary-color);
     --card-shadow: 0 2px 5px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.15);
-    --avatar-placeholder-bg: #4a4a4a;
-    --avatar-placeholder-text: #a0a0a0;
+    --avatar-placeholder-bg: #475569;
+    --avatar-placeholder-text: #94a3b8;
 }
 
 * {
@@ -137,19 +141,22 @@ body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    transition: all 0.3s ease;
+    background-color: var(--container-bg-color); /* Fundo do container principal */
+    box-shadow: 0 0 20px rgba(0,0,0,0.1); /* Sombra sutil */
+    transition: background-color var(--transition-speed) ease;
 }
 
 /* --- Barra Lateral (Sidebar) --- */
 .sidebar {
     width: var(--sidebar-width);
-    min-width: 300px;
+    min-width: 300px; /* Largura mínima para sidebar */
     background-color: var(--sidebar-bg-color);
     border-right: 1px solid var(--border-main-color);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease,
+                width 0.3s ease, min-width 0.3s ease; /* Transição para responsividade */
 }
 
 .sidebar-header {
@@ -160,6 +167,7 @@ body {
     height: var(--header-height);
     background-color: var(--header-footer-bg-color);
     border-bottom: 1px solid var(--border-main-color);
+    flex-shrink: 0; /* Impede que o header encolha */
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 
@@ -167,6 +175,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    overflow: hidden; /* Para evitar que o nome vaze */
 }
 
 .user-avatar, .avatar-placeholder {
@@ -174,8 +183,9 @@ body {
     height: var(--avatar-size);
     border-radius: 50%;
     object-fit: cover;
+    flex-shrink: 0;
 }
-.avatar-placeholder { /* Estilo para o placeholder de avatar */
+.avatar-placeholder {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,17 +196,19 @@ body {
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
-
 .user-info .user-name {
     font-weight: 600;
     display: block;
     color: var(--text-primary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: color var(--transition-speed) ease;
 }
 
 .user-info .user-status {
     font-size: 0.8em;
-    color: var(--success-color); /* Manter verde para status online */
+    color: var(--success-color);
     transition: color var(--transition-speed) ease;
 }
 
@@ -213,19 +225,19 @@ body {
     background-color: var(--hover-item-bg-color);
     color: var(--icon-hover-color);
 }
-.sidebar-actions .icon-button .icon-img, /* Adicionado .icon-img */
+.sidebar-actions .icon-button .icon-img,
 .sidebar-actions .icon-button i {
     width: 20px;
     height: 20px;
     vertical-align: middle;
 }
 
-
 .search-container {
     padding: 10px 15px;
     border-bottom: 1px solid var(--border-main-color);
     position: relative;
-    background-color: var(--sidebar-bg-color); /* Para consistência */
+    background-color: var(--sidebar-bg-color);
+    flex-shrink: 0;
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 
@@ -253,16 +265,16 @@ body {
     width: 16px;
     height: 16px;
     opacity: 0.6;
-    fill: var(--icon-color); /* Para SVGs inline */
-    color: var(--icon-color); /* Para FontAwesome */
+    fill: var(--icon-color);
+    color: var(--icon-color);
     transition: fill var(--transition-speed) ease, color var(--transition-speed) ease;
 }
-
 
 .tabs {
     display: flex;
     background-color: var(--header-footer-bg-color);
     border-bottom: 1px solid var(--border-main-color);
+    flex-shrink: 0;
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 
@@ -277,12 +289,10 @@ body {
     color: var(--text-secondary-color);
     transition: color var(--transition-speed) ease, border-bottom-color var(--transition-speed) ease, background-color var(--transition-speed) ease;
 }
-
 .tab-button.active {
     color: var(--accent-color);
     border-bottom-color: var(--accent-color);
 }
-
 .tab-button:hover {
     background-color: var(--hover-item-bg-color);
     color: var(--text-primary-color);
@@ -291,56 +301,58 @@ body {
 .conversations-list {
     flex-grow: 1;
     overflow-y: auto;
-    background-color: var(--sidebar-bg-color); /* Garante que a lista tenha o fundo da sidebar */
+    background-color: var(--sidebar-bg-color);
     transition: background-color var(--transition-speed) ease;
 }
 
 .chat-item {
-    display: flex;
-    align-items: center;
+    display: flex; /* Mantido flex para estrutura geral */
     padding: 12px 15px;
     cursor: pointer;
-    border-bottom: 1px solid var(--border-light-color); /* Borda mais sutil entre itens */
+    border-bottom: 1px solid var(--border-light-color);
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
-
 .chat-item:hover {
     background-color: var(--hover-item-bg-color);
 }
-
 .chat-item.active {
     background-color: var(--active-item-bg-color);
 }
-
 .chat-item.pending {
-    background-color: color-mix(in srgb, var(--warning-color) 20%, var(--sidebar-bg-color));
+    background-color: color-mix(in srgb, var(--warning-color) 15%, var(--sidebar-bg-color));
 }
 .chat-item.pending:hover {
-    background-color: color-mix(in srgb, var(--warning-color) 30%, var(--sidebar-bg-color));
+    background-color: color-mix(in srgb, var(--warning-color) 25%, var(--sidebar-bg-color));
+}
+
+.chat-item-details { /* Container para avatar e o resto */
+    display: flex;
+    align-items: flex-start; /* Alinha avatar ao topo com o texto */
+    width: 100%; /* Para ocupar todo o espaço do chat-item */
 }
 
 .chat-item-profile-pic {
-    width: calc(var(--avatar-size) + 8px);
+    width: calc(var(--avatar-size) + 8px); /* Um pouco maior que o avatar do header */
     height: calc(var(--avatar-size) + 8px);
     border-radius: 50%;
     margin-right: 12px;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
-.chat-item-details {
+.chat-item-info { /* Container para nome, id, preview */
     flex-grow: 1;
+    overflow: hidden; /* Importante para text-overflow */
     display: flex;
-    align-items: flex-start;
-}
-.chat-item-info {
-    flex-grow: 1;
-    overflow: hidden;
+    flex-direction: column;
+    justify-content: center; /* Centraliza verticalmente se houver espaço */
 }
 
-.chat-item-name-status {
+.chat-item-main-line { /* Nova div para nome e timestamp */
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
     margin-bottom: 2px;
 }
 
@@ -349,30 +361,27 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
     color: var(--text-primary-color);
+    flex-grow: 1; /* Permite que o nome ocupe espaço disponível */
+    margin-right: 8px; /* Espaço antes do timestamp */
     transition: color var(--transition-speed) ease;
 }
-.chat-status-indicator {
-    font-size: 0.75em;
-    padding: 2px 6px;
-    border-radius: 10px;
-    color: var(--text-on-accent-color);
-    margin-left: 5px;
-    text-transform: capitalize;
-    transition: background-color var(--transition-speed) ease;
-}
-.chat-status-indicator.active { background-color: var(--success-color); }
-.chat-status-indicator.pending { background-color: var(--warning-color); color: var(--warning-text-color); }
-.chat-status-indicator.closed { background-color: var(--text-secondary-color); }
-
-
 .chat-item-id {
     font-size: 0.8em;
     color: var(--text-secondary-color);
     display: block;
     margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: color var(--transition-speed) ease;
+}
+
+.chat-item-sub-line { /* Nova div para preview e badge/botão */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 
 .chat-item-preview {
@@ -381,7 +390,8 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px;
+    flex-grow: 1; /* Permite que o preview ocupe espaço */
+    margin-right: 8px; /* Espaço antes do badge/botão */
     transition: color var(--transition-speed) ease;
 }
 .chat-item.unread .chat-item-preview {
@@ -389,27 +399,35 @@ body {
     font-weight: 500;
 }
 
-.chat-item-meta {
+.chat-item-meta { /* Para timestamp, unread badge, take button */
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     font-size: 0.8em;
     color: var(--text-secondary-color);
-    margin-left: 10px;
-    min-width: 50px;
+    margin-left: auto; /* Empurra para a direita */
+    flex-shrink: 0; /* Não encolher */
+    text-align: right;
+    min-width: 60px; /* Espaço mínimo para timestamp e badge */
     transition: color var(--transition-speed) ease;
+}
+.chat-item-timestamp {
+    white-space: nowrap;
 }
 
 .unread-badge {
     background-color: var(--unread-badge-bg-color);
     color: var(--unread-badge-text-color);
-    border-radius: 50%;
-    padding: 1px 6px;
-    font-size: 0.8em;
+    border-radius: 10px; /* Mais oval */
+    padding: 2px 7px;
+    font-size: 0.75em; /* Menor */
     font-weight: bold;
-    margin-top: 5px;
-    min-width: 20px;
+    margin-top: 4px;
+    min-width: 18px; /* Ajustado */
+    height: 18px; /* Ajustado */
+    line-height: 14px; /* Ajustado para centralizar texto */
     text-align: center;
+    display: inline-block;
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
@@ -417,17 +435,17 @@ body {
     background-color: var(--accent-color);
     color: var(--text-on-accent-color);
     border: none;
-    padding: 6px 10px;
+    padding: 5px 10px; /* Ligeiramente menor */
     border-radius: var(--border-radius);
     cursor: pointer;
-    font-size: 0.8em;
-    margin-top: 5px;
+    font-size: 0.75em; /* Menor */
+    margin-top: 4px;
+    white-space: nowrap;
     transition: background-color var(--transition-speed) ease;
 }
 .take-chat-button:hover {
     background-color: var(--accent-hover-color);
 }
-
 
 .empty-list-message {
     text-align: center;
@@ -469,12 +487,12 @@ body {
     opacity: var(--welcome-logo-opacity);
     transition: opacity var(--transition-speed) ease;
 }
-.logo-placeholder-large { /* Estilo para o placeholder de logo grande */
+.logo-placeholder-large {
     height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--avatar-placeholder-bg); /* Reutiliza cor do placeholder de avatar */
+    background-color: var(--avatar-placeholder-bg);
     color: var(--avatar-placeholder-text);
     font-weight: bold;
     font-size: 2em;
@@ -482,14 +500,12 @@ body {
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
-
 .welcome-screen h2 {
     margin-bottom: 10px;
     font-size: 1.8em;
     color: var(--text-primary-color);
     transition: color var(--transition-speed) ease;
 }
-
 .welcome-screen p {
     color: var(--welcome-text-color);
     transition: color var(--transition-speed) ease;
@@ -514,34 +530,43 @@ body {
     height: var(--header-height);
     background-color: var(--header-footer-bg-color);
     border-bottom: 1px solid var(--border-main-color);
+    flex-shrink: 0;
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 
-.contact-avatar {
+.contact-avatar { /* Usado também para #user-avatar-sidebar */
     width: var(--avatar-size);
     height: var(--avatar-size);
     border-radius: 50%;
     margin-right: 15px;
     object-fit: cover;
+    flex-shrink: 0;
 }
 
 .contact-info {
     flex-grow: 1;
+    overflow: hidden;
 }
 .contact-info .contact-name {
     font-weight: 600;
     display: block;
     color: var(--text-primary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     transition: color var(--transition-speed) ease;
 }
 
 .chat-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px; /* Reduzido o gap */
 }
-.chat-actions .icon-button .icon-img, /* Adicionado .icon-img */
+.chat-actions .icon-button {
+    padding: 8px; /* Ajuste para botões de ação */
+}
+.chat-actions .icon-button .icon-img,
 .chat-actions .icon-button i {
-    width: 20px;
+    width: 20px; /* Tamanho consistente */
     height: 20px;
 }
 
@@ -549,27 +574,26 @@ body {
     flex-grow: 1;
     padding: 20px;
     overflow-y: auto;
-    background-color: var(--chat-area-bg-color); /* Fundo da área de mensagens */
+    background-color: var(--chat-area-bg-color);
     display: flex;
     flex-direction: column;
     transition: background-color var(--transition-speed) ease;
 }
 html[data-theme="light"] .messages-container {
-    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Padrão WhatsApp claro */
+    background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
     background-repeat: repeat;
 }
 html[data-theme="dark"] .messages-container {
-     background-color: #0d1418; /* Tom escuro para chat */
-     /* background-image: url('URL_PARA_PADRAO_ESCURO_SE_TIVER'); */
+     background-color: #0d1418;
 }
 
-
 .messages-container .loading-messages,
-.messages-container .empty-history {
+.messages-container .empty-history,
+.messages-container .no-chat-selected { /* Adicionado .no-chat-selected */
     margin: auto;
     color: var(--text-secondary-color);
     font-style: italic;
-    background-color: var(--message-system-bg-color); /* Para destacar do fundo do chat */
+    background-color: var(--message-system-bg-color);
     padding: 8px 12px;
     border-radius: var(--border-radius);
     transition: color var(--transition-speed) ease, background-color var(--transition-speed) ease;
@@ -579,7 +603,6 @@ html[data-theme="dark"] .messages-container {
     font-weight: 500;
 }
 
-
 .message {
     max-width: 70%;
     padding: 8px 12px;
@@ -588,23 +611,19 @@ html[data-theme="dark"] .messages-container {
     position: relative;
     word-wrap: break-word;
     box-shadow: var(--card-shadow);
-    transition: background-color var(--transition-speed) ease, opacity var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease, opacity var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 .message.agent, .message.agent-message {
     background-color: var(--message-sent-bg-color);
+    color: var(--text-on-message-sent);
     align-self: flex-end;
     border-bottom-right-radius: 2px;
-    color: var(--text-primary-color); /* Texto para balão enviado */
 }
-html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-message {
-    color: var(--text-on-accent-color); /* Texto mais claro para balão enviado no tema escuro */
-}
-
 .message.client, .message.client-message {
     background-color: var(--message-received-bg-color);
+    color: var(--text-on-message-received);
     align-self: flex-start;
     border-bottom-left-radius: 2px;
-    color: var(--text-primary-color);
 }
 .message.system, .message.system-message {
     background-color: var(--message-system-bg-color);
@@ -623,7 +642,6 @@ html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-m
     border: 1px solid var(--error-color);
 }
 
-
 .message .sender-name {
     font-size: 0.8em;
     font-weight: 600;
@@ -632,7 +650,7 @@ html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-m
     transition: color var(--transition-speed) ease;
 }
 .message.client .sender-name {
-    color: var(--text-secondary-color); /* Cor diferente para o cliente */
+    color: var(--text-secondary-color);
 }
 
 .message-text {
@@ -676,13 +694,18 @@ html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-m
     color: var(--text-primary-color);
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
-.media-content.document svg {
+.media-content.document svg { /* Estilo para o SVG do ícone de documento */
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-    stroke: var(--accent-color);
+    stroke: var(--accent-color); /* Cor do contorno do ícone */
+    fill: none; /* Se for um ícone de contorno */
     transition: stroke var(--transition-speed) ease;
 }
+html[data-theme="dark"] .media-content.document svg {
+    stroke: var(--accent-color); /* Garante a cor no tema escuro */
+}
+
 .media-error {
     font-size: 0.8em;
     color: var(--error-color);
@@ -690,24 +713,25 @@ html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-m
     transition: color var(--transition-speed) ease;
 }
 
-
 .typing-indicator {
     padding: 5px 20px;
     font-size: 0.85em;
     color: var(--typing-indicator-text-color);
     font-style: italic;
     height: 25px;
-    background-color: var(--header-footer-bg-color); /* Para ter um fundo */
+    background-color: var(--header-footer-bg-color);
+    flex-shrink: 0;
     transition: color var(--transition-speed) ease, background-color var(--transition-speed) ease;
 }
 
 .input-area {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-end; /* Alinha itens na base, bom para textarea multiline */
     padding: 10px 15px;
     background-color: var(--header-footer-bg-color);
     border-top: 1px solid var(--border-main-color);
-    min-height: calc(var(--input-area-height) + 20px);
+    min-height: calc(var(--input-area-height) + 20px); /* Garante altura mínima */
+    flex-shrink: 0;
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
 
@@ -721,8 +745,8 @@ html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-m
     font-family: var(--font-family);
     font-size: 1em;
     line-height: 1.4;
-    max-height: 100px;
-    overflow-y: auto;
+    max-height: 100px; /* Limita altura máxima do textarea */
+    overflow-y: auto; /* Scroll se passar da altura máxima */
     margin: 0 10px;
     color: var(--text-primary-color);
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease, color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
@@ -744,12 +768,13 @@ html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-m
     align-items: center;
     justify-content: center;
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+    flex-shrink: 0; /* Impede que os botões encolham */
 }
 .icon-button:hover {
     background-color: var(--hover-item-bg-color);
     color: var(--icon-hover-color);
 }
-.icon-button .icon-img, /* Adicionado .icon-img */
+.icon-button .icon-img,
 .icon-button i {
     width: 22px;
     height: 22px;
@@ -761,14 +786,22 @@ html[data-theme="dark"] .message.agent, html[data-theme="dark"] .message.agent-m
 .icon-button.primary:hover {
     background-color: var(--accent-hover-color);
 }
-.icon-button.primary .icon-img, /* Para garantir que o ícone SVG herde a cor */
-.icon-button.primary i {
-    filter: brightness(0) invert(1); /* Torna o ícone branco */
+.icon-button.primary .icon-img { /* Para SVGs em botões primários */
+    filter: brightness(0) invert(1);
 }
+html[data-theme="dark"] .icon-button.primary .icon-img {
+    filter: none; /* Já deve ser claro no tema escuro */
+}
+html[data-theme="dark"] .icon-img { /* Filtro geral para ícones SVG no tema escuro */
+    filter: invert(0.8) brightness(1.2) contrast(1.1); /* Ajuste para melhor visibilidade */
+}
+/* Remover filtro para ícones que já são adequados ou têm tratamento específico */
 html[data-theme="dark"] .icon-button.primary .icon-img,
-html[data-theme="dark"] .icon-button.primary i {
-    filter: none; /* No tema escuro, a cor do texto já é clara */
-    color: var(--text-on-accent-color);
+html[data-theme="dark"] .user-avatar, /* Se for SVG */
+html[data-theme="dark"] .chat-item-profile-pic, /* Se for SVG */
+html[data-theme="dark"] .contact-avatar, /* Se for SVG */
+html[data-theme="dark"] .media-content.document svg { /* Ícone de documento */
+    filter: none;
 }
 
 
@@ -793,7 +826,7 @@ html[data-theme="dark"] .icon-button.primary i {
 .modal-content {
     background-color: var(--modal-content-bg-color);
     margin: auto;
-    padding: 0; /* Padding será nos filhos */
+    padding: 0;
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     width: 90%;
@@ -825,22 +858,21 @@ html[data-theme="dark"] .icon-button.primary i {
     color: var(--text-primary-color);
     transition: color var(--transition-speed) ease;
 }
-.modal-header .close-modal { /* Aplicado ao botão */
-    padding: 5px; /* Menor padding para botão de fechar modal */
+.modal-header .close-modal {
+    padding: 5px;
 }
-.modal-header .close-modal span { /* Se usar span para o X */
+.modal-header .close-modal span {
     font-size: 1.5em;
     font-weight: bold;
 }
-.modal-header .close-modal .icon-img, /* Adicionado .icon-img */
+.modal-header .close-modal .icon-img,
 .modal-header .close-modal i {
     width: 16px; height: 16px;
 }
 
-
 .modal-body {
     padding: 20px;
-    overflow-y: auto; /* Para conteúdo longo no modal */
+    overflow-y: auto;
     flex-grow: 1;
 }
 .modal-body label {
@@ -879,13 +911,12 @@ html[data-theme="dark"] .icon-button.primary i {
     justify-content: flex-end;
     padding: 15px 20px;
     border-top: 1px solid var(--border-main-color);
-    margin-top: 0; /* Reset margin-top se não for mais necessário */
-    background-color: var(--header-footer-bg-color); /* Fundo para o rodapé do modal */
-    border-bottom-left-radius: var(--border-radius); /* Arredondar cantos inferiores */
+    background-color: var(--header-footer-bg-color);
+    border-bottom-left-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
 }
-.modal-footer .button {
+.modal-footer .button { /* Estilo genérico para botões no footer do modal */
     padding: 10px 20px;
     border: none;
     border-radius: var(--border-radius);
@@ -898,9 +929,18 @@ html[data-theme="dark"] .icon-button.primary i {
 .modal-footer .button:hover {
     background-color: var(--accent-hover-color);
 }
+.modal-footer .button.secondary { /* Para botão de cancelar, por exemplo */
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-text);
+    border: 1px solid var(--button-secondary-border);
+}
+.modal-footer .button.secondary:hover {
+    background-color: var(--button-secondary-hover-bg);
+}
 
-/* Alertas/Notificações */
-.alert-container {
+
+/* Alertas/Notificações Dinâmicas */
+.alert-container { /* Usado por #alert-modal */
     position: fixed;
     top: 20px;
     right: 20px;
@@ -913,7 +953,7 @@ html[data-theme="dark"] .icon-button.primary i {
 }
 
 .alert {
-    padding: 15px 20px;
+    padding: 12px 18px; /* Reduzido padding */
     border-radius: var(--border-radius);
     color: var(--text-on-accent-color);
     box-shadow: var(--card-shadow);
@@ -921,13 +961,14 @@ html[data-theme="dark"] .icon-button.primary i {
     justify-content: space-between;
     align-items: center;
     opacity: 0;
-    transform: translateX(100%);
+    transform: translateX(20px); /* Começa fora da tela à direita */
     transition: opacity 0.3s ease, transform 0.3s ease, background-color var(--transition-speed) ease, color var(--transition-speed) ease;
     min-width: 250px;
+    font-size: 0.9em; /* Texto um pouco menor */
 }
 .alert.show {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateX(0); /* Entra na tela */
 }
 
 .alert.info { background-color: var(--accent-color); }
@@ -935,14 +976,16 @@ html[data-theme="dark"] .icon-button.primary i {
 .alert.warning { background-color: var(--warning-color); color: var(--warning-text-color); }
 .alert.error { background-color: var(--error-color); }
 
-.alert .close-alert {
+.alert .close-alert { /* Botão de fechar dentro do alerta */
     background: none;
     border: none;
-    color: inherit; /* Herda cor do texto do alerta */
+    color: inherit;
     opacity: 0.7;
-    font-size: 1.2em;
+    font-size: 1.4em; /* Tamanho do 'X' */
     margin-left: 15px;
     cursor: pointer;
+    padding: 0 5px; /* Pequeno padding para área de clique */
+    line-height: 1;
     transition: opacity var(--transition-speed) ease;
 }
 .alert .close-alert:hover {
@@ -970,28 +1013,53 @@ html[data-theme="dark"] .icon-button.primary i {
     background-clip: content-box;
 }
 
-
 /* Responsividade */
+.back-to-sidebar-button { /* Botão para voltar para a lista de conversas em mobile */
+    display: none; /* Escondido por padrão */
+    margin-right: 10px;
+}
+
 @media (max-width: 768px) {
     body {
         font-size: 13px;
     }
     .chat-container {
-        flex-direction: column;
-        height: 100vh;
+        flex-direction: column; /* Empilha sidebar e chat-area */
+        height: 100vh; /* Ocupa toda a altura da viewport */
         border-radius: 0;
     }
     .sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 40%; /* Ajustável */
+        width: 100%; /* Sidebar ocupa toda a largura */
+        height: 100%; /* Começa com altura total */
+        max-height: none; /* Remove limitação de altura */
         border-right: none;
         border-bottom: 1px solid var(--border-main-color);
+        position: absolute; /* Para sobrepor */
+        left: 0;
+        top: 0;
+        z-index: 10;
+        transform: translateX(-100%); /* Escondido fora da tela */
+        transition: transform 0.3s ease-in-out;
+    }
+    .chat-container.sidebar-active .sidebar {
+        transform: translateX(0%); /* Mostra sidebar */
     }
     .chat-area {
-        height: auto;
-        flex-grow: 1;
+        width: 100%;
+        height: 100%; /* Ocupa toda a altura disponível */
     }
+
+    .chat-container.chat-active .sidebar {
+        transform: translateX(-100%); /* Esconde a sidebar quando o chat está ativo */
+    }
+    /*.chat-container.chat-active .chat-area {
+         Não precisa de transform aqui, ele já está visível
+    }*/
+    
+    .back-to-sidebar-button {
+        display: flex; /* Mostrar botão de voltar no header do chat em mobile */
+    }
+
     .message {
         max-width: 85%;
     }
@@ -1009,20 +1077,14 @@ html[data-theme="dark"] .icon-button.primary i {
         width: 20px;
         height: 20px;
     }
-
-    .chat-container.chat-active .sidebar {
-        display: none;
-    }
-    .back-to-sidebar-button {
-        display: none;
-        margin-right: 10px;
-    }
-    .chat-container.chat-active .back-to-sidebar-button { /* Mostrar botão de voltar quando chat está ativo em mobile */
-        display: flex; /* ou inline-flex */
-    }
 }
 
-.icon-img { /* Classe genérica para imagens usadas como ícones */
-    display: inline-block; /* Para que onerror funcione bem com substituição */
+.icon-img {
+    display: inline-block;
     vertical-align: middle;
+}
+
+/* Ajuste para o botão de fechar modal no chat.html */
+.modal-header .close-modal .icon-img {
+    filter: none !important; /* Remove qualquer filtro para o ícone de fechar do modal */
 }

@@ -29,8 +29,8 @@
 }
 
 html[data-theme="dark"] {
-    --card-bg-color: #242424; /* Alterado de #303030 para o cinza escuro anterior do body */
-    --header-bg-color: #242424; /* Mantido igual a card-bg-color */
+    --card-bg-color: #1e1e1e; /* Alterado de #303030 para o cinza escuro anterior do body */
+    --header-bg-color: #1e1e1e; /* Mantido igual a card-bg-color */
     --text-color: #eeeeec;
     --text-secondary-color: #bababa;
     --border-color: #4a4a4a;
@@ -298,9 +298,6 @@ html[data-theme="dark"] .loading-spinner {
     to { transform: rotate(360deg); }
 }
 
-.btn-primary .loading-spinner {
-    /* As cores já são definidas acima e herdam de --button-primary-text-color */
-}
 
 .btn-primary:disabled .loading-spinner {
     border-top-color: var(--button-primary-text-color); 

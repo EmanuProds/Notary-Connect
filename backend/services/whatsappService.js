@@ -1,26 +1,26 @@
 // backend/services/whatsappService.js
-const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js")
-const qrcode = require("qrcode") 
-const fs = require("fs")
-const path = require("path")
+const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
+const qrcode = require("qrcode");
+const fs = require("fs");
+const path = require("path");
 
-let client; 
-const sessionIdExported = "whatsapp-bot-session"; 
+let client;
+const sessionIdExported = "whatsapp-bot-session";
 
 let globalSendLog;
 let globalWebsocketService;
-let globalDbServices; 
+let globalDbServices;
 let currentQR = null;
 let connectionStatus = 'DISCONNECTED';
 let isBotPaused = false;
-let authPathBase; // Alterado para ser o diretório base para LocalAuth
+let authPathBase;
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function sendTypingMessageWithDelay(chat, text, typingDelayMs, responseDelayMs, conversationId, clientJid) {
     try {
-        if (!chat) {
-            globalSendLog(`[WhatsApp_WWJS] Erro em sendTypingMessageWithDelay: Objeto 'chat' é indefinido para ${clientJid}.`, 'error');
+        if (!chat || typeof chat.sendStateTyping !== 'function' || typeof chat.sendMessage !== 'function' || typeof chat.clearState !== 'function') {
+            globalSendLog(`[WhatsApp_WWJS] Erro em sendTypingMessageWithDelay: Objeto 'chat' inválido ou faltando métodos para ${clientJid}.`, 'error');
             return null;
         }
         globalSendLog(`[WhatsApp_WWJS] sendTypingMessageWithDelay: Para ${clientJid}. Typing: ${typingDelayMs}ms, Send: ${responseDelayMs}ms. Texto: "${text.substring(0,50)}..."`, 'debug');
@@ -30,12 +30,13 @@ async function sendTypingMessageWithDelay(chat, text, typingDelayMs, responseDel
             await delay(typingDelayMs);
         }
         if (responseDelayMs > 0) {
-            await delay(responseDelayMs);
+            if (typingDelayMs === 0) await delay(responseDelayMs);
+            else if (responseDelayMs > typingDelayMs) await delay(responseDelayMs - typingDelayMs);
         }
         
         const sentMsg = await chat.sendMessage(text);
-        if (typingDelayMs > 0 || responseDelayMs > 0) {
-             await chat.clearState(); 
+        if (typingDelayMs > 0) {
+             await chat.clearState();
         }
         globalSendLog(`[WhatsApp_WWJS] Mensagem do robô enviada para ${clientJid}: "${text}" (ID: ${sentMsg.id.id})`, 'info');
 
@@ -43,12 +44,12 @@ async function sendTypingMessageWithDelay(chat, text, typingDelayMs, responseDel
             await globalDbServices.chat.saveMessage({
                 conversationId: conversationId,
                 message_platform_id: sentMsg.id.id,
-                senderType: 'BOT', 
+                senderType: 'BOT',
                 senderId: 'ROBOT_AUTO_RESPONSE',
                 messageType: 'chat',
                 content: text,
                 timestamp: new Date(sentMsg.timestamp * 1000).toISOString(),
-                read_by_user: true, 
+                read_by_user: true,
                 read_by_client: false
             });
             globalSendLog(`[WhatsApp_WWJS] Mensagem do robô salva no DB para conversa ${conversationId}.`, 'debug');
@@ -57,7 +58,7 @@ async function sendTypingMessageWithDelay(chat, text, typingDelayMs, responseDel
     } catch (error) {
         globalSendLog(`[WhatsApp_WWJS] Erro em sendTypingMessageWithDelay para ${clientJid}: ${error.message}`, 'error');
         if (chat && typeof chat.clearState === 'function') {
-            await chat.clearState().catch(e => globalSendLog(`[WhatsApp_WWJS] Erro ao limpar estado do chat: ${e.message}`, 'warn'));
+            await chat.clearState().catch(e => globalSendLog(`[WhatsApp_WWJS] Erro ao limpar estado do chat após falha: ${e.message}`, 'warn'));
         }
         return null;
     }
@@ -72,10 +73,10 @@ async function processBotResponse(msg, conversation, clientMessageContent) {
 
     try {
         const configBotActiveResult = await globalDbServices.main.getConfigByKey('bot_active');
-        const isBotActive = configBotActiveResult && configBotActiveResult.CONFIG_VALUE === true; 
-        globalSendLog(`[BotLogic] Status global do Robô (bot_active): ${isBotActive}.`, 'debug');
+        const isBotGloballyActive = configBotActiveResult && configBotActiveResult.CONFIG_VALUE === true;
+        globalSendLog(`[BotLogic] Status global do Robô (bot_active): ${isBotGloballyActive}.`, 'debug');
 
-        if (!isBotActive) {
+        if (!isBotGloballyActive) {
             globalSendLog('[BotLogic] Robô está desativado nas configurações globais.', 'info');
             return false;
         }
@@ -88,7 +89,7 @@ async function processBotResponse(msg, conversation, clientMessageContent) {
         globalSendLog(`[BotLogic] ${autoResponses.length} respostas automáticas carregadas. Verificando correspondências...`, 'debug');
 
         const clientJid = msg.from;
-        const chat = await msg.getChat(); 
+        const chat = await msg.getChat();
         if (!chat) {
             globalSendLog(`[BotLogic] Não foi possível obter o objeto 'chat' para ${clientJid}. Abortando.`, 'error');
             return false;
@@ -119,7 +120,7 @@ async function processBotResponse(msg, conversation, clientMessageContent) {
                             globalSendLog(`[BotLogic] Match por Regex: Padrão "${autoResp.PATTERN}" em "${clientMessageContent}" para Resposta ID ${autoResp.ID}`, 'debug');
                         }
                     } catch (e) {
-                        globalSendLog(`[BotLogic] Padrão "${autoResp.PATTERN}" não é Regex válido e não houve match simples. Erro Regex: ${e.message}`, 'debug');
+                        globalSendLog(`[BotLogic] Padrão "${autoResp.PATTERN}" não é Regex válido (Erro Regex: ${e.message}). Match simples não ocorreu.`, 'debug');
                     }
                 }
             } catch (e) {
@@ -135,16 +136,16 @@ async function processBotResponse(msg, conversation, clientMessageContent) {
                 const clientName = contact.pushname || contact.name || clientJid.split('@')[0];
                 responseText = responseText.replace(/{client_name}/gi, clientName.split(" ")[0]); 
 
-                const typingDelay = parseInt(autoResp.TYPING_DELAY_MS, 10) || 1000; 
-                const sendDelay = parseInt(autoResp.RESPONSE_DELAY_MS, 10) || 500;   
+                const typingDelay = parseInt(autoResp.TYPING_DELAY_MS, 10);
+                const sendDelay = parseInt(autoResp.RESPONSE_DELAY_MS, 10);
                 
                 globalSendLog(`[BotLogic] Enviando resposta: "${responseText.substring(0,50)}..." com typingDelay: ${typingDelay}ms, sendDelay: ${sendDelay}ms`, 'debug');
                 await sendTypingMessageWithDelay(chat, responseText, typingDelay, sendDelay, conversation.ID, clientJid);
-                return true; 
+                return true;
             }
         }
         globalSendLog(`[BotLogic] Nenhuma resposta automática acionada para: "${clientMessageContent}"`, 'debug');
-        return false; 
+        return false;
 
     } catch (error) {
         globalSendLog(`[BotLogic] Erro CRÍTICO ao processar respostas do robô: ${error.message}\n${error.stack}`, 'error');
@@ -155,46 +156,64 @@ async function processBotResponse(msg, conversation, clientMessageContent) {
 async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbServicesInstance, appUserDataPath) {
     globalSendLog = sendLogFunction;
     globalWebsocketService = websocketServiceInstance;
-    globalDbServices = dbServicesInstance; 
+    globalDbServices = dbServicesInstance;
 
-    globalSendLog(`[WhatsApp_WWJS] connectToWhatsApp chamado. appUserDataPath: ${appUserDataPath}`, 'debug');
+    globalSendLog(`[WhatsApp_WWJS] connectToWhatsApp INICIADO. appUserDataPath: ${appUserDataPath}`, 'info');
+
+    if (client) {
+        globalSendLog('[WhatsApp_WWJS] Tentativa de conectar enquanto um cliente já existe. Tentando destruir cliente anterior...', 'warn');
+        try {
+            if (typeof client.destroy === 'function') {
+                await client.destroy();
+                globalSendLog('[WhatsApp_WWJS] Cliente anterior destruído com sucesso.', 'info');
+            }
+        } catch (destroyError) {
+            globalSendLog(`[WhatsApp_WWJS] Erro ao destruir cliente anterior: ${destroyError.message}`, 'error');
+        }
+        client = null;
+    }
 
     if (!appUserDataPath) {
-        const critErrorMsg = "[WhatsApp_WWJS] CRITICAL Error: User data path (appUserDataPath) não fornecido.";
+        const critErrorMsg = "[WhatsApp_WWJS] CRITICAL Error: User data path (appUserDataPath) não fornecido para LocalAuth.";
         globalSendLog(critErrorMsg, "error");
         if (globalWebsocketService) {
             globalWebsocketService.broadcastToAdmins({
                 type: "status_update",
-                clientId: sessionIdExported, 
+                clientId: sessionIdExported,
                 payload: { status: "FATAL_ERROR", reason: critErrorMsg },
             });
         }
         return null;
     }
 
-    // authPathBase é o diretório onde o whatsapp-web.js armazenará as sessões.
-    authPathBase = path.join(appUserDataPath, "Auth", "wwebjs_auth"); 
+    authPathBase = path.join(appUserDataPath, "Auth", "wwebjs_auth");
     globalSendLog(`[WhatsApp_WWJS] Diretório base para autenticação LocalAuth (dataPath): ${authPathBase}`, "info");
 
-    // Verifica se a pasta PAI para todas as sessões existe, se não, cria.
-    if (!fs.existsSync(authPathBase)) { 
-        try {
+    try {
+        if (!fs.existsSync(authPathBase)) {
             fs.mkdirSync(authPathBase, { recursive: true });
             globalSendLog(`[WhatsApp_WWJS] Pasta base de autenticação criada em: ${authPathBase}`, "info");
-        } catch (mkdirErr) {
-            const critErrorMsg = `[WhatsApp_WWJS] CRITICAL Error criando pasta base de autenticação ${authPathBase}: ${mkdirErr.message}`;
-            globalSendLog(critErrorMsg, "error");
-            return null;
+        } else {
+            globalSendLog(`[WhatsApp_WWJS] Pasta base de autenticação já existe em: ${authPathBase}`, "debug");
         }
+    } catch (mkdirErr) {
+        const critErrorMsg = `[WhatsApp_WWJS] CRITICAL Error criando pasta base de autenticação ${authPathBase}: ${mkdirErr.message}`;
+        globalSendLog(critErrorMsg, "error");
+        return null;
     }
     
-    // Verifica se a pasta específica da sessão (ex: .../wwebjs_auth/session-whatsapp-bot-session) existe ANTES de inicializar
-    // A biblioteca whatsapp-web.js geralmente cria uma pasta prefixada com "session-" e o clientId.
     const specificSessionPath = path.join(authPathBase, `session-${sessionIdExported}`);
+    globalSendLog(`[WhatsApp_WWJS] Verificando pasta de sessão específica: ${specificSessionPath}`, "debug");
     if (fs.existsSync(specificSessionPath)) {
-        globalSendLog(`[WhatsApp_WWJS] Pasta de sessão específica (${specificSessionPath}) encontrada ANTES da inicialização do cliente.`, "info");
+        globalSendLog(`[WhatsApp_WWJS] Pasta de sessão específica ENCONTRADA. Tentando reutilizar sessão.`, "info");
+        try {
+            const files = fs.readdirSync(specificSessionPath);
+            globalSendLog(`[WhatsApp_WWJS] Conteúdo da pasta de sessão: ${files.join(', ') || '(vazia)'}`, "debug");
+        } catch (e) {
+            globalSendLog(`[WhatsApp_WWJS] Erro ao acessar pasta de sessão ${specificSessionPath}: ${e.message}. Pode indicar problema de permissão ou corrupção.`, "warn");
+        }
     } else {
-        globalSendLog(`[WhatsApp_WWJS] Pasta de sessão específica (${specificSessionPath}) NÃO encontrada ANTES da inicialização. Uma nova sessão será criada (QR Code).`, "warn");
+        globalSendLog(`[WhatsApp_WWJS] Pasta de sessão específica NÃO encontrada. Uma nova sessão (QR Code) será necessária.`, "warn");
     }
 
     isBotPaused = false;
@@ -204,15 +223,14 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
         
         client = new Client({
             authStrategy: new LocalAuth({
-                clientId: sessionIdExported, 
-                dataPath: authPathBase // Passa o diretório PAI
+                clientId: sessionIdExported,
+                dataPath: authPathBase
             }),
             puppeteer: {
-                headless: true, 
+                headless: true,
                 args: [
                     '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
                     '--disable-accelerated-2d-canvas', '--no-first-run', '--no-zygote',
-                    // '--single-process', // Removido para teste, pode causar problemas
                     '--disable-gpu'
                 ],
             },
@@ -232,7 +250,7 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
                 globalWebsocketService.broadcastToAdmins({
                     type: 'qr_code',
                     clientId: sessionIdExported,
-                    payload: { qr: qr, status: 'QR_CODE', isPaused: isBotPaused } 
+                    payload: { qr: qr, status: 'QR_CODE', isPaused: isBotPaused }
                 });
             }
             if (globalDbServices && globalDbServices.main) {
@@ -258,7 +276,7 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
 
         client.on('auth_failure', async (msg) => { 
             connectionStatus = 'AUTH_FAILURE';
-            globalSendLog(`[WhatsApp_WWJS] Evento AUTH_FAILURE: Falha na autenticação: ${msg}`, 'error');
+            globalSendLog(`[WhatsApp_WWJS] Evento AUTH_FAILURE: Falha na autenticação: ${msg}. CHAMANDO fullLogoutAndCleanup...`, 'error'); // Log Adicionado
             if (globalWebsocketService) {
                 globalWebsocketService.broadcastToAdmins({
                     type: 'status_update',
@@ -290,8 +308,9 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
         });
 
         client.on('disconnected', async (reason) => {
+            const previousStatus = connectionStatus;
             connectionStatus = 'DISCONNECTED';
-            globalSendLog(`[WhatsApp_WWJS] Evento DISCONNECTED: Cliente desconectado: ${reason}`, 'warn');
+            globalSendLog(`[WhatsApp_WWJS] Evento DISCONNECTED: Cliente desconectado: ${reason}. Status anterior: ${previousStatus}. CHAMANDO fullLogoutAndCleanup SE CRÍTICO...`, 'warn'); // Log Adicionado
             if (globalWebsocketService) {
                 globalWebsocketService.broadcastToAdmins({
                     type: 'status_update',
@@ -303,22 +322,28 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
                 await globalDbServices.main.updateWhatsappSessionStatus(sessionIdExported, 'DISCONNECTED');
             }
             
-            if (String(reason).includes('NAVIGATION') || String(reason).includes('LOGGED_OUT') || reason === 'NAVIGATION_ERROR' || reason === 'Max qrcode retries reached' || reason === 'ABNORMAL_LOGOUT' || String(reason).toLowerCase().includes('zowel')) { 
-                globalSendLog(`[WhatsApp_WWJS] Desconexão indica logout ou problema crítico (${reason}). Limpando sessão...`, 'warn');
-                await fullLogoutAndCleanup(true); 
+            const criticalLogoutReasons = ['NAVIGATION', 'LOGGED_OUT', 'Max qrcode retries reached', 'ABNORMAL_LOGOUT', 'ACCOUNT_SYNC_ERROR', 'SYNC_TIMEOUT', 'UNPAIRED', 'UNLAUNCHED'];
+            let isCriticalLogout = criticalLogoutReasons.some(r => String(reason).toUpperCase().includes(r)) || String(reason).toLowerCase().includes('zowel');
+
+            if (previousStatus === 'AUTH_FAILURE') {
+                isCriticalLogout = true;
+                globalSendLog(`[WhatsApp_WWJS] Desconexão após AUTH_FAILURE. Considerado crítico. Razão: ${reason}`, 'warn');
+            }
+            if (String(reason).includes("Protocol error (Runtime.callFunctionOn): Session closed.")) {
+                isCriticalLogout = true;
+                globalSendLog(`[WhatsApp_WWJS] Desconexão por 'Session closed'. Considerado crítico. Razão: ${reason}`, 'warn');
+            }
+
+            if (isCriticalLogout) {
+                globalSendLog(`[WhatsApp_WWJS] Desconexão CRÍTICA (${reason}). CHAMANDO fullLogoutAndCleanup...`, 'warn');
+                await fullLogoutAndCleanup(true);
             } else {
-                 globalSendLog('[WhatsApp_WWJS] Tentando reinicializar o cliente em 10 segundos devido à desconexão...', 'info');
-                 setTimeout(() => {
-                    if (client && typeof client.initialize === 'function') { 
-                         client.initialize().catch(err => globalSendLog(`[WhatsApp_WWJS] Falha ao reinicializar após desconexão: ${err.message}`, "error"));
-                    } else {
-                        globalSendLog('[WhatsApp_WWJS] Cliente não disponível para reinicialização após desconexão.', 'warn');
-                    }
-                 }, 10000);
+                 globalSendLog(`[WhatsApp_WWJS] Desconexão não crítica (${reason}). Nenhuma ação de limpeza automática. Aguardando reinício manual ou próxima inicialização.`, 'info');
             }
         });
 
         client.on('message', async (msg) => {
+            // ... (código existente do message handler, sem alterações aqui) ...
             globalSendLog(`[WhatsApp_WWJS] Evento MESSAGE: Mensagem recebida de ${msg.from}. Pausado: ${isBotPaused}, FromMe: ${msg.fromMe}, IsStatus: ${msg.isStatus}`, 'debug');
             if (isBotPaused || msg.fromMe || msg.from === 'status@broadcast' || msg.isStatus) { 
                 globalSendLog(`[WhatsApp_WWJS] Mensagem de ${msg.from} ignorada (pausado, própria, ou status).`, 'debug');
@@ -331,8 +356,8 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
             
             try {
                 const contact = await msg.getContact();
-                senderName = contact.pushname || contact.name || senderName;
-                senderProfilePic = await contact.getProfilePicUrl().catch(() => null);
+                senderName = contact.pushname || contact.name || senderName; 
+                senderProfilePic = await contact.getProfilePicUrl().catch(() => null); 
                 globalSendLog(`[WhatsApp_WWJS] Detalhes do contato obtidos: ${senderName}, Pic: ${senderProfilePic ? 'Sim' : 'Não'}`, 'debug');
             } catch (contactError) {
                 globalSendLog(`[WhatsApp_WWJS] Erro ao obter detalhes do contato ${senderJid}: ${contactError.message}`, 'warn');
@@ -346,7 +371,7 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
             if (msg.hasMedia) {
                 globalSendLog(`[WhatsApp_WWJS] Mensagem de ${senderName} contém mídia. Tipo: ${msg.type}`, 'debug');
                 messageType = msg.type; 
-                displayMessageContent = msg.caption ? `${msg.caption} (${messageType})` : `(Mídia: ${messageType})`;
+                displayMessageContent = msg.caption ? `${msg.caption} (Mídia: ${messageType})` : `(Mídia: ${messageType})`;
             }
             
             const messageTimestamp = msg.timestamp ? new Date(msg.timestamp * 1000).toISOString() : new Date().toISOString();
@@ -417,7 +442,7 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
                                             CLIENT_NAME: senderName,
                                             CLIENT_WHATSAPP_ID: senderJid, 
                                             CLIENT_PROFILE_PIC: senderProfilePic,
-                                            USER_ID: null,
+                                            USER_ID: null, 
                                             USER_USERNAME: null,
                                             STATUS: 'pending',
                                             SECTOR: null, 
@@ -466,6 +491,7 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
 }
 
 async function sendWhatsAppMessage(toJid, messageContent, agentUsername, conversationId, chatDbService) {
+    // ... (código existente, sem alterações aqui) ...
     globalSendLog(`[WhatsApp_WWJS] sendWhatsAppMessage: Para ${toJid}, Agente: ${agentUsername}, ConvID: ${conversationId}`, 'debug');
     if (isBotPaused) {
         globalSendLog(`[WhatsApp_WWJS] Bot pausado. Não é possível enviar mensagem para ${toJid}.`, 'warn');
@@ -495,7 +521,7 @@ async function sendWhatsAppMessage(toJid, messageContent, agentUsername, convers
             } else if (messageContent.document && messageContent.document.url) {
                 const media = await MessageMedia.fromUrl(messageContent.document.url, { unsafeMime: true });
                 contentToSend = media;
-                if (messageContent.document.fileName) options.filename = messageContent.document.fileName;
+                if (messageContent.document.fileName) options.filename = messageContent.document.fileName; 
                 if (messageContent.document.caption) {options.caption = messageContent.document.caption; captionForDb = options.caption;}
                 messageTypeForDb = 'document';
                 mediaUrlForDb = messageContent.document.url;
@@ -543,21 +569,22 @@ async function sendWhatsAppMessage(toJid, messageContent, agentUsername, convers
             senderId: agentUsername, 
             messageType: messageTypeForDb,
             content: messageTextForDb,
-            mediaUrl: mediaUrlForDb,
+            mediaUrl: mediaUrlForDb, 
             timestamp: sentMsgTimestamp,
             read_by_user: true, 
-            read_by_client: false
+            read_by_client: false 
         });
         globalSendLog(`[WhatsApp_WWJS] Mensagem do agente ${agentUsername} salva no DB. ID DB: ${savedMessage.id}`, 'debug');
         return savedMessage; 
     } catch (error) {
         globalSendLog(`[WhatsApp_WWJS] Erro ao enviar mensagem para ${toJid}: ${error.message}`, 'error');
-        globalSendLog(error.stack, 'debug');
+        globalSendLog(error.stack, 'debug'); 
         return null;
     }
 }
 
 function getCurrentStatusAndQR() {
+    // ... (código existente, sem alterações aqui) ...
     const statusData = {
         sessionId: sessionIdExported,
         status: connectionStatus,
@@ -570,10 +597,12 @@ function getCurrentStatusAndQR() {
 }
 
 function getClient() { 
+    // ... (código existente, sem alterações aqui) ...
     return client;
 }
 
 async function togglePauseBot() {
+    // ... (código existente, sem alterações aqui) ...
     isBotPaused = !isBotPaused;
     globalSendLog(`[WhatsApp_WWJS] togglePauseBot: Estado de pausa do bot alterado para: ${isBotPaused}`, 'info');
     if (globalWebsocketService) {
@@ -595,51 +624,50 @@ async function togglePauseBot() {
     return isBotPaused;
 }
 
-async function fullLogoutAndCleanup(isDisconnectEvent = false) {
-    globalSendLog('[WhatsApp_WWJS] fullLogoutAndCleanup: Iniciando logout completo e limpeza de sessão...', 'info');
+async function fullLogoutAndCleanup(isDisconnectOrAuthFailureEvent = false) {
+    globalSendLog(`[WhatsApp_WWJS] fullLogoutAndCleanup: Iniciando logout completo e limpeza. isDisconnectOrAuthFailureEvent: ${isDisconnectOrAuthFailureEvent}`, 'info');
     
     if (client) {
         try {
-            if (!isDisconnectEvent && typeof client.logout === 'function') { 
-                 globalSendLog('[WhatsApp_WWJS] Tentando logout do cliente whatsapp-web.js...', 'info');
+            if (!isDisconnectOrAuthFailureEvent && typeof client.logout === 'function') { 
+                 globalSendLog('[WhatsApp_WWJS] Tentando client.logout()...', 'info');
                  await client.logout(); 
-                 globalSendLog('[WhatsApp_WWJS] Logout do cliente realizado com sucesso.', 'info');
-            } else if (isDisconnectEvent) {
-                 globalSendLog('[WhatsApp_WWJS] Desconectado externamente ou logout já ocorreu, pulando client.logout().', 'info');
+                 globalSendLog('[WhatsApp_WWJS] client.logout() realizado com sucesso.', 'info');
+            } else if (isDisconnectOrAuthFailureEvent) {
+                 globalSendLog('[WhatsApp_WWJS] Chamado a partir de evento de desconexão/falha, pulando client.logout() explícito.', 'info');
             }
             
             if (typeof client.destroy === 'function') {
-                globalSendLog('[WhatsApp_WWJS] Destruindo cliente whatsapp-web.js...', 'info');
+                globalSendLog('[WhatsApp_WWJS] Tentando client.destroy()...', 'info');
                 await client.destroy();
-                globalSendLog('[WhatsApp_WWJS] Cliente whatsapp-web.js destruído.', 'info');
+                globalSendLog('[WhatsApp_WWJS] client.destroy() realizado com sucesso.', 'info');
             }
-
         } catch (e) {
-            globalSendLog(`[WhatsApp_WWJS] Erro durante o logout/destroy do cliente: ${e.message}.`, 'warn');
+            globalSendLog(`[WhatsApp_WWJS] Erro durante o client.logout/destroy: ${e.message}.`, 'warn');
         } finally {
             client = null; 
-            globalSendLog('[WhatsApp_WWJS] Instância do cliente definida como null.', 'debug');
+            globalSendLog('[WhatsApp_WWJS] Instância do client definida como null.', 'debug');
         }
     } else {
-        globalSendLog('[WhatsApp_WWJS] Cliente whatsapp-web.js não existente para logout/cleanup.', 'warn');
+        globalSendLog('[WhatsApp_WWJS] Nenhuma instância do client para logout/cleanup.', 'warn');
     }
 
-    connectionStatus = 'DISCONNECTED'; 
+    connectionStatus = 'CLEARED_FOR_RESTART';
     currentQR = null;
     isBotPaused = false; 
 
-    // O caminho correto para a pasta da sessão específica é DENTRO de authPathBase, prefixado com "session-"
     const specificSessionPathForCleanup = path.join(authPathBase, `session-${sessionIdExported}`);
+    globalSendLog(`[WhatsApp_WWJS] Verificando pasta de sessão para limpeza: ${specificSessionPathForCleanup}`, 'debug');
     if (fs.existsSync(specificSessionPathForCleanup)) {
         try {
-            globalSendLog(`[WhatsApp_WWJS] Removendo pasta de autenticação da sessão específica: ${specificSessionPathForCleanup}`, 'info');
+            globalSendLog(`[WhatsApp_WWJS] Removendo pasta de autenticação da sessão: ${specificSessionPathForCleanup}`, 'info');
             fs.rmSync(specificSessionPathForCleanup, { recursive: true, force: true });
-            globalSendLog(`[WhatsApp_WWJS] Pasta de autenticação da sessão específica removida.`, 'info');
+            globalSendLog(`[WhatsApp_WWJS] Pasta de autenticação da sessão removida.`, 'info');
         } catch (err) {
-            globalSendLog(`[WhatsApp_WWJS] Erro ao remover pasta de autenticação específica (${specificSessionPathForCleanup}): ${err.message}`, 'error');
+            globalSendLog(`[WhatsApp_WWJS] Erro ao remover pasta de autenticação (${specificSessionPathForCleanup}): ${err.message}`, 'error');
         }
     } else {
-        globalSendLog(`[WhatsApp_WWJS] Pasta de autenticação específica (${specificSessionPathForCleanup}) não encontrada para remoção.`, 'warn');
+        globalSendLog(`[WhatsApp_WWJS] Pasta de autenticação (${specificSessionPathForCleanup}) não encontrada para remoção. Pode já ter sido limpa.`, 'warn');
     }
     
     if (globalDbServices && globalDbServices.main && typeof globalDbServices.main.updateWhatsappSessionStatus === 'function') {
@@ -664,9 +692,9 @@ async function fullLogoutAndCleanup(isDisconnectEvent = false) {
 module.exports = {
     connectToWhatsApp,
     sendWhatsAppMessage,
-    getClient, 
+    getClient,
     getCurrentStatusAndQR,
-    togglePauseBot, 
+    togglePauseBot,
     fullLogoutAndCleanup,
     sessionId: sessionIdExported,
 };

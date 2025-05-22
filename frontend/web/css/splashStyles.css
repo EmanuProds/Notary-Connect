@@ -1,0 +1,180 @@
+/* splashStyles.css - Estilo Libadwaita/GTK4 com Tema Escuro */
+:root {
+    /* Tema Claro (Light Theme - Padrão) */
+    --bg-color: #f6f6f6; /* Um cinza muito claro, quase branco */
+    --card-bg-color: #ffffff;
+    --text-color: #2c2c2c; /* Texto escuro, mas não preto puro */
+    --secondary-text-color: #5c5c5c; /* Cinza médio para texto secundário */
+    --accent-color: #3584e4; /* Azul Adwaita */
+    --progress-track-color: #e0e0e0;
+    --border-color: #dcdcdc;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] {
+    /* Tema Escuro (Dark Theme - Estilo Libadwaita, mais escuro) */
+    --bg-color: #1e1e1e; /* Cinza bem escuro, como na tela de login */
+    --card-bg-color: #1e1e1e; /* Mesmo cinza escuro para a "caixa" que ocupa tudo */
+    --text-color: #e2e2e2; /* Texto claro, não branco puro para conforto visual */
+    --secondary-text-color: #a0a0a0; /* Cinza claro para texto secundário */
+    --accent-color: #3584e4; /* Azul Adwaita */
+    --progress-track-color: #3a3a3a; /* Trilha da barra de progresso escura */
+    --border-color: #3a3a3a;
+    --shadow-color: rgba(0, 0, 0, 0.25);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    user-select: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.splash-outer-container {
+    background-color: var(--card-bg-color);
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    text-align: center;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+.splash-content-box {
+    padding: 1rem;
+    max-width: 520px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; 
+    flex-grow: 1;
+    height: auto;
+    min-height: 330px;
+    padding-top: 2rem; 
+    padding-bottom: 100px; /* Aumentado ainda mais para a barra de progresso mais grossa e mais para cima */
+}
+
+.main-content-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; 
+    flex-grow: 1; 
+    width: 100%;
+}
+
+.logo-name-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.1rem; /* Reduzido ao mínimo para aproximar o copyright/versão */
+    margin-top: 4.5rem; /* Mantém a posição vertical do bloco logo/nome */
+}
+
+.logo-and-name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-logo-svg {
+    height: 4.5rem;
+    width: 4.5rem;
+    max-height: 80px;
+    max-width: 80px;
+    min-height: 50px;
+    min-width: 50px;
+    margin-right: 0.875rem;
+    object-fit: contain;
+}
+
+.project-name-text {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+    line-height: 1.2;
+    text-align: left;
+    transition: color 0.3s ease;
+}
+
+.copyright-version-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 0.05rem; /* Reduzido ao mínimo para colar no nome do projeto */
+}
+
+.copyright-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+.copyright-text,
+.current-year-text,
+.app-version-text {
+    color: var(--secondary-text-color);
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.app-version-text {
+    font-size: 0.8rem;
+    margin-top: 0.05rem; /* Espaço mínimo */
+}
+.copyright-text, .current-year-text {
+    font-size: 0.875rem;
+}
+
+.status-and-progress-container { 
+    width: 90%;
+    max-width: 400px;
+    margin-top: auto; 
+}
+
+.loading-status-text {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--secondary-text-color);
+    min-height: 1.25em;
+    margin-bottom: 1.75rem; /* Aumentado espaço antes da barra de progresso mais grossa */
+    transition: color 0.3s ease;
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+    background-color: var(--progress-track-color);
+    height: 32px; /* Barra de carregamento ainda mais grossa */
+    position: absolute;
+    bottom: -18px; /* Ajustado para a nova altura, "entrando" 18px */
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+}
+
+.progress-bar {
+    background-color: var(--accent-color);
+    height: 100%;
+    width: 0%;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+}
+
