@@ -30,6 +30,12 @@
             "target": "nsis",
             "icon": "frontend/web/img/icons/logo.ico"
         },
+        "linux": {
+            "target": [
+                "AppImage"
+            ],
+            "icon": "frontend/web/img/icons/logo.svg"
+        },
         "nsis": {
             "oneClick": false,
             "allowToChangeInstallationDirectory": true,

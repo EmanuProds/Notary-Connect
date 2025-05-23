@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Principal - Notary Connect</title>
+    <link rel="stylesheet" href="./css/menuStyles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="menu-container">
+        <header class="menu-header">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="menu">
+                    <img src="./img/icons/house.svg" alt="Início" class="icon-tab">
+                    <span>Início</span>
+                </button>
+                <button class="tab-button" data-tab="updates">
+                    <img src="./img/icons/arrow-clockwise.svg" alt="Atualizações" class="icon-tab">
+                    <span>Atualizações</span>
+                </button>
+                <button class="tab-button" data-tab="about">
+                    <img src="./img/icons/info.svg" alt="Sobre" class="icon-tab">
+                    <span>Sobre</span>
+                </button>
+            </div>
+            <div class="header-actions">
+                <button id="closeAppBtnMenu" class="close-button" title="Fechar Aplicação">
+                    <img src="./img/icons/x.svg" alt="Fechar" class="icon-header-action">
+                </button>
+            </div>
+        </header>
+
+        <main class="menu-content">
+            <div class="tab-content active" id="tab-menu">
+                <section class="updates-carousel-section">
+                    <h2>Atualizações do Sistema</h2>
+                    <div class="carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-slide active">
+                                <img src="https://placehold.co/800x300/3584e4/ffffff?text=Nova+Interface&font=inter" alt="Atualização 1">
+                                <div class="carousel-caption">
+                                    <h3>Nova Interface!</h3>
+                                    <p>Agora você pode alternar entre o sistema de atendimento e a central de administração.</p>
+                                </div>
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="https://placehold.co/800x300/1e1e1e/e2e2e2?text=Melhorias+de+Performance&font=inter" alt="Atualização 2">
+                                <div class="carousel-caption">
+                                    <h3>Melhorias de Performance</h3>
+                                    <p>O sistema está mais rápido e responsivo.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-navigation">
+                            <button class="carousel-prev">
+                                <img src="./img/icons/caret-left.svg" alt="Anterior" class="icon-carousel-nav">
+                            </button>
+                            <button class="carousel-next">
+                                <img src="./img/icons/caret-right.svg" alt="Próximo" class="icon-carousel-nav">
+                            </button>
+                        </div>
+                        <div class="carousel-indicators">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="action-buttons-section">
+                    <button class="action-button" id="goToChatButton">
+                        <img src="./img/icons/chats-teardrop.svg" alt="Ícone de chat" class="icon-action-button">
+                        <div class="action-button-text-content">
+                            <span>Sistema de Atendimento</span>
+                            <small>Conecte-se para atender os clientes.</small>
+                        </div>
+                    </button>
+                    <button class="action-button" id="goToAdminButton">
+                        <img src="./img/icons/gear-six.svg" alt="Ícone de administração" class="icon-action-button">
+                        <div class="action-button-text-content">
+                            <span>Administração do Sistema</span>
+                            <small>Gerencie usuários, setores e configurações.</small>
+                        </div>
+                    </button>
+                </section>
+            </div>
+
+            <div class="tab-content" id="tab-updates">
+                <h2>Atualizações Detalhadas</h2>
+                <div class="update-list">
+                    <div class="update-item">
+                        <h3>Versão 1.0.1 (22/05/2025)</h3>
+                        <p>- Adicionada integração com a API libadwaita/gtk4.</p>
+                        <p>- Corrigido bug na autenticação de sessão.</p>
+                        <p>- Melhoria na interface de gestão de conversas com clientes.</p>
+                    </div>
+                    <div class="update-item">
+                        <h3>Versão 1.0.0 (19/05/2025)</h3>
+                        <p>- Otimizações de performance no carregamento de conversas.</p>
+                        <p>- Pequenas correções de UI.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-about">
+                <h2>Sobre o Notary Connect</h2>
+                <div class="about-content">
+                    <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="about-logo">
+                    <p><strong>Notary Connect</strong> <span id="appVersionAbout">Versão 1.0.1</span></p>
+                    <p>Sistema de Atendimento Digital e Gestão para Cartórios.</p>
+                    <p>&copy; <span id="currentYearAbout"></span> Perains On Tecnologia. Todos os direitos reservados.</p>
+                    <p>Desenvolvido para comunicação e processos de serviços para Cartórios.</p>
+                    <div class="about-links">
+                        <button id="openLogsButton">
+                            <img src="./img/icons/file-text.svg" alt="Ícone de logs" class="icon-about-link">
+                            Ver Logs
+                        </button>
+                        <button id="checkUpdatesButton">
+                            <img src="./img/icons/cloud-arrow-down.svg" alt="Ícone de atualizações" class="icon-about-link">
+                            Verificar Atualizações
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="./js/menuScript.js"></script>
+</body>
+</html>

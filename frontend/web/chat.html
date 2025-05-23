@@ -1,138 +1,99 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light"> <head>
+<html lang="pt-BR">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atendimento ao Cliente</title>
-    <link rel="stylesheet" href="./css/chatStyles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
+    <title>Chat de Atendimento</title>
+    <link rel="stylesheet" href="css/chatStyles.css">
+    </head>
 <body>
-    <div class="chat-container">
-        <aside class="sidebar">
-            <header class="sidebar-header">
-                <div class="user-profile">
-                    <img src="./img/icons/logo.svg" alt="Logo do Usuário" class="user-avatar" id="user-avatar-sidebar" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div class=\'avatar-placeholder\'>U</div>');">
-                    <div class="user-info">
-                        <span class="user-name" id="user-name">Nome do Atendente</span>
-                        <span class="user-status" id="user-status">Online</span>
-                    </div>
+    <div class="app-layout"> <aside class="sidebar">
+            <div class="sidebar-header">
+                <button id="add-room-button" title="Nova Sala ou Chat">
+                    <img src="img/icons/plus-icon.svg" alt="Nova Sala">
+                </button>
                 </div>
-                <div class="sidebar-actions">
-                    <button id="logout-button" class="icon-button" title="Sair">
-                        <img src="./img/icons/logout.svg" alt="Sair" class="icon-img" onerror="this.parentElement.innerHTML = '<i class=\'fas fa-sign-out-alt\'></i>';">
+            <div class="room-list-container" id="room-list">
+                <!--
+                <div class="room-item active">
+                    <span class="room-name">Sala Principal</span>
+                    <span class="unread-count">3</span>
+                </div>
+                -->
+                <!--
+                <div class="room-item">
+                    <span class="room-name">Suporte Técnico</span>
+                </div>
+                -->
+                <div class="room-item placeholder">Carregando salas...</div>
+            </div>
+        </aside>
+
+        <main class="main-chat-area">
+            <header class="main-chat-header">
+                <div class="header-left">
+                    <button id="menu-button" title="Menu Principal">
+                        <img src="img/icons/menu-hamburger-icon.svg" alt="Menu">
+                    </button>
+                </div>
+                <div class="header-center">
+                    <h1 id="chat-room-title">Selecione uma sala</h1> </div>
+                <div class="header-right">
+                    <span id="user-count-indicator" title="Usuários na sala">
+                        <img src="img/icons/user-group-icon.svg" alt="Usuários">
+                        <span id="user-count">0</span>
+                    </span>
+                    <button id="close-room-button" title="Fechar Sala Atual">
+                        <img src="img/icons/close-icon.svg" alt="Fechar Sala">
                     </button>
                 </div>
             </header>
 
-            <div class="search-container">
-                <input type="text" id="search-input" placeholder="Pesquisar ou começar uma nova conversa">
-                <img src="./img/icons/search.svg" alt="Ícone de Pesquisa" class="search-icon icon-img" onerror="this.style.display='none'">
-            </div>
-
-            <div class="tabs">
-                <button class="tab-button active" data-tab="active">Ativos</button>
-                <button class="tab-button" data-tab="closed">Encerrados</button>
-            </div>
-
-            <div class="conversations-list" id="conversations-list">
-                <div class="empty-list-message">Carregando conversas...</div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="no-chat-selected" id="no-chat-placeholder">
+                    <img src="img/icons/chat-bubble-hash-icon.svg" alt="Ícone de Chat" class="placeholder-icon">
+                    <h2 class="placeholder-title">Bem-vindo!</h2>
+                    <p class="placeholder-text">Selecione uma sala na barra lateral ou crie uma nova clicando no botão '+' para iniciar uma conversa.</p>
                 </div>
-        </aside>
-
-        <main class="chat-area">
-            <div class="welcome-screen" id="welcome-screen">
-                <img src="./img/icons/logo.svg" alt="Logo Principal" class="welcome-logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div class=\'logo-placeholder-large\'>LOGO</div>');">
-                <h2>Bem-vindo ao Atendimento</h2>
-                <p>Selecione uma conversa para começar.</p>
-                <p class="app-version">Versão 1.0.0</p>
-            </div>
-
-            <div class="chat-interface" id="chat-interface" style="display: none;">
-                <header class="chat-header">
-                    <button id="back-to-sidebar-button" class="icon-button back-to-sidebar-button" title="Voltar para lista">
-                        <img src="./img/icons/arrow-left.svg" alt="Voltar" class="icon-img" onerror="this.parentElement.innerHTML = '<i class=\'fas fa-arrow-left\'></i>';">
-                    </button>
-                    <img src="https://placehold.co/40x40/E0E0E0/757575?text=C" alt="Avatar do Contato" class="contact-avatar" id="contact-avatar" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('beforeend', '<div class=\'avatar-placeholder\'>C</div>');">
-                    <div class="contact-info" id="contact-details-div">
-                        <span class="contact-name" id="contact-name">Nome do Contato</span>
-                        </div>
-                    <div class="chat-actions">
-                        <button id="transfer-button" class="icon-button" title="Transferir Chat">
-                            <img src="./img/icons/transfer.svg" alt="Transferir" class="icon-img" onerror="this.parentElement.innerHTML = '<i class=\'fas fa-random\'></i>';">
-                        </button>
-                        <button id="close-chat-button" class="icon-button" title="Encerrar Chat">
-                           <img src="./img/icons/close.svg" alt="Encerrar" class="icon-img" onerror="this.parentElement.innerHTML = '<i class=\'fas fa-times-circle\'></i>';">
-                        </button>
-                    </div>
-                </header>
-
-                <div class="messages-container" id="messages-container">
-                    </div>
-
-                <div class="typing-indicator" id="typing-indicator" style="display: none;">
-                    Alguém está digitando...
                 </div>
 
-                <footer class="input-area">
-                    <button id="attachment-button" class="icon-button" title="Anexar">
-                        <img src="./img/icons/attachment.svg" alt="Anexar" class="icon-img" onerror="this.parentElement.innerHTML = '<i class=\'fas fa-paperclip\'></i>';">
-                    </button>
-                    <input type="file" id="file-input" style="display: none;">
-                    <textarea id="message-input" placeholder="Digite sua mensagem..." rows="1"></textarea>
-                    <button id="send-button" class="icon-button primary" title="Enviar">
-                        <img src="./img/icons/send.svg" alt="Enviar" class="icon-img" onerror="this.parentElement.innerHTML = '<i class=\'fas fa-paper-plane\'></i>';">
-                    </button>
-                </footer>
+            <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                <span></span><span></span><span></span> </div>
+
+            <div class="chat-input-area">
+                <button id="attach-file-button" title="Anexar Arquivo">
+                    <img src="img/icons/attach-icon.svg" alt="Anexar">
+                </button>
+                <textarea id="message-input" placeholder="Digite sua mensagem..." rows="1"></textarea>
+                <button id="send-message-button" title="Enviar Mensagem">
+                    <img src="img/icons/send-icon.svg" alt="Enviar">
+                </button>
+                <button id="record-audio-button" title="Gravar Áudio">
+                    <img src="img/icons/mic-icon.svg" alt="Gravar Áudio">
+                </button>
             </div>
+
+            <!-- As seções chat-actions e notification-area foram mantidas,
+                 mas podem precisar de reavaliação para se encaixarem perfeitamente
+                 no novo design inspirado no Polari.
+                 Para um visual mais limpo, elas poderiam ser integradas de outra forma (ex: menus de contexto) ou removidas.
+            -->
+            <div class="chat-actions">
+                <button id="quick-responses-button">Respostas Rápidas</button>
+                <button id="transfer-chat-button">Transferir Chat</button>
+            </div>
+            <div id="notification-area" class="notification-area">
+                </div>
         </main>
     </div>
 
-    <div id="transfer-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Transferir Conversa</h2>
-                <button class="close-modal icon-button" title="Fechar">
-                    <img src="./img/icons/close.svg" alt="Fechar" class="icon-img" onerror="this.parentElement.innerHTML = '<span>&times;</span>';">
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="transfer-options">
-                    <label for="transfer-type">Transferir para:</label>
-                    <select id="transfer-type">
-                        <option value="sector">Setor</option>
-                        <option value="attendant">Atendente</option>
-                    </select>
-                </div>
-                <div id="sectors-list-container">
-                    <label for="sectors-list-select">Setores:</label>
-                    <select id="sectors-list-select">
-                        <option value="">Carregando setores...</option>
-                    </select>
-                </div>
-                <div id="attendants-list-container" style="display:none;">
-                    <label for="attendants-list-select">Atendentes:</label>
-                    <select id="attendants-list-select">
-                        <option value="">Carregando atendentes...</option>
-                    </select>
-                </div>
-                <label for="transfer-message">Mensagem (opcional):</label>
-                <textarea id="transfer-message" placeholder="Deixe uma mensagem para o próximo atendente ou setor"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button id="confirm-transfer-button" class="button">Confirmar Transferência</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="alert-modal" class="alert-container">
-        </div>
-    
-    <script src="./js/chatUtils.js"></script>
-    <script src="./js/chatDomElements.js"></script>
-    <script src="./js/notificationService.js"></script>
-    <script src="./js/chatUiUpdater.js"></script>
-    <script src="./js/chatWebsocketService.js"></script>
-    <script src="./js/chatActions.js"></script>
-    <script src="./js/chatEventHandlers.js"></script>
-    <script src="./js/mainChatScript.js"></script> </body>
+    <script src="js/chatDomElements.js"></script>
+    <script src="js/chatUtils.js"></script>
+    <script src="js/chatUiUpdater.js"></script>
+    <script src="js/chatWebsocketService.js"></script>
+    <script src="js/chatEventHandlers.js"></script>
+    <script src="js/chatActions.js"></script>
+    <script src="js/notificationService.js"></script>
+    <script src="js/mainChatScript.js"></script>
+</body>
 </html>

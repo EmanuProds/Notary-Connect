@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light"> <head>
+<html lang="pt-BR" data-theme="light"> 
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notary Connect - Login</title>
@@ -11,7 +12,7 @@
         <header class="login-header">
             <img src="img/icons/logo.svg" alt="Logo Notary Connect" class="logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:64px;height:64px;background:#ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;border-radius:4px;margin-bottom:12px;\'>Logo</div>')">
             <h1>Notary Connect</h1>
-            <p>Sistema de Atendimento Digital</p>
+            <p id="loginPageSubtitle" class="login-page-subtitle">Sistema de Atendimento Digital</p> 
         </header>
 
         <form id="loginForm" class="login-form">
@@ -23,7 +24,7 @@
                             <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                         </svg>
                     </span>
-                    <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
+                    <input type="text" id="username" name="username" placeholder="Digite seu usuário" required autocomplete="username">
                 </div>
             </div>
 
@@ -35,7 +36,7 @@
                             <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/>
                         </svg>
                     </span>
-                    <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+                    <input type="password" id="password" name="password" placeholder="Digite sua senha" required autocomplete="current-password">
                     <button type="button" id="togglePassword" class="toggle-password-button" aria-label="Mostrar/Ocultar senha">
                         <svg class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -55,13 +56,13 @@
             <button type="submit" class="btn btn-primary">
                 Entrar
             </button>
-            <button type="button" id="closeAppBtn" class="btn btn-secondary">
-                Fechar
+            <button type="button" id="backToMenuBtn" class="btn btn-secondary"> Voltar
             </button>
         </form>
 
         <footer class="login-footer">
             <p>Perains On Tecnologia &copy; <span id="currentYear">2025</span></p>
+            <p class="app-version-login">Versão <span id="appVersionLogin">Carregando...</span></p> 
         </footer>
     </div>
 
