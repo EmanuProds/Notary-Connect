@@ -1,57 +1,77 @@
 // preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('electronAPI', {
-    // Para navegação entre janelas
-    navigate: (targetPage, data = {}) => ipcRenderer.send('navigate', { targetPage, ...data }),
+console.log('[Preload] Script de pré-carregamento executado.');
 
-    // Para o menu.html solicitar a abertura da tela de login com um destino específico
-    openLoginForTarget: (targetPage) => ipcRenderer.send('open-login-for-target', { targetPage }),
-    
-    // Para obter informações da aplicação (versão, nome)
-    getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+if (contextBridge && ipcRenderer) {
+    console.log('[Preload] contextBridge e ipcRenderer estão disponíveis.');
+    try {
+        contextBridge.exposeInMainWorld('electronAPI', {
+            // Para navegação entre janelas (se aplicável ao seu novo fluxo web-first)
+            navigate: (targetPage, data = {}) => {
+                console.log(`[Preload] navigate chamada para: ${targetPage}`);
+                ipcRenderer.send('navigate', { targetPage, ...data });
+            },
 
-    // Para receber atualizações de tema do sistema operacional
-    onSystemThemeUpdate: (callback) => {
-        const subscription = (_event, theme) => callback(theme); // theme será 'dark' ou 'light'
-        ipcRenderer.on('system-theme-update', subscription);
-        return () => {
-            ipcRenderer.removeListener('system-theme-update', subscription);
-        };
-    },
+            // Para o menu.html (agora index.html) solicitar a abertura da tela de login com um destino específico
+            openLoginForTarget: (targetPage) => {
+                console.log(`[Preload] openLoginForTarget chamada para: ${targetPage}`);
+                ipcRenderer.send('open-login-for-target', { targetPage });
+            },
+            
+            // Para obter informações da aplicação (versão, nome)
+            getAppInfo: () => {
+                console.log('[Preload] getAppInfo chamada. Invocando "get-app-info"...');
+                return ipcRenderer.invoke('get-app-info');
+            },
 
-    // Para obter o tema inicial do sistema (usado por janelas que abrem antes do 'updated' do nativeTheme)
-    getSystemTheme: () => ipcRenderer.invoke('get-system-theme'),
+            // Para receber atualizações de tema do sistema operacional
+            onSystemThemeUpdate: (callback) => {
+                const subscription = (_event, theme) => callback(theme); // theme será 'dark' ou 'light'
+                ipcRenderer.on('system-theme-update', subscription);
+                console.log('[Preload] Listener para onSystemThemeUpdate registrado.');
+                return () => {
+                    ipcRenderer.removeListener('system-theme-update', subscription);
+                    console.log('[Preload] Listener para onSystemThemeUpdate removido.');
+                };
+            },
 
-    // Para o logsViewer.html
-    onLogData: (callback) => { // Para logs em tempo real
-        const subscription = (_event, value) => callback(value);
-        ipcRenderer.on('log-data', subscription);
-        return () => {
-            ipcRenderer.removeListener('log-data', subscription);
-        };
-    },
-    onInitialLogsData: (callback) => { // Para o buffer de histórico de logs
-        const subscription = (_event, logsArray) => callback(logsArray);
-        ipcRenderer.on('initial-logs-data', subscription);
-        return () => {
-            ipcRenderer.removeListener('initial-logs-data', subscription);
-        };
-    },
-    requestInitialLogs: () => ipcRenderer.send('request-initial-logs'),
+            // Para obter o tema inicial do sistema
+            getSystemTheme: () => {
+                console.log('[Preload] getSystemTheme chamada. Invocando "get-system-theme"...');
+                return ipcRenderer.invoke('get-system-theme');
+            },
 
-    // Para abrir DevTools da janela atual
-    openDevTools: () => ipcRenderer.send('open-dev-tools'),
+            // Para o logsViewer.html
+            onLogData: (callback) => { 
+                const subscription = (_event, value) => callback(value);
+                ipcRenderer.on('log-data', subscription);
+                return () => {
+                    ipcRenderer.removeListener('log-data', subscription);
+                };
+            },
+            onInitialLogsData: (callback) => { 
+                const subscription = (_event, logsArray) => callback(logsArray);
+                ipcRenderer.on('initial-logs-data', subscription);
+                return () => {
+                    ipcRenderer.removeListener('initial-logs-data', subscription);
+                };
+            },
+            requestInitialLogs: () => ipcRenderer.send('request-initial-logs'),
 
-    // Para fechar a aplicação (usado pelo menu.html ou index.html)
-    closeApp: () => ipcRenderer.send('close-app'),
-    
-    // Para fechar a janela atual (usado pelo botão de voltar no index.html para o menu)
-    // No electronMain, isso pode ser tratado para fechar a loginWindow e reabrir/focar a mainWindow (menu)
-    // Ou, se for o menu, pode chamar closeApp.
-    // Para simplificar, o botão "Voltar" no index.html agora usa navigate('menu', { fromLoginWindow: true })
-    // E o botão "Fechar" no menu usa closeApp.
+            // Para abrir DevTools da janela atual
+            openDevTools: () => ipcRenderer.send('open-dev-tools'),
 
-    // Função para enviar mensagens IPC genéricas (mantida para flexibilidade)
-    sendIpcMessage: (channel, data) => ipcRenderer.send(channel, data),
-});
+            // Para fechar a aplicação
+            closeApp: () => ipcRenderer.send('close-app'),
+            
+            // Função para enviar mensagens IPC genéricas
+            sendIpcMessage: (channel, data) => ipcRenderer.send(channel, data),
+        });
+        console.log('[Preload] electronAPI exposto com sucesso em window.');
+    } catch (error) {
+        console.error('[Preload] Erro ao expor electronAPI:', error);
+    }
+} else {
+    console.error('[Preload] contextBridge ou ipcRenderer não estão disponíveis.');
+}

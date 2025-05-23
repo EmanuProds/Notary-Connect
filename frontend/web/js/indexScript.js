@@ -1,243 +1,306 @@
-// frontend/web/js/indexScript.js
-document.addEventListener("DOMContentLoaded", () => {
-  const loginPageSubtitleElement = document.getElementById('loginPageSubtitle'); 
-  const appVersionLoginElement = document.getElementById('appVersionLogin');
-  const currentYearElement = document.getElementById("currentYear"); // Para o ano no rodapé
+// indexScript.js (anteriormente menuScript.js)
+document.addEventListener('DOMContentLoaded', () => {
+    const themeToggleButton = document.getElementById('themeToggleButton');
+    const themeIcon = document.getElementById('themeIcon');
+    const THEME_STORAGE_KEY = 'notaryConnectTheme';
 
-  // --- INÍCIO: Lógica de Detecção e Aplicação de Tema ---
-  const applyTheme = (theme) => { // theme deve ser 'dark' ou 'light'
-    document.documentElement.setAttribute('data-theme', theme);
-    console.log(`[IndexTheme] Tema aplicado: ${theme}`);
-  };
+    // --- Lógica de Tema ---
 
-  const initializeSystemTheme = () => {
-    // Tenta obter o tema inicial diretamente do Electron API, se disponível
-    if (window.electronAPI && typeof window.electronAPI.getSystemTheme === 'function') {
-        window.electronAPI.getSystemTheme().then(theme => {
-            applyTheme(theme); // 'theme' já será 'dark' ou 'light'
-        }).catch(err => {
-            console.warn("[IndexTheme] Erro ao obter tema inicial do Electron, usando fallback do S.O.:", err);
-            checkSystemThemeFallback();
-        });
-    } else {
-        // Fallback para window.matchMedia se a API do Electron não estiver disponível ou a função não existir
-        checkSystemThemeFallback();
-    }
-  };
-  
-  const checkSystemThemeFallback = () => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      applyTheme('dark');
-    } else {
-      applyTheme('light'); // Padrão para claro se matchMedia não for suportado
-    }
-  };
-  
-  initializeSystemTheme(); 
-
-  // Ouvir mudanças de tema do sistema operacional via matchMedia (fallback ou para navegadores)
-  if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-      applyTheme(event.matches ? 'dark' : 'light');
-    });
-  }
-  
-  // Ouvir atualizações de tema do processo principal do Electron
-  if (window.electronAPI && typeof window.electronAPI.onSystemThemeUpdate === 'function') {
-      window.electronAPI.onSystemThemeUpdate((theme) => { // theme já é 'dark' ou 'light'
-          console.log('[IndexTheme] Recebida atualização de tema do sistema via Electron API:', theme);
-          applyTheme(theme);
-      });
-  }
-  // --- FIM: Lógica de Detecção e Aplicação de Tema ---
-
-  // --- INÍCIO: Lógica para exibir o subtítulo da página de destino ---
-  if (loginPageSubtitleElement) {
-      try {
-          const pageTitle = sessionStorage.getItem('loginRedirectPageTitle');
-          if (pageTitle) {
-              loginPageSubtitleElement.textContent = pageTitle;
-          } else {
-            loginPageSubtitleElement.textContent = "Acesse sua conta"; // Subtítulo Padrão
-          }
-      } catch (e) {
-          console.error("[IndexScript] Erro ao acessar sessionStorage para pageTitle:", e);
-          loginPageSubtitleElement.textContent = "Acesse sua conta";
-      }
-  }
-  // --- FIM: Lógica para exibir o subtítulo da página de destino ---
-
-  // --- INÍCIO: Atualizar ano no rodapé ---
-  if (currentYearElement) {
-    currentYearElement.textContent = new Date().getFullYear();
-  }
-  // --- FIM: Atualizar ano no rodapé ---
-
-  // Toggle password visibility
-  const togglePasswordButton = document.getElementById("togglePassword");
-  const passwordInput = document.getElementById("password");
-  const eyeIcon = togglePasswordButton ? togglePasswordButton.querySelector(".eye-icon") : null;
-  const eyeSlashIcon = togglePasswordButton ? togglePasswordButton.querySelector(".eye-slash-icon") : null;
-
-  if (togglePasswordButton && passwordInput && eyeIcon && eyeSlashIcon) {
-    togglePasswordButton.addEventListener("click", () => {
-      const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-      passwordInput.setAttribute("type", type);
-
-      if (type === "password") {
-        eyeIcon.style.display = "block";
-        eyeSlashIcon.style.display = "none";
-      } else {
-        eyeIcon.style.display = "none";
-        eyeSlashIcon.style.display = "block";
-      }
-    });
-  }
-
-  const loginForm = document.getElementById("loginForm");
-  const backToMenuBtn = document.getElementById("backToMenuBtn"); 
-  const errorMessageDiv = document.getElementById("errorMessage");
-
-  if (!loginForm) {
-    console.error("Elemento loginForm não encontrado!");
-    const body = document.querySelector("body");
-    if (body) {
-      body.innerHTML =
-        '<p style="color: red; text-align: center; margin-top: 50px;">Erro crítico: Formulário de login não encontrado. Verifique o HTML.</p>';
-    }
-    return;
-  }
-
-  loginForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const usernameInput = document.getElementById("username");
-    const passwordInputRef = document.getElementById("password");
-
-    if (!usernameInput || !passwordInputRef) {
-        if(errorMessageDiv) errorMessageDiv.textContent = "Campos de usuário ou senha não encontrados no formulário.";
-        return;
-    }
-
-    const username = usernameInput.value;
-    const password = passwordInputRef.value;
-
-    if (!username || !password) {
-      if(errorMessageDiv) errorMessageDiv.textContent = "Por favor, preencha todos os campos.";
-      return;
-    }
-
-    if(errorMessageDiv) errorMessageDiv.textContent = ""; 
-
-    const submitBtn = loginForm.querySelector('button[type="submit"]');
-    let originalBtnText = "";
-    if (submitBtn) {
-        originalBtnText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="loading-spinner"></span> Entrando...';
-    }
-
-    try {
-      const response = await fetch("/api/auth/login", { 
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalBtnText;
-      }
-
-      if (response.ok && data.success) {
-        console.log("Login bem-sucedido:", data);
-        loginForm.classList.add("success");
-        
-        let navigationPayload = { fromLoginWindow: true }; 
-        if (data.admin) { 
-            navigationPayload.adminInfo = { name: data.name || username, agent: data.agent, isAdmin: true };
-        } else { 
-            navigationPayload.agentInfo = { agent: data.agent, name: data.name || username };
-            navigationPayload.adminInfo = { isAdmin: false, agent: data.agent, name: data.name || username }; 
+    const applyTheme = (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (themeIcon) {
+            themeIcon.src = theme === 'dark' ? './img/icons/sun.svg' : './img/icons/moon.svg';
+            themeIcon.alt = theme === 'dark' ? 'Tema Claro (Sol)' : 'Tema Escuro (Lua)';
         }
-        
-        let intendedTarget = data.admin ? 'admin' : 'chat'; 
+        console.log(`[IndexTheme] Tema aplicado: ${theme}`);
+    };
+
+    const saveThemePreference = (theme) => {
         try {
-            const storedTarget = sessionStorage.getItem('loginRedirectTarget');
-            if (storedTarget) intendedTarget = storedTarget;
-            sessionStorage.removeItem('loginRedirectTarget'); 
-            sessionStorage.removeItem('loginRedirectPageTitle');
-        } catch(e) { console.error("Erro ao limpar sessionStorage", e); }
-
-        console.log(`[IndexLogin] Login OK. Chamando navigate para destino (será decidido por pendingLoginTarget no main): ${intendedTarget}. Payload:`, navigationPayload);
-        
-        if (window.electronAPI && typeof window.electronAPI.navigate === "function") {
-          window.electronAPI.navigate(intendedTarget, navigationPayload);
-        } else {
-          if(errorMessageDiv) errorMessageDiv.textContent = "Login bem-sucedido. API de navegação não disponível.";
-          console.warn("API do Electron não encontrada para navegação pós-login.");
+            localStorage.setItem(THEME_STORAGE_KEY, theme);
+        } catch (e) {
+            console.warn("[IndexTheme] Não foi possível salvar a preferência de tema no localStorage:", e);
         }
-      } else {
-        if(errorMessageDiv) errorMessageDiv.textContent = data.message || "Falha no login. Verifique suas credenciais.";
-        loginForm.classList.add("error-shake");
-        setTimeout(() => {
-          loginForm.classList.remove("error-shake");
-        }, 500);
-      }
-    } catch (error) {
-      console.error("Erro durante a requisição de login:", error);
-      if(errorMessageDiv) errorMessageDiv.textContent = "Ocorreu um erro ao tentar conectar ao servidor.";
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalBtnText;
-      }
+    };
+
+    const getSavedThemePreference = () => {
+        try {
+            return localStorage.getItem(THEME_STORAGE_KEY);
+        } catch (e) {
+            console.warn("[IndexTheme] Não foi possível carregar a preferência de tema do localStorage:", e);
+            return null;
+        }
+    };
+
+    const initializeTheme = () => {
+        const savedTheme = getSavedThemePreference();
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            if (window.electronAPI && typeof window.electronAPI.getSystemTheme === 'function') {
+                window.electronAPI.getSystemTheme().then(themeFromElectron => {
+                    applyTheme(themeFromElectron);
+                }).catch(err => {
+                    console.warn("[IndexTheme] Erro ao obter tema inicial do Electron, usando fallback do S.O.:", err);
+                    checkSystemThemeFallback(false); 
+                });
+            } else {
+                checkSystemThemeFallback(false); 
+            }
+        }
+    };
+    
+    const checkSystemThemeFallback = (savePreference = true) => {
+        let themeToApply = 'light'; 
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            themeToApply = 'dark';
+        }
+        applyTheme(themeToApply);
+        if (savePreference) { 
+            saveThemePreference(themeToApply);
+        }
+    };
+    
+    initializeTheme(); 
+
+    if (themeToggleButton) {
+        themeToggleButton.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+            saveThemePreference(newTheme);
+        });
     }
-  });
 
-  // --- Lógica do Botão Voltar ---
-  if (backToMenuBtn) {
-    backToMenuBtn.addEventListener("click", () => {
-      if (window.electronAPI && typeof window.electronAPI.navigate === "function") {
-        console.log("[IndexNav] Solicitando retorno ao menu via Electron API.");
-        window.electronAPI.navigate('menu', { fromLoginWindow: true }); 
-      } else {
-        console.warn("[IndexNav] electronAPI.navigate não disponível. Fallback: Navegando para menu.html");
-        window.location.href = 'menu.html'; 
-      }
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            const savedTheme = getSavedThemePreference();
+            if (!savedTheme) { 
+                applyTheme(event.matches ? 'dark' : 'light');
+            }
+        });
+    }
+    
+    if (window.electronAPI && typeof window.electronAPI.onSystemThemeUpdate === 'function') {
+        window.electronAPI.onSystemThemeUpdate((themeFromElectron) => {
+            const savedTheme = getSavedThemePreference();
+            if (!savedTheme) { 
+                console.log('[IndexTheme] Recebida atualização de tema do sistema via Electron API (sem preferência salva):', themeFromElectron);
+                applyTheme(themeFromElectron);
+            }
+        });
+    }
+
+    // --- Lógica de Abas ---
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            const targetTab = button.getAttribute('data-tab');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `tab-${targetTab}`) {
+                    content.classList.add('active');
+                }
+            });
+        });
     });
-  }
 
-  document.querySelectorAll(".input-wrapper input").forEach((input) => {
-    input.addEventListener("focus", () => {
-      if (input.parentElement && input.parentElement.parentElement) { 
-        input.parentElement.parentElement.classList.add("focused");
-      }
-    });
-    input.addEventListener("blur", () => {
-       if (input.parentElement && input.parentElement.parentElement) {
-        input.parentElement.parentElement.classList.remove("focused");
-      }
-    });
-  });
+    // --- Lógica do Carrossel ---
+    const carousel = document.querySelector('.carousel');
+    let carouselInterval; 
 
-  // --- Versão do App ---
-  if (appVersionLoginElement && window.electronAPI && typeof window.electronAPI.getAppInfo === 'function') {
-      window.electronAPI.getAppInfo().then(info => {
-          if (info && info.version) {
-              appVersionLoginElement.textContent = info.version;
-          } else {
-              appVersionLoginElement.textContent = 'N/D';
-          }
-      }).catch(err => {
-          console.error("[IndexScript] Erro ao obter versão do app:", err);
-          appVersionLoginElement.textContent = 'N/D';
-      });
-  } else if (appVersionLoginElement) {
-       appVersionLoginElement.textContent = 'N/D';
-  }
+    if (carousel) {
+        const carouselInner = carousel.querySelector('.carousel-inner'); 
+        const slides = carousel.querySelectorAll('.carousel-slide');
+        const prevButton = carousel.querySelector('.carousel-prev');
+        const nextButton = carousel.querySelector('.carousel-next');
+        const indicatorsContainer = carousel.querySelector('.carousel-indicators');
+        let currentIndex = 0;
+        const totalSlides = slides.length;
 
+        function stopCarouselAutoplay() {
+            clearInterval(carouselInterval);
+        }
+
+        function startCarouselAutoplay() {
+            stopCarouselAutoplay(); 
+            if (totalSlides > 1) { 
+                carouselInterval = setInterval(() => {
+                    showSlide((currentIndex + 1) % totalSlides); 
+                }, 8000); 
+            }
+        }
+
+        function updateIndicators() {
+            if (indicatorsContainer) {
+                const indicators = indicatorsContainer.querySelectorAll('span');
+                indicators.forEach((indicator, idx) => {
+                    indicator.classList.toggle('active', idx === currentIndex);
+                });
+            }
+        }
+
+        function showSlide(index) {
+            if (totalSlides === 0) return; 
+            currentIndex = (index + totalSlides) % totalSlides; 
+            if (carouselInner) {
+                const offset = -currentIndex * 100; 
+                carouselInner.style.transform = `translateX(${offset}%)`;
+            }
+            updateIndicators();
+        }
+
+        if (totalSlides > 0) {
+            if (indicatorsContainer) {
+                indicatorsContainer.innerHTML = ''; 
+                for (let i = 0; i < totalSlides; i++) {
+                    const indicator = document.createElement('span');
+                    indicator.addEventListener('click', () => {
+                        showSlide(i);
+                        startCarouselAutoplay(); 
+                    });
+                    indicatorsContainer.appendChild(indicator);
+                }
+            }
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    showSlide(currentIndex - 1);
+                    startCarouselAutoplay(); 
+                });
+            }
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    showSlide(currentIndex + 1);
+                    startCarouselAutoplay(); 
+                });
+            }
+            showSlide(0); 
+            startCarouselAutoplay(); 
+        }
+    }
+
+    // --- Lógica de Navegação ---
+    const goToChatButton = document.getElementById('goToChatButton');
+    const goToAdminButton = document.getElementById('goToAdminButton');
+
+    function handleSectorSelection(targetPage, pageTitleForLogin) {
+        if (window.electronAPI && typeof window.electronAPI.openLoginForTarget === 'function') {
+            console.log(`[IndexNav] Solicitando abertura de login para ${targetPage} (${pageTitleForLogin}) via Electron API.`);
+            try {
+                sessionStorage.setItem('loginRedirectPageTitle', pageTitleForLogin);
+            } catch(e) {
+                console.warn("[IndexNav] Erro ao salvar pageTitle no sessionStorage:", e);
+            }
+            window.electronAPI.openLoginForTarget(targetPage);
+        } else {
+            console.warn(`[IndexNav] electronAPI.openLoginForTarget não disponível. Fallback: Navegando para login.html (destino: ${targetPage}, título: ${pageTitleForLogin}).`);
+            try {
+                sessionStorage.setItem('loginRedirectTarget', targetPage);
+                sessionStorage.setItem('loginRedirectPageTitle', pageTitleForLogin);
+                window.location.href = 'login.html'; 
+            } catch (e) {
+                console.error("[IndexNav] Erro ao tentar usar sessionStorage ou window.location.href:", e);
+            }
+        }
+    }
+
+    if (goToChatButton) {
+        goToChatButton.addEventListener('click', () => {
+            handleSectorSelection('chat', 'Sistema de Atendimento');
+        });
+    }
+
+    if (goToAdminButton) {
+        goToAdminButton.addEventListener('click', () => {
+            handleSectorSelection('admin', 'Administração do Sistema');
+        });
+    }
+
+    const closeAppBtnMenu = document.getElementById('closeAppBtnMenu');
+    if (closeAppBtnMenu) {
+        if (window.electronAPI && typeof window.electronAPI.closeApp === 'function') {
+            closeAppBtnMenu.addEventListener('click', () => {
+                window.electronAPI.closeApp(); 
+            });
+        } else {
+            closeAppBtnMenu.style.display = 'none'; 
+            console.warn("[IndexNav] Funcionalidade de fechar app não disponível (não está no Electron ou botão foi removido).");
+        }
+    }
+
+    // --- Aba "Sobre" ---
+    const appVersionAbout = document.getElementById('appVersionAbout');
+    const currentYearAbout = document.getElementById('currentYearAbout');
+    const openLogsButton = document.getElementById('openLogsButton');
+    const checkUpdatesButton = document.getElementById('checkUpdatesButton'); 
+
+    if (currentYearAbout) {
+        currentYearAbout.textContent = new Date().getFullYear();
+    }
+
+    // Lógica para exibir a versão do App na aba "Sobre"
+    if (appVersionAbout) {
+        if (window.electronAPI && typeof window.electronAPI.getAppInfo === 'function') {
+            // Se estiver no Electron, usa a API do Electron
+            window.electronAPI.getAppInfo().then(info => {
+                if (info && info.version) {
+                    appVersionAbout.textContent = `Versão ${info.version}`;
+                } else {
+                    appVersionAbout.textContent = 'Versão N/D (API)';
+                }
+            }).catch(err => {
+                console.error("[IndexAbout] Erro ao obter versão do app via Electron API:", err);
+                appVersionAbout.textContent = 'Versão N/D (Erro API)';
+            });
+        } else {
+            // Se não estiver no Electron (acesso web), tenta buscar o package.json
+            console.warn("[IndexAbout] electronAPI.getAppInfo não disponível. Tentando buscar package.json para obter versão do app.");
+            fetch('./package.json') // Assume que package.json está na raiz do servidor web (frontend/web)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.version) {
+                        appVersionAbout.textContent = `Versão ${data.version}`;
+                    } else {
+                        appVersionAbout.textContent = 'Versão N/D (JSON)';
+                    }
+                })
+                .catch(err => {
+                    console.error("[IndexAbout] Erro ao buscar ou parsear package.json:", err);
+                    appVersionAbout.textContent = 'Versão N/D (Fetch Err)';
+                });
+        }
+    }
+    
+    if (openLogsButton) {
+        if (window.electronAPI && typeof window.electronAPI.navigate === 'function') {
+            openLogsButton.addEventListener('click', () => {
+                window.electronAPI.navigate("logsViewer", {}); 
+            });
+        } else {
+            openLogsButton.style.display = 'none';
+            console.warn("[IndexAbout] Funcionalidade de ver logs não disponível (não está no Electron).");
+        }
+    }
+
+    if (checkUpdatesButton) { 
+        if (window.electronAPI && typeof window.electronAPI.checkForUpdates === 'function') {
+            checkUpdatesButton.addEventListener('click', () => {
+                console.log("Verificando atualizações...");
+                window.electronAPI.checkForUpdates(); 
+            });
+        } else {
+            checkUpdatesButton.style.display = 'none';
+            console.warn("[IndexAbout] Funcionalidade de verificar atualizações não disponível (não está no Electron).");
+        }
+    }
 });

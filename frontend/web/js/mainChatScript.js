@@ -7,20 +7,43 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   const checkSystemTheme = () => {
+    // Verifica se a API do Electron e a função getSystemTheme estão disponíveis
+    if (window.electronAPI && typeof window.electronAPI.getSystemTheme === 'function') {
+      window.electronAPI.getSystemTheme().then(theme => {
+        applyTheme(theme); // 'theme' já será 'dark' ou 'light'
+      }).catch(err => {
+        console.warn("[ChatTheme] Erro ao obter tema inicial do Electron, usando fallback do S.O.:", err);
+        checkSystemThemeFallback();
+      });
+    } else {
+      // Fallback para window.matchMedia se a API do Electron não estiver disponível
+      checkSystemThemeFallback();
+    }
+  };
+
+  const checkSystemThemeFallback = () => {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       applyTheme('dark');
     } else {
-      applyTheme('light');
+      applyTheme('light'); // Padrão para claro
     }
   };
 
   // Aplicar tema na carga inicial
   checkSystemTheme();
 
-  // Ouvir mudanças na preferência do sistema em tempo real
+  // Ouvir mudanças na preferência do sistema em tempo real (via matchMedia para navegadores ou fallback)
   if (window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
       applyTheme(event.matches ? 'dark' : 'light');
+    });
+  }
+
+  // Ouvir atualizações de tema do processo principal do Electron, se disponível
+  if (window.electronAPI && typeof window.electronAPI.onSystemThemeUpdate === 'function') {
+    window.electronAPI.onSystemThemeUpdate((theme) => { // theme já é 'dark' ou 'light'
+      console.log('[ChatTheme] Recebida atualização de tema do sistema via Electron API:', theme);
+      applyTheme(theme);
     });
   }
   // --- FIM: Lógica de Detecção e Aplicação de Tema ---
@@ -60,22 +83,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.ChatDomElements.init();
     console.log("[Chat] ChatDomElements inicializado.");
 
-    // Atualizar nome do usuário na UI
-    if (window.ChatDomElements.userNameElement) {
-      window.ChatDomElements.userNameElement.textContent = agentName;
+    // Atualizar nome do usuário na UI (Exemplo, se o elemento existir no novo HTML)
+    // No novo HTML, o nome do atendente logado não parece estar em um local fixo na sidebar principal.
+    // Se precisar exibir, adicione um elemento com ID "user-name-display" ou similar.
+    const userNameDisplayElement = document.getElementById("user-name-display"); // Supondo que você adicione este ID
+    if (userNameDisplayElement) {
+      userNameDisplayElement.textContent = agentName;
     } else {
-      console.warn("[Chat] userNameElement não encontrado no DOM.");
+      // console.warn("[Chat] userNameDisplayElement (user-name-display) não encontrado no DOM para exibir nome do agente.");
     }
 
+
      // Adicionar evento de clique para o botão de voltar (mobile)
-    if (window.ChatDomElements.backToSidebarButton && window.ChatDomElements.chatContainer) {
-        window.ChatDomElements.backToSidebarButton.addEventListener('click', () => {
-            window.ChatDomElements.chatContainer.classList.remove('chat-active');
+     // No novo HTML, o ID é "back-to-chats-mobile" e o container principal é "app-container"
+    if (window.ChatDomElements.backToChatsMobileButton && window.ChatDomElements.chatContainer) {
+        window.ChatDomElements.backToChatsMobileButton.addEventListener('click', () => {
+            // A lógica de mostrar/esconder sidebars no mobile pode ser mais complexa
+            // dependendo do layout final.
+            // Este é um exemplo simples.
+            if (window.ChatDomElements.chatListSidebar) {
+                window.ChatDomElements.chatListSidebar.classList.add('active-mobile');
+            }
+            if (window.ChatDomElements.mainChatContent) {
+                 window.ChatDomElements.mainChatContent.style.display = 'none'; // Ou uma classe para esconder
+            }
             if (window.ChatUiUpdater) {
-                window.ChatUiUpdater.clearChatArea(false);
+                window.ChatUiUpdater.clearChatArea(false); // Não mostrar placeholder de "nenhum chat"
             }
         });
     }
+
 
     // 2. Inicializar NotificationService
     if (window.NotificationService && typeof window.NotificationService.init === 'function') {
@@ -118,13 +155,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.ChatEventHandlers.initialize();
     console.log("[Chat] ChatEventHandlers inicializado.");
 
-    // 7. Carregar conversas iniciais (agora é feito no onopen do WebSocket ou pode ser chamado aqui se necessário)
+    // 7. Carregar conversas iniciais
     // O ChatWebsocketService.handleOpen agora solicita a lista de conversas.
     // Se desejar forçar aqui, pode adicionar uma verificação:
     if (window.ChatWebsocketService.isConnected) {
         if (window.ChatActions && typeof window.ChatActions.loadConversations === "function") {
             console.log("[Chat] WebSocket já conectado. Solicitando conversas iniciais...");
-            window.ChatActions.loadConversations("active"); // Ou a aba padrão
+            // Carrega a aba padrão (ex: 'active' ou a primeira da lista de abas)
+            const defaultTab = window.ChatDomElements.chatFilterTabsContainer?.querySelector('.filter-tab.active')?.dataset.tab || 'active';
+            window.ChatActions.loadConversations(defaultTab); 
         }
     } else {
         console.log("[Chat] Aguardando conexão WebSocket para carregar conversas...");
@@ -142,8 +181,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         errorDiv.style.left = '0';
         errorDiv.style.width = '100%';
         errorDiv.style.padding = '20px';
-        errorDiv.style.backgroundColor = 'var(--error-color, red)';
-        errorDiv.style.color = 'var(--text-on-accent-color, white)';
+        errorDiv.style.backgroundColor = 'var(--error-color, red)'; // Use a variável CSS se definida
+        errorDiv.style.color = 'var(--text-on-accent-color, white)'; // Use a variável CSS se definida
         errorDiv.style.textAlign = 'center';
         errorDiv.style.zIndex = '9999';
         errorDiv.innerHTML = `<h1>Erro Crítico na Interface</h1><p>Não foi possível carregar a interface de chat.</p><p>Detalhes: ${error.message}</p><p>Verifique o console (Ctrl+Shift+I ou Cmd+Option+I) para mais informações.</p>`;

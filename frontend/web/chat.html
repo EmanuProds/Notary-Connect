@@ -3,97 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat de Atendimento</title>
-    <link rel="stylesheet" href="css/chatStyles.css">
-    </head>
+    <title>Chat de Atendimento - Estilo Telegram/Adwaita</title>
+    <link rel="stylesheet" href="./css/chatStyles.css">
+    <link rel="icon" href="./img/icons/chat-bubble-icon.svg" type="image/svg+xml">
+</head>
 <body>
-    <div class="app-layout"> <aside class="sidebar">
-            <div class="sidebar-header">
-                <button id="add-room-button" title="Nova Sala ou Chat">
-                    <img src="img/icons/plus-icon.svg" alt="Nova Sala">
+    <div class="app-container">
+        <nav class="icon-navbar">
+            <button id="nav-conversas" class="icon-nav-button active" title="Conversas">
+                <img src="./img/icons/chat-bubbles-icon.svg" alt="Conversas">
                 </button>
-                </div>
-            <div class="room-list-container" id="room-list">
-                <!--
-                <div class="room-item active">
-                    <span class="room-name">Sala Principal</span>
-                    <span class="unread-count">3</span>
-                </div>
-                -->
-                <!--
-                <div class="room-item">
-                    <span class="room-name">Suporte Técnico</span>
-                </div>
-                -->
-                <div class="room-item placeholder">Carregando salas...</div>
+            <button id="nav-encerrados" class="icon-nav-button" title="Encerrados">
+                <img src="./img/icons/archive-icon.svg" alt="Encerrados">
+                </button>
+            <button id="nav-documentos" class="icon-nav-button" title="Documentos">
+                <img src="./img/icons/file-text-icon.svg" alt="Documentos">
+                </button>
+            <div class="nav-spacer"></div> <button id="nav-editar" class="icon-nav-button" title="Editar/Configurações">
+                <img src="./img/icons/settings-icon.svg" alt="Editar/Configurações">
+                </button>
+            <button id="nav-sair" class="icon-nav-button" title="Sair">
+                <img src="./img/icons/logout-icon.svg" alt="Sair">
+                </button>
+        </nav>
+
+        <aside class="chat-list-sidebar">
+            <div class="sidebar-header">
+                <button id="main-menu-button" class="icon-button" title="Menu Principal">
+                    <img src="./img/icons/menu-hamburger-icon.svg" alt="Menu">
+                </button>
+                <input type="search" id="search-chats-input" placeholder="Buscar">
+            </div>
+            <div class="chat-filter-tabs" id="chat-filter-tabs">
+            </div>
+            <div class="chat-list-container" id="room-list">
+                <div class="chat-list-item placeholder" id="room-list-placeholder">Carregando conversas...</div>
             </div>
         </aside>
 
-        <main class="main-chat-area">
-            <header class="main-chat-header">
-                <div class="header-left">
-                    <button id="menu-button" title="Menu Principal">
-                        <img src="img/icons/menu-hamburger-icon.svg" alt="Menu">
+        <main class="main-chat-content">
+            <header class="chat-area-header" id="chat-area-header" style="display: none;">
+                <div class="contact-info-left">
+                    <button id="back-to-chats-mobile" class="icon-button" title="Voltar">
+                        <img src="./img/icons/arrow-left-icon.svg" alt="Voltar">
                     </button>
+                    <img src="./img/icons/user-avatar-placeholder.svg" alt="Avatar do Contato" class="header-contact-avatar" id="header-contact-avatar">
+                    <div class="header-contact-details">
+                        <h2 id="chat-room-title-main">Nome do Contato</h2>
+                        <span id="contact-status">Online</span>
+                    </div>
                 </div>
-                <div class="header-center">
-                    <h1 id="chat-room-title">Selecione uma sala</h1> </div>
-                <div class="header-right">
-                    <span id="user-count-indicator" title="Usuários na sala">
-                        <img src="img/icons/user-group-icon.svg" alt="Usuários">
-                        <span id="user-count">0</span>
-                    </span>
-                    <button id="close-room-button" title="Fechar Sala Atual">
-                        <img src="img/icons/close-icon.svg" alt="Fechar Sala">
+                <div class="chat-header-actions">
+                    <button id="search-in-chat-button" class="icon-button" title="Buscar na conversa">
+                        <img src="./img/icons/search-icon.svg" alt="Buscar">
+                    </button>
+                    <button id="call-button" class="icon-button" title="Ligar">
+                        <img src="./img/icons/phone-icon.svg" alt="Ligar">
+                    </button>
+                    <button id="contact-info-button" class="icon-button" title="Dados do Contato">
+                        <img src="./img/icons/info-icon.svg" alt="Informações">
                     </button>
                 </div>
             </header>
 
-            <div class="chat-messages" id="chat-messages">
-                <div class="no-chat-selected" id="no-chat-placeholder">
-                    <img src="img/icons/chat-bubble-hash-icon.svg" alt="Ícone de Chat" class="placeholder-icon">
-                    <h2 class="placeholder-title">Bem-vindo!</h2>
-                    <p class="placeholder-text">Selecione uma sala na barra lateral ou crie uma nova clicando no botão '+' para iniciar uma conversa.</p>
+            <div class="messages-container" id="chat-messages">
+                <div class="no-chat-selected-placeholder" id="no-chat-placeholder">
+                    <img src="./img/icons/chat-bubble-hash-icon.svg" alt="Selecione um chat" class="placeholder-logo-icon">
+                    <p>Selecione uma conversa para começar a trocar mensagens.</p>
                 </div>
-                </div>
+            </div>
 
             <div id="typing-indicator" class="typing-indicator" style="display: none;">
-                <span></span><span></span><span></span> </div>
-
-            <div class="chat-input-area">
-                <button id="attach-file-button" title="Anexar Arquivo">
-                    <img src="img/icons/attach-icon.svg" alt="Anexar">
-                </button>
-                <textarea id="message-input" placeholder="Digite sua mensagem..." rows="1"></textarea>
-                <button id="send-message-button" title="Enviar Mensagem">
-                    <img src="img/icons/send-icon.svg" alt="Enviar">
-                </button>
-                <button id="record-audio-button" title="Gravar Áudio">
-                    <img src="img/icons/mic-icon.svg" alt="Gravar Áudio">
-                </button>
+                <span></span><span></span><span></span>
             </div>
 
-            <!-- As seções chat-actions e notification-area foram mantidas,
-                 mas podem precisar de reavaliação para se encaixarem perfeitamente
-                 no novo design inspirado no Polari.
-                 Para um visual mais limpo, elas poderiam ser integradas de outra forma (ex: menus de contexto) ou removidas.
-            -->
-            <div class="chat-actions">
-                <button id="quick-responses-button">Respostas Rápidas</button>
-                <button id="transfer-chat-button">Transferir Chat</button>
-            </div>
-            <div id="notification-area" class="notification-area">
-                </div>
+            <footer class="message-input-area" id="message-input-area" style="display: none;">
+                <button id="attach-file-button-main" class="icon-button" title="Anexar Arquivo">
+                    <img src="./img/icons/attach-icon.svg" alt="Anexar">
+                </button>
+                <textarea id="message-input-main" placeholder="Mensagem" rows="1"></textarea>
+                <button id="emoji-button" class="icon-button" title="Emoji">
+                    <img src="./img/icons/emoji-smile-icon.svg" alt="Emoji">
+                </button>
+                <button id="send-message-button-main" class="icon-button" title="Enviar Mensagem">
+                    <img src="./img/icons/send-icon.svg" alt="Enviar">
+                </button>
+            </footer>
         </main>
+
+        <aside class="right-sidebar" id="contact-info-panel" style="display: none;">
+            <div class="contact-info-header">
+                <h3>Dados do Contato</h3>
+                <button id="close-contact-info-button" class="icon-button" title="Fechar">
+                    <img src="./img/icons/close-icon.svg" alt="Fechar">
+                </button>
+            </div>
+            <div class="contact-info-body">
+                <div class="contact-primary-info">
+                    <img src="./img/icons/user-avatar-placeholder.svg" alt="Avatar" class="contact-info-avatar" id="panel-contact-avatar">
+                    <h2 id="panel-contact-name">Nome do Contato</h2>
+                    <span id="panel-contact-phone">@username ou número</span>
+                    <button id="add-contact-button" class="action-button">ADICIONAR CONTATO</button>
+                </div>
+                <div class="contact-info-section">
+                    <div class="info-item">
+                        <img src="./img/icons/bell-icon.svg" alt="Notificações" class="info-item-icon">
+                        <span>Notificações</span>
+                        <label class="switch">
+                            <input type="checkbox" id="notification-toggle" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="contact-info-section">
+                    <h4>Mídia compartilhada</h4>
+                    <div class="shared-media-grid" id="shared-media-grid">
+                        <p>Nenhuma mídia ainda.</p>
+                    </div>
+                </div>
+                 <div class="contact-info-section contact-actions">
+                    <button class="action-link"><img src="./img/icons/link-icon.svg" alt=""> 14 links compartilhados</button>
+                    <button class="action-link"><img src="./img/icons/share-icon.svg" alt=""> Compartilhar este contato</button>
+                    <button class="action-link danger"><img src="./img/icons/block-user-icon.svg" alt=""> Bloquear usuário</button>
+                </div>
+            </div>
+        </aside>
     </div>
 
-    <script src="js/chatDomElements.js"></script>
-    <script src="js/chatUtils.js"></script>
-    <script src="js/chatUiUpdater.js"></script>
-    <script src="js/chatWebsocketService.js"></script>
-    <script src="js/chatEventHandlers.js"></script>
-    <script src="js/chatActions.js"></script>
-    <script src="js/notificationService.js"></script>
-    <script src="js/mainChatScript.js"></script>
+    <script src="./js/chatDomElements.js"></script>
+    <script src="./js/chatUtils.js"></script>
+    <script src="./js/chatUiUpdater.js"></script>
+    <script src="./js/chatWebsocketService.js"></script>
+    <script src="./js/chatEventHandlers.js"></script>
+    <script src="./js/chatActions.js"></script>
+    <script src="./js/notificationService.js"></script>
+    <script src="./js/mainChatScript.js"></script>
+    <script>
+        // Basic JS to toggle contact info panel (example)
+        const contactInfoButton = document.getElementById('contact-info-button');
+        const contactInfoPanel = document.getElementById('contact-info-panel');
+        const closeContactInfoButton = document.getElementById('close-contact-info-button');
+        const mainChatContent = document.querySelector('.main-chat-content');
+
+        if (contactInfoButton && contactInfoPanel && closeContactInfoButton && mainChatContent) {
+            contactInfoButton.addEventListener('click', () => {
+                contactInfoPanel.style.display = 'flex';
+                mainChatContent.classList.add('with-right-sidebar');
+            });
+            closeContactInfoButton.addEventListener('click', () => {
+                contactInfoPanel.style.display = 'none';
+                mainChatContent.classList.remove('with-right-sidebar');
+            });
+        }
+
+        function showChatArea() {
+            document.getElementById('chat-area-header').style.display = 'flex';
+            document.getElementById('message-input-area').style.display = 'flex';
+            document.getElementById('no-chat-placeholder').style.display = 'none';
+        }
+    </script>
 </body>
 </html>

@@ -1,71 +1,127 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light"> 
-<head>
+<html lang="pt-BR" data-theme="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notary Connect - Login</title>
-    <link rel="stylesheet" href="./css/indexStyles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Notary Connect - Menu Principal</title>
+    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./css/indexStyles.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="login-container">
-        <header class="login-header">
-            <img src="img/icons/logo.svg" alt="Logo Notary Connect" class="logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:64px;height:64px;background:#ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;border-radius:4px;margin-bottom:12px;\'>Logo</div>')">
-            <h1>Notary Connect</h1>
-            <p id="loginPageSubtitle" class="login-page-subtitle">Sistema de Atendimento Digital</p> 
+    <div class="menu-container">
+        <header class="menu-header">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="menu">
+                    <img src="./img/icons/house.svg" alt="Início" class="icon-tab">
+                    <span>Início</span>
+                </button>
+                <button class="tab-button" data-tab="updates">
+                    <img src="./img/icons/arrow-clockwise.svg" alt="Atualizações" class="icon-tab">
+                    <span>Atualizações</span>
+                </button>
+                <button class="tab-button" data-tab="about">
+                    <img src="./img/icons/info.svg" alt="Sobre" class="icon-tab">
+                    <span>Sobre</span>
+                </button>
+            </div>
+            <div class="header-actions">
+                <button id="themeToggleButton" class="theme-toggle-button" title="Alternar Tema">
+                    <img src="./img/icons/moon.svg" alt="Tema Escuro" id="themeIcon" class="icon-header-action">
+                </button>
+            </div>
         </header>
 
-        <form id="loginForm" class="login-form">
-            <div class="input-wrapper">
-                <label for="username">Usuário</label>
-                <div class="input-group">
-                    <span class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                    </span>
-                    <input type="text" id="username" name="username" placeholder="Digite seu usuário" required autocomplete="username">
-                </div>
-            </div>
+        <main class="menu-content">
+            <div class="tab-content active" id="tab-menu">
+                <section class="updates-carousel-section">
+                    <h2>Atualizações do Sistema</h2>
+                    <div class="carousel">
+                        <div class="carousel-inner">
+                            <div class="carousel-slide active">
+                                <img src="https://placehold.co/800x300/3584e4/ffffff?text=Nova+Interface&font=inter" alt="[Imagem de Nova Interface]" onerror="this.alt='[Imagem de Nova Interface]'; this.src='https://placehold.co/800x300/3584e4/ffffff?text=Erro+ao+carregar+imagem';">
+                                <div class="carousel-caption">
+                                    <h3>Nova Interface!</h3>
+                                    <p>Agora você pode alternar entre o sistema de atendimento e a central de administração.</p>
+                                </div>
+                            </div>
+                            <div class="carousel-slide">
+                                <img src="https://placehold.co/800x300/6a0dad/ffffff?text=Melhorias+de+Performance&font=inter" alt="[Imagem de Melhorias de Performance]" onerror="this.alt='[Imagem de Melhorias de Performance]'; this.src='https://placehold.co/800x300/6a0dad/ffffff?text=Erro+ao+carregar+imagem';">
+                                <div class="carousel-caption">
+                                    <h3>Melhorias de Performance</h3>
+                                    <p>O sistema está mais rápido e responsivo.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-navigation">
+                            <button class="carousel-prev">
+                                <img src="./img/icons/caret-left.svg" alt="Anterior" class="icon-carousel-nav">
+                            </button>
+                            <button class="carousel-next">
+                                <img src="./img/icons/caret-right.svg" alt="Próximo" class="icon-carousel-nav">
+                            </button>
+                        </div>
+                        <div class="carousel-indicators">
+                        </div>
+                    </div>
+                </section>
 
-            <div class="input-wrapper">
-                <label for="password">Senha</label>
-                <div class="input-group password-group">
-                    <span class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/>
-                        </svg>
-                    </span>
-                    <input type="password" id="password" name="password" placeholder="Digite sua senha" required autocomplete="current-password">
-                    <button type="button" id="togglePassword" class="toggle-password-button" aria-label="Mostrar/Ocultar senha">
-                        <svg class="eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                         <svg class="eye-slash-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="20" height="20" style="display: none;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                            <line x1="1" y1="1" x2="23" y2="23"></line>
-                        </svg>
+                <section class="action-buttons-section">
+                    <button class="action-button" id="goToChatButton">
+                        <img src="./img/icons/chats-teardrop.svg" alt="Ícone de chat" class="icon-action-button">
+                        <div class="action-button-text-content">
+                            <span>Sistema de Atendimento</span>
+                            <small>Conecte-se para atender os clientes.</small>
+                        </div>
                     </button>
+                    <button class="action-button" id="goToAdminButton">
+                        <img src="./img/icons/gear-six.svg" alt="Ícone de administração" class="icon-action-button">
+                        <div class="action-button-text-content">
+                            <span>Administração do Sistema</span>
+                            <small>Gerencie usuários, setores e configurações.</small>
+                        </div>
+                    </button>
+                </section>
+            </div>
+
+            <div class="tab-content" id="tab-updates">
+                <h2>Atualizações Detalhadas</h2>
+                <div class="update-list">
+                    <div class="update-item">
+                        <h3>Versão 1.0.1 (22/05/2025)</h3>
+                        <p>- Adicionada integração com a API libadwaita/gtk4.</p>
+                        <p>- Corrigido bug na autenticação de sessão.</p>
+                        <p>- Melhoria na interface de gestão de conversas com clientes.</p>
+                    </div>
+                    <div class="update-item">
+                        <h3>Versão 1.0.0 (19/05/2025)</h3>
+                        <p>- Otimizações de performance no carregamento de conversas.</p>
+                        <p>- Pequenas correções de UI.</p>
+                    </div>
                 </div>
             </div>
 
-            <div id="errorMessage" class="error-message">
+            <div class="tab-content" id="tab-about">
+                <h2>Sobre o Notary Connect</h2>
+                <div class="about-content">
+                    <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="about-logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:80px;height:80px;background:#ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;border-radius:4px;margin-bottom:16px;\'>Logo</div>')">
+                    <p><strong>Notary Connect</strong> <span id="appVersionAbout">Versão N/D</span></p>
+                    <p>Sistema de Atendimento Digital e Gestão para Cartórios.</p>
+                    <p>Desenvolvido para comunicação e processos de serviços para Cartórios via WhatsApp.</p>
+                    <p>Perains On Tecnologia &copy; <span id="currentYearAbout">2025</span>. Todos os direitos reservados.</p>
+                    <div class="about-links">
+                        <button id="openLogsButton">
+                            <img src="./img/icons/file-text.svg" alt="Ícone de logs" class="icon-about-link">
+                            Ver Logs
+                        </button>
+                        <button id="checkUpdatesButton">
+                            <img src="./img/icons/cloud-arrow-down.svg" alt="Ícone de atualizações" class="icon-about-link">
+                            Verificar Atualizações
+                        </button>
+                    </div>
                 </div>
-
-            <button type="submit" class="btn btn-primary">
-                Entrar
-            </button>
-            <button type="button" id="backToMenuBtn" class="btn btn-secondary"> Voltar
-            </button>
-        </form>
-
-        <footer class="login-footer">
-            <p>Perains On Tecnologia &copy; <span id="currentYear">2025</span></p>
-            <p class="app-version-login">Versão <span id="appVersionLogin">Carregando...</span></p> 
-        </footer>
+            </div>
+        </main>
     </div>
-
-    <script src="./js/indexScript.js"></script>
+    <script src="./js/indexScript.js"></script> 
 </body>
 </html>

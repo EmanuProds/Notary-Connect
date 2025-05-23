@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light"> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notary Connect - Login</title>
+    <link rel="stylesheet" href="./css/loginStyles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="login-page-container"> <div class="login-container">
+            <header class="login-header">
+                <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:64px;height:64px;background:#ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;border-radius:4px;margin-bottom:12px;\'>Logo</div>')">
+                <h1>Notary Connect</h1>
+                <p id="loginPageSubtitle" class="login-page-subtitle">Acesse sua conta</p> 
+            </header>
+
+            <form id="loginForm" class="login-form">
+                <div class="input-wrapper">
+                    <label for="username">Usuário</label>
+                    <div class="input-group">
+                        <span class="input-icon">
+                            <img src="./img/icons/user.svg" alt="Usuário" class="input-svg-icon">
+                        </span>
+                        <input type="text" id="username" name="username" placeholder="Digite seu usuário" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="input-wrapper">
+                    <label for="password">Senha</label>
+                    <div class="input-group password-group">
+                        <span class="input-icon">
+                             <img src="./img/icons/lock.svg" alt="Senha" class="input-svg-icon lock-icon">
+                        </span>
+                        <input type="password" id="password" name="password" placeholder="Digite sua senha" required autocomplete="current-password">
+                        <button type="button" id="togglePassword" class="toggle-password-button" aria-label="Mostrar/Ocultar senha">
+                            <img class="eye-icon" src="./img/icons/eye.svg" alt="Mostrar senha">
+                            <img class="eye-slash-icon" src="./img/icons/eye-slash.svg" alt="Ocultar senha" style="display: none;">
+                        </button>
+                    </div>
+                </div>
+
+                <div id="errorMessage" class="error-message">
+                    </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Entrar
+                </button>
+                <button type="button" id="backToMenuBtn" class="btn btn-secondary"> Voltar
+                </button>
+            </form>
+
+            <footer class="login-footer">
+                <p>Perains On Tecnologia &copy; <span id="currentYear">2025</span></p>
+                <p class="app-version-login">Versão <span id="appVersionLogin">Carregando...</span></p> 
+            </footer>
+        </div>
+    </div>
+
+    <script src="./js/loginScript.js"></script>
+</body>
+</html>

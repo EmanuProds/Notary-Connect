@@ -1,0 +1,352 @@
+/* loginStyles.css - Estilo Adwaita/GTK4 para a Página de Login */
+:root {
+    /* Tema Claro (Light Theme - Padrão) */
+    --body-bg-color-surround: #e0e0e0; /* Cinza um pouco mais escuro para o fundo do body */
+    --login-container-bg-color: #f4f5f6; /* Fundo do .login-container (claro) */
+    --header-bg-color: #f4f5f6; 
+    --text-color: #2e3436;
+    --text-secondary-color: #5c616c;
+    --border-color: #dcdcdc;
+    --input-bg-color: #ffffff; 
+    --input-border-color: #c0c0c0;
+    --input-focus-border-color: #3584e4; 
+    --input-icon-color: #7d7d7d; /* Cor padrão para ícones de input */
+    --input-icon-focus-color: #3584e4; /* Cor do ícone quando o input está focado */
+    --button-primary-bg-color: #3584e4;
+    --button-primary-hover-bg-color: #2673cf;
+    --button-primary-active-bg-color: #1a62ba;
+    --button-primary-text-color: #ffffff;
+    --button-secondary-bg-color: #e0e0e0;
+    --button-secondary-hover-bg-color: #d0d0d0;
+    --button-secondary-active-bg-color: #c0c0c0;
+    --button-secondary-text-color: #2e3436;
+    --button-secondary-border-color: #c0c0c0;
+    --error-color: #c01c28; 
+    --link-color: #3584e4;
+    --border-radius: 6px; 
+    --transition-speed: 0.2s;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra para o login-container */
+}
+
+[data-theme="dark"] {
+    /* Tema Escuro */
+    --body-bg-color-surround: #121212; 
+    --login-container-bg-color: #1e1e1e; 
+    --header-bg-color: #1e1e1e; 
+    --text-color: #eeeeec;
+    --text-secondary-color: #bababa;
+    --border-color: #4a4a4a;
+    --input-bg-color: #3a3a3a; 
+    --input-border-color: #5c5c5c;
+    --input-focus-border-color: #5294e2; 
+    --input-icon-color: #9a9a9a; /* Cor padrão para ícones de input no tema escuro */
+    --input-icon-focus-color: #5294e2; /* Cor do ícone quando o input está focado no tema escuro */
+    --button-primary-bg-color: #5294e2;
+    --button-primary-hover-bg-color: #4284d2;
+    --button-primary-active-bg-color: #3274c2;
+    --button-primary-text-color: #ffffff;
+    --button-secondary-bg-color: #424242;
+    --button-secondary-hover-bg-color: #505050;
+    --button-secondary-active-bg-color: #5e5e5e;
+    --button-secondary-text-color: #eeeeec;
+    --button-secondary-border-color: #5c5c5c;
+    --error-color: #ff7b72; 
+    --link-color: #5294e2;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    color: var(--text-color); 
+    background-color: var(--body-bg-color-surround); 
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px; 
+    box-sizing: border-box;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.login-page-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.login-container {
+    background-color: var(--login-container-bg-color); 
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px; 
+    box-shadow: var(--card-shadow); 
+    overflow: hidden; 
+    transition: background-color var(--transition-speed) ease; 
+}
+
+.login-header {
+    text-align: center;
+    padding: 24px 24px 16px;
+    background-color: var(--header-bg-color); 
+    border-bottom: 1px solid var(--border-color); 
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+.login-header .logo {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 12px;
+}
+
+.login-header h1 {
+    font-size: 1.75rem; 
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: var(--text-color);
+    transition: color var(--transition-speed) ease;
+}
+
+.login-header p {
+    font-size: 0.9rem; 
+    color: var(--text-secondary-color);
+    margin: 0;
+    transition: color var(--transition-speed) ease;
+}
+
+.login-form {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background-color: var(--login-container-bg-color); 
+    transition: background-color var(--transition-speed) ease;
+}
+
+.input-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-wrapper label {
+    font-size: 0.875rem; 
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--text-color);
+    transition: color var(--transition-speed) ease;
+}
+
+.input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-group .input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex; 
+    align-items: center;
+    pointer-events: none;
+}
+
+.input-group .input-icon .input-svg-icon {
+    width: 18px; 
+    height: 18px;
+    /* A cor será controlada por filter para SVGs que não herdam 'fill' */
+    transition: filter var(--transition-speed) ease;
+}
+.input-group .input-icon .lock-icon { 
+    width: 22px; /* Aumentado o tamanho do ícone de cadeado */
+    height: 22px;
+}
+
+/* Estilo padrão dos ícones de input (user, lock) */
+[data-theme="light"] .input-group .input-icon .input-svg-icon {
+    filter: grayscale(1) brightness(0.5) opacity(0.8); /* Cinza escuro (var(--input-icon-color) aproximado) */
+}
+[data-theme="dark"] .input-group .input-icon .input-svg-icon {
+    filter: invert(1) brightness(0.7) opacity(0.8); /* Cinza claro (var(--input-icon-color) aproximado) */
+}
+
+/* Estilo dos ícones de input (user, lock) QUANDO O INPUT ESTÁ EM FOCO */
+[data-theme="light"] .input-wrapper.focused .input-icon .input-svg-icon {
+    /* Azul do tema claro: #3584e4 */
+    filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2074%) hue-rotate(199deg) brightness(97%) contrast(90%);
+}
+[data-theme="dark"] .input-wrapper.focused .input-icon .input-svg-icon {
+    /* Azul mais claro do tema escuro: #5294e2 */
+    filter: brightness(0) saturate(100%) invert(65%) sepia(50%) saturate(1200%) hue-rotate(185deg) brightness(95%) contrast(90%);
+}
+
+
+.input-group input[type="text"],
+.input-group input[type="password"] {
+    font-family: var(--font-family);
+    width: 100%;
+    padding: 10px 12px 10px 40px; 
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--input-bg-color);
+    font-size: 1rem; 
+    color: var(--text-color);
+    transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease, background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+.input-group.password-group input[type="password"] {
+    padding-right: 40px; 
+}
+
+
+.input-group input[type="text"]:focus,
+.input-group input[type="password"]:focus {
+    outline: none;
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 2px var(--input-focus-border-color-alpha, rgba(53, 132, 228, 0.2)); 
+}
+
+html[data-theme="dark"] .input-group input[type="text"]:focus,
+html[data-theme="dark"] .input-group input[type="password"]:focus {
+    box-shadow: 0 0 0 2px rgba(82, 148, 226, 0.25); 
+}
+
+
+.toggle-password-button {
+    position: absolute;
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.toggle-password-button img { /* Classe genérica para os ícones de olho */
+    width: 20px;
+    height: 20px;
+    transition: filter var(--transition-speed) ease;
+}
+
+/* Estilo dos ícones de olho (eye.svg, eye-slash.svg) */
+[data-theme="light"] .toggle-password-button img {
+    filter: grayscale(1) brightness(0.4) opacity(0.7); 
+}
+[data-theme="light"] .toggle-password-button:hover img {
+    filter: grayscale(0) brightness(0.3) opacity(1); 
+}
+[data-theme="dark"] .toggle-password-button img {
+    filter: invert(1) brightness(0.7) opacity(0.7); 
+}
+[data-theme="dark"] .toggle-password-button:hover img {
+    filter: invert(1) brightness(1) opacity(1); 
+}
+
+
+.error-message {
+    color: var(--error-color);
+    font-size: 0.875rem; 
+    text-align: center;
+    min-height: 1.25em;
+    margin-top: -8px;
+    margin-bottom: 8px;
+    transition: color var(--transition-speed) ease;
+}
+
+.btn {
+    font-family: var(--font-family);
+    padding: 10px 16px;
+    font-size: 0.95rem; 
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease, color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary {
+    background-color: var(--button-primary-bg-color);
+    color: var(--button-primary-text-color);
+}
+.btn-primary:hover {
+    background-color: var(--button-primary-hover-bg-color);
+}
+.btn-primary:active {
+    background-color: var(--button-primary-active-bg-color);
+}
+.btn-primary:disabled {
+    background-color: var(--button-primary-bg-color);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+.btn-secondary {
+    background-color: var(--button-secondary-bg-color);
+    color: var(--button-secondary-text-color);
+    border: 1px solid var(--button-secondary-border-color);
+}
+.btn-secondary:hover {
+    background-color: var(--button-secondary-hover-bg-color);
+}
+.btn-secondary:active {
+    background-color: var(--button-secondary-active-bg-color);
+}
+
+.login-footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 0.75rem; 
+    color: var(--text-secondary-color);
+    border-top: 1px solid var(--border-color); 
+    background-color: var(--login-container-bg-color); 
+    transition: color var(--transition-speed) ease, border-color var(--transition-speed) ease, background-color var(--transition-speed) ease;
+}
+
+/* Animações */
+.error-shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid rgba(255, 255, 255, 0.3); 
+    border-radius: 50%;
+    border-top-color: var(--button-primary-text-color); 
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 0.5em;
+}
+
+html[data-theme="dark"] .loading-spinner {
+    border: 2px solid rgba(255, 255, 255, 0.2); 
+    border-top-color: var(--button-primary-text-color); 
+}
+
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+
+.btn-primary:disabled .loading-spinner {
+    border-top-color: var(--button-primary-text-color); 
+}

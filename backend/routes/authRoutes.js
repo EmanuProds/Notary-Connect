@@ -39,12 +39,25 @@ module.exports = function(sqliteAdminService, sendLogFunc) {
 
             if (isMatch) {
                 log(`Login bem-sucedido para usuário: ${username}. Admin: ${user.IS_ADMIN}`, 'info');
+                // Em um ambiente web, você precisaria iniciar uma sessão ou gerar um token JWT aqui.
+                // Por enquanto, apenas retornamos o sucesso e os dados do usuário.
+                // if (req.session) { // Exemplo com express-session
+                //    req.session.user = {
+                //        id: user.ID,
+                //        username: user.USERNAME,
+                //        name: user.NAME,
+                //        isAdmin: user.IS_ADMIN,
+                //        agent: user.USERNAME // ou user.ID, dependendo do que o chat usa
+                //    };
+                //    log(`Sessão criada para usuário: ${username}`, 'info');
+                // }
                 res.json({
                     success: true,
                     message: 'Login bem-sucedido!',
                     admin: user.IS_ADMIN, 
-                    agent: user.USERNAME, 
+                    agent: user.USERNAME, // Usado pelo chat para identificar o atendente
                     name: user.NAME
+                    // token: jwtToken, // Se estiver usando JWT
                 });
             } else {
                 log(`Falha no login: Senha incorreta para usuário '${username}'.`, 'warn');
@@ -57,7 +70,33 @@ module.exports = function(sqliteAdminService, sendLogFunc) {
         }
     });
 
-    // Rota de debug para criar atendente/usuário foi removida.
+    // Rota de logout (exemplo, se estiver usando sessões)
+    // router.post('/logout', (req, res) => {
+    //   if (req.session) {
+    //     req.session.destroy(err => {
+    //       if (err) {
+    //         log(`Erro ao destruir sessão: ${err.message}`, 'error');
+    //         return res.status(500).json({ success: false, message: 'Erro ao fazer logout.' });
+    //       }
+    //       res.clearCookie('connect.sid'); // Substitua 'connect.sid' pelo nome do seu cookie de sessão, se aplicável
+    //       log('Logout bem-sucedido e sessão destruída.', 'info');
+    //       res.json({ success: true, message: 'Logout bem-sucedido.' });
+    //     });
+    //   } else {
+    //     res.json({ success: true, message: 'Nenhuma sessão para encerrar.' });
+    //   }
+    // });
+
+    // Rota para verificar status da sessão (exemplo)
+    // router.get('/session-status', (req, res) => {
+    //   if (req.session && req.session.user) {
+    //     res.json({ success: true, loggedIn: true, user: req.session.user });
+    //   } else {
+    //     res.json({ success: true, loggedIn: false });
+    //   }
+    // });
+
+
     // A criação de usuários deve ser feita através das rotas de admin.
 
     return router; // Retorna o router configurado
