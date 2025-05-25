@@ -118,6 +118,7 @@ window.ChatUiUpdater = {
 
 
     const showTakeButton = conversation.STATUS === "pending" && !conversation.USER_ID && !conversation.USER_USERNAME;
+    const showReopenButton = this.currentTab === 'closed';
 
     item.innerHTML = `
       <div class="flex items-center">
@@ -135,7 +136,10 @@ window.ChatUiUpdater = {
             ${conversation.UNREAD_MESSAGES > 0 && String(conversation.ID) !== String(this.activeConversationId) ? `<span class="unread-badge bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 mt-1">${conversation.UNREAD_MESSAGES}</span>` : ""}
         </div>
       </div>
-      ${showTakeButton ? `<button class="take-chat-button mt-2 py-1 px-3 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-md transition duration-150 ease-in-out" data-id="${conversation.ID}">Assumir</button>` : ""}
+      <div class="flex items-center mt-2">
+        ${showTakeButton ? `<button class="take-chat-button py-1 px-3 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-md transition duration-150 ease-in-out" data-id="${conversation.ID}">Assumir</button>` : ""}
+        ${showReopenButton ? `<button class="reopen-chat-button ${showTakeButton ? 'ml-2' : ''} py-1 px-3 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition duration-150 ease-in-out" data-id="${conversation.ID}">Reassumir Chat</button>` : ""}
+      </div>
     `;
 
     item.addEventListener("click", (e) => {
@@ -143,6 +147,10 @@ window.ChatUiUpdater = {
             e.stopPropagation();
             console.log(`[ChatUiUpdater] Botão 'Assumir' clicado para conversa ID: ${conversation.ID}`);
             if (window.ChatActions) window.ChatActions.takeChat(conversation.ID);
+        } else if (e.target.classList.contains('reopen-chat-button')) {
+            e.stopPropagation();
+            console.log(`[ChatUiUpdater] Botão 'Reassumir Chat' clicado para conversa ID: ${conversation.ID}`);
+            if (window.ChatActions) window.ChatActions.reopenClosedChat(conversation.ID);
         } else {
             this.selectConversation(conversation.ID);
         }
@@ -155,8 +163,6 @@ window.ChatUiUpdater = {
     const stringConversationId = String(conversationId);
 
     this.activeConversationId = stringConversationId; 
-    // Log Adicionado: Modificação de activeConversationId
-    console.log("[ChatUiUpdater] activeConversationId definido para:", this.activeConversationId, "em selectConversation");
     this.highlightActiveConversation();
 
     const conversation = this.getActiveConversationDetails(); 
@@ -357,8 +363,6 @@ window.ChatUiUpdater = {
   },
 
   addNewMessage(conversationId, message) {
-    // Log Adicionado: No início da função addNewMessage
-    console.log(`[DEBUG] addNewMessage START: conversationId: ${conversationId}, message:`, JSON.stringify(message));
     console.log(`[ChatUiUpdater] addNewMessage: Adicionando nova mensagem à conversa ${conversationId}. Mensagem:`, JSON.stringify(message).substring(0,200)+"...");
     const stringConversationId = String(conversationId);
     
@@ -400,45 +404,30 @@ window.ChatUiUpdater = {
 
     this.updateConversationInList(stringConversationId, updatesForList);
 
-    // Log Adicionado: Antes da condição if (String(this.activeConversationId) === stringConversationId)
-    console.log(`[DEBUG] addNewMessage: Checking active conversation. this.activeConversationId: ${this.activeConversationId}, stringConversationId: ${stringConversationId}`);
-
-    if (String(this.activeConversationId) === stringConversationId) {
-      // Log Adicionado: Dentro da condição
-      console.log("[DEBUG] addNewMessage: Condição para exibir mensagem no chat ativo é VERDADEIRA.");
-
-      const { chatMessages } = window.ChatDomElements || {};
-      if (!chatMessages) {
-        // Log Adicionado: Se chatMessages não for encontrado
-        console.error("[DEBUG] addNewMessage: ERRO CRÍTICO - chatMessages não encontrado dentro do bloco de chat ativo.");
-        console.error("[ChatUiUpdater] addNewMessage: Container de mensagens (chatMessages) não encontrado.");
-        return;
-      }
-
-      const placeholder = chatMessages.querySelector('.p-4.text-center.text-gray-500');
-      if (placeholder) placeholder.remove();
-
-      const messageElement = this.createMessageElement(message); // Chamada já estava correta
-      
-      // Log Adicionado: Antes de chamar chatMessages.appendChild(messageElement)
-      console.log("[DEBUG] addNewMessage: Anexando messageElement ao chatMessages.");
-      chatMessages.appendChild(messageElement); // Anexar ao DOM já estava correto
-      // Log Adicionado: Depois de anexar
-      console.log("[DEBUG] addNewMessage: messageElement anexado.");
-
-      setTimeout(() => {
-          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll após adicionar já estava correto e presente
-          console.log("[DEBUG] addNewMessage: Scroll do chat realizado.");
-      }, 100); 
-
+    if (String(this.activeConversationId) !== stringConversationId) {
+      console.warn(`[ChatUiUpdater] addNewMessage: Nova mensagem para conversa ${conversationId} que NÃO está ativa (ativa: ${this.activeConversationId}). Lista atualizada, mas chat não.`);
       if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
         if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
       }
-    } else {
-      console.warn(`[ChatUiUpdater] addNewMessage: Nova mensagem para conversa ${conversationId} que NÃO está ativa (ativa: ${this.activeConversationId}). Lista atualizada, mas chat não exibirá nova mensagem diretamente.`);
-      if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
-        if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
-      }
+      return;
+    }
+
+    const { chatMessages } = window.ChatDomElements || {};
+    if (!chatMessages) {
+      console.error("[ChatUiUpdater] addNewMessage: Container de mensagens (chatMessages) não encontrado.");
+      return;
+    }
+    const placeholder = chatMessages.querySelector('.p-4.text-center.text-gray-500');
+    if (placeholder) placeholder.remove();
+
+    const messageElement = this.createMessageElement(message);
+    chatMessages.appendChild(messageElement);
+    setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 100); 
+
+    if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
+      if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
     }
   },
   
@@ -562,8 +551,6 @@ window.ChatUiUpdater = {
        
         if (selectAfterUpdate && String(this.activeConversationId) !== stringConversationId) {
             console.log(`[ChatUiUpdater] updateConversationInList: Conversa ${conversationId} atualizada e selectAfterUpdate é true. SELECIONANDO.`);
-            // Log Adicionado: Antes de chamar selectConversation
-            console.log("[ChatUiUpdater] updateConversationInList está prestes a chamar selectConversation. Novo ID será:", stringConversationId);
             this.selectConversation(stringConversationId); 
         } else if (selectAfterUpdate && String(this.activeConversationId) === stringConversationId) {
             console.log(`[ChatUiUpdater] updateConversationInList: Conversa ${conversationId} é a ativa e selectAfterUpdate é true. RE-AVALIANDO UI para chat ativo.`);
@@ -715,10 +702,7 @@ window.ChatUiUpdater = {
 
   clearChatArea(showWelcome = true) {
     console.log("[ChatUiUpdater] clearChatArea: Limpando área de chat. Mostrar welcome:", showWelcome);
-    const oldActiveConversationId = this.activeConversationId;
     this.activeConversationId = null;
-    // Log Adicionado: Modificação de activeConversationId
-    console.log("[ChatUiUpdater] activeConversationId alterado de:", oldActiveConversationId, "para:", this.activeConversationId, "em clearChatArea");
     const { chatMessages, noChatSelectedIconPlaceholder, chatInputControls, endChatButton } = window.ChatDomElements || {};
 
     if (chatMessages) {
@@ -832,5 +816,28 @@ window.ChatUiUpdater = {
   showNotification(message, type = "info") { 
     console.log(`[ChatUiUpdater] Notificação UI (${type}):`, message);
     this._showAlertBase(message, type); 
+  },
+
+  removeConversationFromList(conversationId, tabKey) {
+    console.log(`[ChatUiUpdater] removeConversationFromList: Removendo ConvID ${conversationId} da aba '${tabKey}'`);
+    const stringConvId = String(conversationId);
+
+    if (!this.conversations[tabKey] || !Array.isArray(this.conversations[tabKey])) {
+      console.warn(`[ChatUiUpdater] removeConversationFromList: Lista de conversas para aba '${tabKey}' não existe ou não é um array.`);
+      return;
+    }
+
+    const index = this.conversations[tabKey].findIndex(c => c && String(c.ID) === stringConvId);
+
+    if (index !== -1) {
+      this.conversations[tabKey].splice(index, 1);
+      console.log(`[ChatUiUpdater] removeConversationFromList: ConvID ${stringConvId} removida da lista this.conversations.${tabKey}.`);
+      if (this.currentTab === tabKey) {
+        console.log(`[ChatUiUpdater] removeConversationFromList: Aba atual (${this.currentTab}) corresponde à aba da remoção. Re-renderizando.`);
+        this.renderCurrentTabConversations();
+      }
+    } else {
+      console.warn(`[ChatUiUpdater] removeConversationFromList: ConvID ${stringConvId} não encontrada na lista this.conversations.${tabKey}.`);
+    }
   },
 };

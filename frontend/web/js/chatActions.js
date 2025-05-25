@@ -217,4 +217,16 @@ window.ChatActions = {
       // No user-facing error here, as it's a background action.
     }
   },
+
+  reopenClosedChat(conversationId) {
+    console.log(`[ChatActions] reopenClosedChat: Solicitando reabertura para ConvID ${conversationId}`);
+    if (window.ChatWebsocketService && typeof window.ChatWebsocketService.sendReopenChatRequest === 'function') {
+      window.ChatWebsocketService.sendReopenChatRequest(conversationId);
+    } else {
+      console.error("[ChatActions] reopenClosedChat: ChatWebsocketService ou sendReopenChatRequest não estão disponíveis.");
+      if (window.ChatUiUpdater && typeof window.ChatUiUpdater.showError === 'function') {
+        window.ChatUiUpdater.showError("Erro de conexão: Não foi possível reabrir o chat.");
+      }
+    }
+  },
 };

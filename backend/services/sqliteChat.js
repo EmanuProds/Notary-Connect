@@ -578,5 +578,60 @@ module.exports = {
   getConversationById,
   transferConversationToSector,
   transferConversationToUser,
+  reopenConversation, // Adicionando a nova função
 };
+
+async function reopenConversation(conversationId, agentUsername, agentFullName) {
+  log(`[SQLite-Chat] Tentando reabrir ConvID ${conversationId} para Agente ${agentUsername} (Nome: ${agentFullName})`, "debug");
+  try {
+    if (!sqliteAdminServiceInstance || typeof sqliteAdminServiceInstance.getUserByUsername !== 'function') {
+        log(`[reopenConversation] sqliteAdminServiceInstance não disponível para buscar atendente ${agentUsername}.`, "error");
+        return { success: false, error: "Serviço de administração de usuários não configurado." };
+    }
+
+    const attendant = await sqliteAdminServiceInstance.getUserByUsername(agentUsername);
+    if (!attendant || !attendant.ID) {
+      log(`[reopenConversation] Atendente ${agentUsername} não encontrado no banco de dados.`, "error");
+      return { success: false, error: "Atendente não encontrado." };
+    }
+    const numericAgentId = attendant.ID;
+
+    const sql = `
+      UPDATE CONVERSATIONS
+      SET STATUS = 'active',
+          USER_ID = ?,
+          USER_USERNAME = ?, 
+          CLOSED_AT = NULL,
+          UPDATED_AT = CURRENT_TIMESTAMP,
+          LAST_MESSAGE_TIMESTAMP = CURRENT_TIMESTAMP, -- Para que a conversa vá para o topo
+          UNREAD_MESSAGES = 0 -- Zera mensagens não lidas, já que o atendente está assumindo
+      WHERE ID = ? AND STATUS = 'closed' 
+    `;
+    // Adicionamos "AND STATUS = 'closed'" para garantir que só reabrimos conversas realmente fechadas.
+
+    const result = await runQuery(sql, [numericAgentId, agentUsername, conversationId]);
+
+    if (result.changes > 0) {
+      log(`[SQLite-Chat] ConvID ${conversationId} reaberta com sucesso no DB para Agente ${agentUsername}. Buscando detalhes...`, "info");
+      const updatedConversationDetails = await getConversationById(conversationId); // Reutiliza a função existente
+      if (updatedConversationDetails) {
+        // O campo USER_NAME_ASSIGNED já é adicionado por getConversationById
+        return { success: true, conversation: updatedConversationDetails };
+      } else {
+        log(`[SQLite-Chat] Falha ao buscar detalhes da ConvID ${conversationId} após reabertura.`, "error");
+        return { success: false, error: "Conversa reaberta, mas falha ao buscar detalhes atualizados." };
+      }
+    } else {
+      log(`[SQLite-Chat] Nenhuma conversa foi atualizada. ConvID ${conversationId} não encontrada, não estava fechada, ou já atribuída.`, "warn");
+      const currentConv = await getConversationById(conversationId);
+      if (currentConv && currentConv.STATUS !== 'closed') {
+        return { success: false, error: `Conversa não está fechada (status atual: ${currentConv.STATUS}).` };
+      }
+      return { success: false, error: "Falha ao atualizar conversa no banco de dados ou conversa não encontrada/não estava fechada." };
+    }
+  } catch (error) {
+    log(`[SQLite-Chat] Erro de banco de dados ao tentar reabrir ConvID ${conversationId}: ${error.message}`, "error");
+    return { success: false, error: "Erro de banco de dados." };
+  }
+}
 

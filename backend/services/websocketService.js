@@ -424,6 +424,67 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbService
             }
             break;
 
+          case "reopen_chat_request":
+            if (ws.clientType === ClientTypeEnum.ATTENDANT_CHAT && parsedMessage.conversationId && ws.agentId) {
+              const convIdToReopen = String(parsedMessage.conversationId);
+              if(sendLogGlobal) sendLogGlobal(`[WS] Processando 'reopen_chat_request' de ${clientIdentifier} (Username: ${ws.agentId}) para ConvID ${convIdToReopen}`, "debug");
+
+              if (!sqliteServiceInstanceGlobal || !sqliteServiceInstanceGlobal.chat || typeof sqliteServiceInstanceGlobal.chat.reopenConversation !== 'function') {
+                if(sendLogGlobal) sendLogGlobal('[WS] Erro: sqliteServiceInstanceGlobal.chat.reopenConversation não disponível.', 'error');
+                if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'reopen_chat_response', success: false, error: 'Serviço de banco de dados indisponível para reabrir chat.', conversationId: convIdToReopen }));
+                return;
+              }
+
+              try {
+                const reopenResult = await sqliteServiceInstanceGlobal.chat.reopenConversation(
+                    convIdToReopen,
+                    ws.agentId, 
+                    ws.agentName 
+                );
+
+                if (reopenResult.success) {
+                  if(sendLogGlobal) sendLogGlobal(`[WS] Chat ${convIdToReopen} reaberto com sucesso por ${ws.agentName}. Detalhes: ${JSON.stringify(reopenResult.conversation).substring(0,100)}`, "info");
+                  helperSendMessageToAttendant(ws.agentId, { 
+                    type: 'reopen_chat_response', 
+                    success: true, 
+                    conversation: reopenResult.conversation 
+                  });
+                  
+                  // Notificar outros atendentes que a conversa foi reaberta e está pendente
+                  // (para que possam atualizar suas listas, se necessário, e ver o novo status pendente)
+                  helperBroadcastToAttendants({ 
+                    type: 'pending_conversation', // Usar 'pending_conversation' para que as UIs dos outros atendentes adicionem/atualizem para pendente
+                    payload: reopenResult.conversation 
+                  }, ws.agentId); // Exclui o atendente que reabriu
+                  if(sendLogGlobal) sendLogGlobal(`[WS] >> Notificação 'pending_conversation' (devido à reabertura) transmitida para outros atendentes para ConvID ${convIdToReopen}.`, "debug");
+
+                } else {
+                  if(sendLogGlobal) sendLogGlobal(`[WS] Falha ao reabrir chat ${convIdToReopen} por ${ws.agentName}. Erro: ${reopenResult.error}`, "warn");
+                  helperSendMessageToAttendant(ws.agentId, { 
+                    type: 'reopen_chat_response', 
+                    success: false, 
+                    error: reopenResult.error || 'Falha ao reabrir chat.', 
+                    conversationId: convIdToReopen 
+                  });
+                }
+              } catch (dbError) {
+                if(sendLogGlobal) sendLogGlobal(`[WS] Erro de banco de dados ao reabrir chat ${convIdToReopen}: ${dbError.message}`, "error");
+                if (ws.readyState === WebSocket.OPEN) {
+                  ws.send(JSON.stringify({ 
+                    type: 'reopen_chat_response', 
+                    success: false, 
+                    error: 'Erro de banco de dados ao reabrir chat.', 
+                    conversationId: convIdToReopen 
+                  }));
+                }
+              }
+            } else {
+                if(sendLogGlobal) sendLogGlobal(`[WS] 'reopen_chat_request' inválido ou de cliente não autorizado. ClientType: ${ws.clientType}, ConvID: ${parsedMessage.conversationId}, AgentID: ${ws.agentId}`, "warn");
+                 if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'reopen_chat_response', success: false, error: 'Solicitação inválida ou não autorizada.' }));
+                }
+            }
+            break;
 
           default:
             if(sendLogGlobal) sendLogGlobal(`[WS] Tipo de mensagem WS NÃO TRATADA: ${parsedMessage.type} de ${clientIdentifier}`, "warn")
@@ -460,25 +521,20 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbService
 
 // Função para ser chamada por um serviço externo (ex: WsWhatsApp.js) quando uma nova mensagem do CLIENTE é recebida e salva.
 function handleNewClientMessage(conversation, savedMessageDetails) {
-  if (conversation && conversation.ID && conversation.USER_USERNAME && savedMessageDetails && savedMessageDetails.SENDER_TYPE === 'CLIENT') {
-    const messageData = {
-      type: 'new_message',
-      conversationId: conversation.ID,
-      message: savedMessageDetails 
-    };
-    // Log Temporário Adicionado
-    if(sendLogGlobal) sendLogGlobal(`[WS] Enviando new_message para atendente: ${JSON.stringify(messageData)}`, "debug");
+  if (conversation && conversation.USER_USERNAME && savedMessageDetails && savedMessageDetails.SENDER_TYPE === 'CLIENT') {
     if(sendLogGlobal) sendLogGlobal(`[WS] Distribuindo nova mensagem do cliente para atendente ${conversation.USER_USERNAME} na conversa ${conversation.ID}. Detalhes: ${JSON.stringify(savedMessageDetails).substring(0,100)}`, "debug");
-    
     helperSendMessageToAttendant(
       conversation.USER_USERNAME, // agentId (username)
-      messageData
+      {
+        type: 'new_message',
+        conversationId: conversation.ID,
+        message: savedMessageDetails 
+      }
     );
   } else {
-    if(sendLogGlobal) {
+    if(sendLogGlobal && conversation) {
         let reason = "Motivo desconhecido";
         if (!conversation) reason = "conversa é nula/indefinida.";
-        else if (!conversation.ID) reason = `conversation.ID é nulo/indefinido.`;
         else if (!conversation.USER_USERNAME) reason = `conversa ${conversation.ID} não tem USER_USERNAME (atendente designado).`;
         else if (!savedMessageDetails) reason = "savedMessageDetails é nulo/indefinido.";
         else if (savedMessageDetails.SENDER_TYPE !== 'CLIENT') reason = `mensagem não é do tipo CLIENT (tipo: ${savedMessageDetails.SENDER_TYPE}).`;

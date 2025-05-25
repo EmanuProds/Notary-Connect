@@ -135,7 +135,8 @@ const ChatWebsocketService = {
         'chat_taken_update': 'onChatTakenUpdate',
         'chat_closed_update': 'onChatClosedUpdate',
         'pending_conversation': 'onPendingConversation',
-        'client_typing': 'onClientTyping'
+        'client_typing': 'onClientTyping',
+        'reopen_chat_response': 'onChatReopenedResponse'
     };
     return map[eventType] || eventType;
   },
@@ -310,6 +311,14 @@ const ChatWebsocketService = {
       targetType: "attendant",
       targetId: attendantId,
       message: message,
+    });
+  },
+
+  sendReopenChatRequest(conversationId) {
+    console.log(`[ChatWebsocketService] sendReopenChatRequest: Enviando solicitação para reabrir ConvID ${conversationId}`);
+    this.sendMessageInternal({
+      type: "reopen_chat_request",
+      conversationId: String(conversationId)
     });
   },
 };
