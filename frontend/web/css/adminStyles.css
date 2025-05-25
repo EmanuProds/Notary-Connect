@@ -3,23 +3,24 @@
 
 :root {
     --font-family: 'Inter', sans-serif;
-    --border-radius: 6px;
-    --header-height: 56px;
+    --border-radius: 8px; /* Aumentado para consistência */
+    --header-height: 60px; /* Altura do header principal do admin */
     --sidebar-width: 260px;
     --icon-size: 18px;
     --transition-speed: 0.2s;
 
-    /* Variáveis para o tema claro (padrão) */
-    --body-bg-color: #f0f2f5; /* Um cinza muito claro para o fundo geral */
+    /* Tema Claro (Padrão) */
+    --body-bg-color-surround: #e0e0e0; /* Cinza mais escuro para o fundo do body */
+    --admin-container-bg-color: #f8f9fa; /* Fundo principal do admin-container */
     --sidebar-bg-color: #ffffff;
-    --main-content-bg-color: #f8f9fa; /* Fundo do conteúdo principal um pouco diferente */
+    --main-content-header-bg: #ffffff; /* Fundo do header dentro do main content */
     --card-bg-color: #ffffff;
     --text-primary-color: #212529;
     --text-secondary-color: #6c757d;
     --text-on-accent-color: #ffffff;
     --border-main-color: #dee2e6;
     --border-light-color: #e9ecef;
-    --accent-color: #0d6efd; /* Azul Bootstrap */
+    --accent-color: #0d6efd;
     --accent-hover-color: #0b5ed7;
     --accent-active-color: #0a58ca;
     --button-secondary-bg-color: #e9ecef;
@@ -30,20 +31,17 @@
     --input-border-color: #ced4da;
     --input-focus-border-color: var(--accent-color);
     --input-focus-shadow-color: rgba(13, 110, 253, 0.25);
-    --disabled-bg-color: #e9ecef;
-    --disabled-text-color: #adb5bd;
-    --disabled-border-color: #dee2e6;
-    --error-color: #dc3545; /* Vermelho Bootstrap */
-    --success-color: #198754; /* Verde Bootstrap */
-    --warning-color: #ffc107; /* Amarelo Bootstrap */
-    --warning-text-color: #000000; /* Texto escuro para fundo amarelo */
+    --error-color: #dc3545;
+    --success-color: #198754;
+    --warning-color: #ffc107;
+    --warning-text-color: #000000;
     --link-color: var(--accent-color);
-    --icon-color: #6c757d; /* Cor padrão para ícones */
-    --icon-active-color: var(--accent-color);
-    --nav-item-hover-bg: rgba(0,0,0,0.05);
+    --icon-color: #6c757d;
+    --icon-active-color: var(--accent-color); /* Azul para ícones ativos no tema claro */
+    --nav-item-hover-bg: rgba(0,0,0,0.04); /* Mais sutil */
     --nav-item-active-bg: var(--accent-color);
     --nav-item-active-text: var(--text-on-accent-color);
-    --scrollbar-track-color: rgba(0,0,0,0.08);
+    --scrollbar-track-color: rgba(0,0,0,0.05);
     --scrollbar-thumb-color: #adb5bd;
     --scrollbar-thumb-hover-color: #6c757d;
     --modal-bg-overlay-color: rgba(0,0,0,0.4);
@@ -51,21 +49,27 @@
     --switch-bg-off-color: #ced4da;
     --switch-bg-on-color: var(--accent-color);
     --switch-slider-color: #ffffff;
-    --card-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.03);
-    --qr-code-bg: #ffffff; /* QR code precisa de fundo claro */
+    --card-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Sombra mais sutil */
+    --qr-code-bg: #ffffff; /* Fundo do QR Code sempre branco */
+    --theme-toggle-icon-color: #5c5c5c; /* Cor do ícone de tema (lua) no modo claro */
+    --disabled-bg-color: #e9ecef;
+    --disabled-text-color: #6c757d;
+    --disabled-border-color: #ced4da;
+    --button-hover-bg: rgba(0,0,0,0.04);
 }
 
 html[data-theme="dark"] {
-    --body-bg-color: #121212; /* Preto muito escuro */
-    --sidebar-bg-color: #1e1e1e; /* Um pouco mais claro que o body */
-    --main-content-bg-color: #181818; /* Fundo do conteúdo principal */
+    --body-bg-color-surround: #121212;
+    --admin-container-bg-color: #181818;
+    --sidebar-bg-color: #1e1e1e;
+    --main-content-header-bg: #1e1e1e;
     --card-bg-color: #1e1e1e;
-    --text-primary-color: #e0e0e0; /* Branco suave */
-    --text-secondary-color: #a0a0a0; /* Cinza claro */
+    --text-primary-color: #e0e0e0;
+    --text-secondary-color: #a0a0a0;
     --text-on-accent-color: #ffffff;
     --border-main-color: #3a3a3a;
     --border-light-color: #2c2c2c;
-    --accent-color: #589bf6; /* Azul mais claro para tema escuro */
+    --accent-color: #589bf6;
     --accent-hover-color: #4a8ae0;
     --accent-active-color: #3c7acc;
     --button-secondary-bg-color: #3a3a3a;
@@ -76,29 +80,31 @@ html[data-theme="dark"] {
     --input-border-color: #4a4a4a;
     --input-focus-border-color: var(--accent-color);
     --input-focus-shadow-color: rgba(88, 155, 246, 0.25);
-    --disabled-bg-color: #2c2c2c;
-    --disabled-text-color: #757575;
-    --disabled-border-color: #3a3a3a;
-    --error-color: #f48771; /* Vermelho mais claro */
-    --success-color: #67d69b; /* Verde mais claro */
-    --warning-color: #f8d766; /* Amarelo mais claro */
-    --warning-text-color: #000000;
+    --error-color: #f48771;
+    --success-color: #67d69b;
+    --warning-color: #f8d766;
+    --warning-text-color: #000000; /* Mantido preto para contraste no amarelo */
     --link-color: var(--accent-color);
     --icon-color: #a0a0a0;
-    --icon-active-color: var(--accent-color);
-    --nav-item-hover-bg: rgba(255,255,255,0.08);
+    --icon-active-color: var(--accent-color); /* Azul claro para ícones ativos no tema escuro */
+    --nav-item-hover-bg: rgba(255,255,255,0.06);
     --nav-item-active-bg: var(--accent-color);
     --nav-item-active-text: var(--text-on-accent-color);
-    --scrollbar-track-color: rgba(255,255,255,0.08);
+    --scrollbar-track-color: rgba(255,255,255,0.06);
     --scrollbar-thumb-color: #4a4a4a;
     --scrollbar-thumb-hover-color: #616161;
     --modal-bg-overlay-color: rgba(0,0,0,0.6);
     --modal-content-bg-color: #1e1e1e;
     --switch-bg-off-color: #4a4a4a;
     --switch-bg-on-color: var(--accent-color);
-    --switch-slider-color: #1e1e1e;
-    --card-shadow: 0 1px 2px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.2);
-    --qr-code-bg: #e0e0e0; /* Manter QR code com fundo claro */
+    --switch-slider-color: #181818;
+    --card-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    --qr-code-bg: #ffffff; /* MODIFICADO: Fundo do QR Code sempre branco */
+    --theme-toggle-icon-color: #a0a0a0;
+    --disabled-bg-color: #2c2c2c;
+    --disabled-text-color: #616161;
+    --disabled-border-color: #3a3a3a;
+    --button-hover-bg: rgba(255,255,255,0.06);
 }
 
 * {
@@ -109,22 +115,40 @@ html[data-theme="dark"] {
 
 body {
     font-family: var(--font-family);
-    background-color: var(--body-bg-color);
+    background-color: var(--body-bg-color-surround);
     color: var(--text-primary-color);
     line-height: 1.5;
     overflow: hidden;
     display: flex;
-    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
     font-size: 14px;
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
 
-.admin-container {
+.admin-page-container {
     display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
-    background-color: var(--main-content-bg-color);
-    transition: background-color var(--transition-speed) ease;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.admin-container {
+    display: flex;
+    width: 95%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    max-width: 1800px;
+    max-height: calc(100vh - 40px);
+    background-color: var(--admin-container-bg-color);
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: background-color var(--transition-speed) ease, width var(--transition-speed) ease, height var(--transition-speed) ease, aspect-ratio var(--transition-speed) ease;
 }
 
 /* --- Barra Lateral --- */
@@ -136,13 +160,14 @@ body {
     flex-direction: column;
     padding: 10px 0;
     transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    flex-shrink: 0;
 }
 
 .sidebar-header {
     display: flex;
     align-items: center;
     padding: 15px 20px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .sidebar-header .logo {
@@ -151,9 +176,13 @@ body {
     margin-right: 12px;
     object-fit: contain;
 }
+[data-theme="dark"] .sidebar-header .logo {
+    filter: none; /* MODIFICADO: Logo mantém cores originais no tema escuro */
+}
+
 
 .sidebar-header h1 {
-    font-size: 1.3em;
+    font-size: 1.2em;
     font-weight: 600;
     color: var(--text-primary-color);
     transition: color var(--transition-speed) ease;
@@ -168,74 +197,75 @@ body {
 .nav-list .nav-item {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
-    margin: 0 10px;
+    padding: 10px 20px;
+    margin: 2px 10px;
     color: var(--text-secondary-color);
     text-decoration: none;
     border-radius: var(--border-radius);
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
     font-weight: 500;
+    font-size: 0.9em;
 }
 
 .nav-list .nav-item:hover {
     background-color: var(--nav-item-hover-bg);
     color: var(--text-primary-color);
 }
+
+/* Cor dos ícones da sidebar no hover (ambos os temas) */
 .nav-list .nav-item:hover .nav-icon,
-.nav-list .nav-item:hover .fa-icon,
-.nav-list .nav-item:hover .btn-icon-img { /* Adicionado .btn-icon-img */
-    filter: none;
-    color: var(--icon-active-color);
+.sidebar-footer .button-link:hover .nav-icon {
+    filter: none; 
+    fill: var(--icon-active-color); 
 }
+
+[data-theme="light"] .nav-list .nav-item:hover .nav-icon,
+[data-theme="light"] .sidebar-footer .button-link:hover .nav-icon {
+     filter: invert(38%) sepia(98%) saturate(2545%) hue-rotate(205deg) brightness(100%) contrast(97%); 
+}
+
+
+[data-theme="dark"] .nav-list .nav-item:hover .nav-icon,
+[data-theme="dark"] .sidebar-footer .button-link:hover .nav-icon {
+    filter: brightness(0) invert(1) opacity(1); 
+     fill: var(--icon-active-color); 
+}
+
 
 .nav-list .nav-item.active {
     background-color: var(--nav-item-active-bg);
     color: var(--nav-item-active-text);
     font-weight: 600;
 }
-.nav-list .nav-item.active .nav-icon,
-.nav-list .nav-item.active .fa-icon,
-.nav-list .nav-item.active .btn-icon-img { /* Adicionado .btn-icon-img */
+.nav-list .nav-item.active .nav-icon {
     filter: brightness(0) invert(1);
-    color: var(--nav-item-active-text) !important;
+    fill: var(--nav-item-active-text);
 }
 
-/* Estilo geral para ícones SVG/IMG e FontAwesome */
-.nav-icon, .fa-icon, .btn-icon-img {
+
+.nav-icon {
     width: var(--icon-size);
     height: var(--icon-size);
-    margin-right: 12px;
-    opacity: 0.9;
-    color: var(--icon-color);
-    transition: color var(--transition-speed) ease, filter var(--transition-speed) ease;
+    margin-right: 10px;
+    opacity: 0.8;
+}
+[data-theme="light"] .nav-icon {
+    filter: grayscale(1) opacity(0.7) brightness(0.3);
+}
+[data-theme="dark"] .nav-icon {
+    filter: brightness(0) invert(1) opacity(0.7);
+}
+.nav-list .nav-item.active .nav-icon { 
+    opacity: 1;
 }
 
-/* Correção para ícones SVG no tema escuro */
-html[data-theme="dark"] .nav-icon,
-html[data-theme="dark"] .btn-icon-img {
-    filter: invert(0.8) brightness(1.1) contrast(0.9) saturate(0.5);
+[data-theme="light"] .nav-list .nav-item.active .nav-icon {
+     filter: brightness(0) invert(1);
 }
-html[data-theme="dark"] .fa-icon {
-    color: var(--icon-color);
+[data-theme="light"] .nav-list .nav-item.active[data-active-bg-is-light="true"] .nav-icon {
+    filter: grayscale(1) opacity(1) brightness(0.2);
 }
 
-html[data-theme="dark"] .nav-list .nav-item.active .nav-icon,
-html[data-theme="dark"] .nav-list .nav-item.active .btn-icon-img,
-html[data-theme="dark"] .nav-list .nav-item.active .fa-icon,
-html[data-theme="dark"] .sidebar-header .logo,
-html[data-theme="dark"] .button.primary .btn-icon-img,
-html[data-theme="dark"] .button.primary .fa-icon,
-html[data-theme="dark"] .button.danger .btn-icon-img,
-html[data-theme="dark"] .button.danger .fa-icon {
-    filter: none;
-}
-html[data-theme="dark"] .button.primary .btn-icon-img,
-html[data-theme="dark"] .button.primary .fa-icon,
-html[data-theme="dark"] .button.danger .btn-icon-img,
-html[data-theme="dark"] .button.danger .fa-icon {
-    color: var(--text-on-accent-color) !important;
-    filter: brightness(0) invert(1);
-}
 
 .sidebar-footer {
     margin-top: auto;
@@ -254,7 +284,7 @@ html[data-theme="dark"] .button.danger .fa-icon {
     text-align: left;
     border-radius: var(--border-radius);
     cursor: pointer;
-    font-size: 0.95em;
+    font-size: 0.9em;
     font-family: var(--font-family);
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
 }
@@ -262,17 +292,10 @@ html[data-theme="dark"] .button.danger .fa-icon {
     background-color: var(--nav-item-hover-bg);
     color: var(--text-primary-color);
 }
-.sidebar-footer .button-link .nav-icon,
-.sidebar-footer .button-link .fa-icon,
-.sidebar-footer .button-link .btn-icon-img {
+.sidebar-footer .button-link .nav-icon {
     margin-right: 10px;
-    color: var(--icon-color);
 }
-.sidebar-footer .button-link:hover .nav-icon,
-.sidebar-footer .button-link:hover .fa-icon,
-.sidebar-footer .button-link:hover .btn-icon-img {
-    color: var(--icon-active-color);
-}
+
 
 .connection-status {
     font-size: 0.8em;
@@ -281,28 +304,101 @@ html[data-theme="dark"] .button.danger .fa-icon {
     border-radius: var(--border-radius);
     text-align: center;
     transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+    font-weight: 600; 
 }
-.connection-status.connected {
-    background-color: var(--success-color);
-    color: var(--text-on-accent-color);
+.connection-status.connected { background-color: var(--success-color); color: var(--text-on-accent-color); }
+.connection-status.disconnected { background-color: var(--error-color); color: var(--text-on-accent-color); }
+.connection-status.connecting { background-color: var(--warning-color); color: var(--warning-text-color); }
+
+/* Forçar cores do tema claro para connection-status no tema escuro */
+html[data-theme="dark"] .connection-status.connected {
+    background-color: #198754; 
+    color: #ffffff; 
 }
-.connection-status.disconnected {
-    background-color: var(--error-color);
-    color: var(--text-on-accent-color);
+html[data-theme="dark"] .connection-status.disconnected {
+    background-color: #dc3545; 
+    color: #ffffff; 
 }
-.connection-status.connecting {
-    background-color: var(--warning-color);
-    color: var(--warning-text-color);
+html[data-theme="dark"] .connection-status.connecting {
+    background-color: #ffc107; 
+    color: #000000; 
 }
 
+
 /* --- Conteúdo Principal --- */
-.admin-content {
+.admin-main-content {
     flex-grow: 1;
-    padding: 25px;
-    overflow-y: auto;
-    background-color: var(--main-content-bg-color);
-    transition: background-color var(--transition-speed) ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--admin-container-bg-color);
 }
+
+.admin-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    height: var(--header-height);
+    background-color: var(--main-content-header-bg);
+    border-bottom: 1px solid var(--border-main-color);
+    flex-shrink: 0;
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+.admin-main-header h2 {
+    font-size: 1.6em;
+    font-weight: 600;
+    color: var(--text-primary-color);
+    margin: 0;
+}
+.header-actions-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.theme-toggle-button {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+.theme-toggle-button:hover {
+    background-color: var(--button-hover-bg);
+}
+.theme-toggle-button .icon-header-action {
+    width: 20px;
+    height: 20px;
+    transition: fill 0.2s ease, filter 0.2s ease;
+}
+[data-theme="light"] .theme-toggle-button img[src$="moon.svg"].icon-header-action {
+    fill: var(--theme-toggle-icon-color);
+    filter: none;
+}
+[data-theme="light"] .theme-toggle-button:hover img[src$="moon.svg"].icon-header-action {
+    fill: var(--text-primary-color);
+}
+[data-theme="dark"] .theme-toggle-button img[src$="sun.svg"].icon-header-action {
+    fill: transparent !important;
+    filter: brightness(0) invert(1);
+}
+[data-theme="dark"] .theme-toggle-button:hover img[src$="sun.svg"].icon-header-action {
+    fill: transparent !important;
+    filter: invert(1) brightness(0.886) saturate(0%);
+}
+
+
+.content-area {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 25px;
+}
+
 
 .content-section {
     display: none;
@@ -317,26 +413,13 @@ html[data-theme="dark"] .button.danger .fa-icon {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.section-header {
+.section-header-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-light-color);
-    transition: border-color var(--transition-speed) ease;
+    margin-bottom: 20px;
 }
 
-.section-header h2 {
-    font-size: 1.8em;
-    font-weight: 600;
-    color: var(--text-primary-color);
-    transition: color var(--transition-speed) ease;
-}
-.header-actions {
-    display: flex;
-    gap: 10px;
-}
 
 /* Estilos de Card */
 .card {
@@ -370,38 +453,57 @@ html[data-theme="dark"] .button.danger .fa-icon {
     width: 200px;
     height: 200px;
     margin: 0 auto 15px auto;
-    border: 1px solid var(--border-main-color);
+    border: 1px solid var(--border-main-color); 
     border-radius: var(--border-radius);
-    background-color: var(--qr-code-bg);
-    padding: 10px; /* Espaçamento interno para o QR code não colar nas bordas */
-    position: relative; /* Para controle de filhos, se necessário */
-    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
-    /* Removido display:flex para evitar duplicação se a biblioteca gerar múltiplos elementos */
+    background-color: var(--qr-code-bg); 
+    padding: 10px;
+    position: relative;
+    display: flex; /* Adicionado para melhor centralização dos filhos */
+    align-items: center; /* Adicionado para melhor centralização vertical dos filhos */
+    justify-content: center; /* Adicionado para melhor centralização horizontal dos filhos */
 }
 
-/* Estilo específico para o CANVAS gerado pela biblioteca qrcode.js */
+html[data-theme="dark"] .qr-code-display {
+    border-color: #dee2e6; 
+}
+
 .qr-code-display canvas {
-    display: block !important; /* Garante que seja um bloco */
-    width: 100% !important;   /* Ocupa 100% da área de conteúdo do pai (200px - 2*10px padding = 180px) */
-    height: 100% !important;  /* Ocupa 100% da área de conteúdo do pai */
-    margin: 0 auto; /* Centraliza o canvas se ele for menor que o container por algum motivo */
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 auto;
+    position: absolute; /* Para garantir que fique atrás de ícones/texto */
+    top: 0;
+    left: 0;
 }
 
-/* Esconde qualquer elemento IMG que a biblioteca qrcode.js possa gerar como fallback */
-.qr-code-display img {
-    display: none !important;
+.qr-code-display img { 
+    display: none !important; 
 }
 
-.qr-code-display p { /* Estilo para o texto "Aguardando Código QR..." */
-    text-align: center; /* Centraliza o texto placeholder */
+/* Ícone de status do QR Code (check, erro, etc.) */
+.qr-code-display .qr-code-status-icon {
+    position: relative; /* Alterado de absolute para funcionar com flex do pai */
+    z-index: 1; /* Para garantir que fique acima do canvas */
+    max-width: 60%; 
+    max-height: 60%; 
+    display: block; 
+    /* transform: translate(-50%, -50%); NÃO MAIS NECESSÁRIO COM FLEX NO PAI */
+}
+
+
+.qr-code-display p { 
+    text-align: center;
     color: var(--text-secondary-color);
     font-style: italic;
-    position: absolute; /* Para centralizar sobre o espaço do QR */
+    position: absolute; /* Manter absoluto se precisar sobrepor o canvas/ícone em certos momentos */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     margin: 0;
     transition: color var(--transition-speed) ease;
+    width: 90%; 
+    z-index: 1; /* Para garantir que fique acima do canvas */
 }
 
 .status-text {
@@ -420,10 +522,39 @@ html[data-theme="dark"] .button.danger .fa-icon {
     display: flex;
     gap: 10px;
     justify-content: center;
+    margin-top: 15px;
 }
 .bot-actions .button {
     flex-grow: 1;
 }
+
+/* Forçar cores do tema claro para botões específicos no tema escuro */
+html[data-theme="dark"] .bot-actions .button.secondary {
+    background-color: #e9ecef; 
+    color: #212529; 
+    border-color: #ced4da; 
+}
+html[data-theme="dark"] .bot-actions .button.secondary:hover {
+    background-color: #ced4da; 
+    border-color: #ced4da; 
+}
+html[data-theme="dark"] .bot-actions .button.secondary .btn-icon-img {
+    filter: brightness(0) invert(1) opacity(0.7); /* MODIFICADO: Para ser cinza claro, como outros ícones no tema escuro */
+}
+
+html[data-theme="dark"] .bot-actions .button.danger {
+    background-color: #dc3545; 
+    color: #ffffff; 
+    border-color: #dc3545; 
+}
+html[data-theme="dark"] .bot-actions .button.danger:hover {
+    background-color: color-mix(in srgb, #dc3545 85%, black); 
+    border-color: color-mix(in srgb, #dc3545 85%, black); 
+}
+html[data-theme="dark"] .bot-actions .button.danger .btn-icon-img {
+    filter: brightness(0) invert(1); 
+}
+
 
 .info-list {
     list-style: none;
@@ -502,7 +633,7 @@ html[data-theme="dark"] .button.danger .fa-icon {
 .form-group-inline {
     display: flex;
     gap: 15px;
-    align-items: flex-end; 
+    align-items: flex-end;
 }
 .form-group-inline .form-group {
     flex: 1;
@@ -528,8 +659,8 @@ html[data-theme="dark"] .button.danger .fa-icon {
 .switch {
   position: relative;
   display: inline-block;
-  width: 40px; 
-  height: 22px; 
+  width: 40px;
+  height: 22px;
 }
 .switch input {
   opacity: 0;
@@ -543,16 +674,16 @@ html[data-theme="dark"] .button.danger .fa-icon {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: var(--switch-bg-off-color); 
+  background-color: var(--switch-bg-off-color);
   transition: .3s;
-  border-radius: 22px; 
+  border-radius: 22px;
 }
 .slider:before {
   position: absolute;
   content: "";
-  height: 16px; 
+  height: 16px;
   width: 16px;
-  left: 3px; 
+  left: 3px;
   bottom: 3px;
   background-color: var(--switch-slider-color);
   transition: .3s;
@@ -566,7 +697,7 @@ input:focus + .slider {
   box-shadow: 0 0 0 2px var(--input-focus-shadow-color);
 }
 input:checked + .slider:before {
-  transform: translateX(18px); 
+  transform: translateX(18px);
 }
 
 .form-actions {
@@ -590,15 +721,23 @@ input:checked + .slider:before {
     gap: 8px;
     text-decoration: none;
 }
-.button .fa-icon, .button .btn-icon-img {
+.button .btn-icon-img {
     width: 16px;
     height: 16px;
-    margin-right: 0; 
-    color: inherit;
 }
-.button.primary .fa-icon, .button.primary .btn-icon-img {
-    color: var(--text-on-accent-color);
+[data-theme="light"] .button .btn-icon-img {
+    filter: grayscale(1) opacity(0.7);
 }
+[data-theme="dark"] .button:not(.primary):not(.danger):not(.bot-actions .button.secondary) .btn-icon-img { /* Ajustado para não afetar botões de robô sobrescritos E o botão secundário específico */
+    filter: brightness(0) invert(1) opacity(0.8);
+}
+.button.primary .btn-icon-img {
+    filter: brightness(0) invert(1);
+}
+.button.danger .btn-icon-img { 
+    filter: brightness(0) invert(1);
+}
+
 
 .button.primary {
     background-color: var(--accent-color);
@@ -619,31 +758,30 @@ input:checked + .slider:before {
     border-color: var(--disabled-border-color);
     cursor: not-allowed;
 }
-.button.primary:disabled .fa-icon, .button.primary:disabled .btn-icon-img {
-    color: var(--disabled-text-color);
+.button.primary:disabled .btn-icon-img {
+    filter: grayscale(1) opacity(0.5);
 }
 
-.button.secondary {
+
+.button.secondary { 
     background-color: var(--button-secondary-bg-color);
     color: var(--button-secondary-text-color);
     border-color: var(--button-secondary-border-color);
 }
-.button.secondary:hover {
+.button.secondary:hover { 
     background-color: var(--button-secondary-hover-color);
 }
 
-.button.danger {
+.button.danger { 
     background-color: var(--error-color);
     color: var(--text-on-accent-color);
     border-color: var(--error-color);
 }
-.button.danger:hover {
+.button.danger:hover { 
     background-color: color-mix(in srgb, var(--error-color) 85%, black);
     border-color: color-mix(in srgb, var(--error-color) 85%, black);
 }
-.button.danger .fa-icon, .button.danger .btn-icon-img {
-    color: var(--text-on-accent-color);
-}
+
 
 .search-input {
     padding: 8px 12px;
@@ -709,11 +847,24 @@ input:checked + .slider:before {
     color: var(--text-primary-color);
     background-color: var(--nav-item-hover-bg);
 }
-.item-actions .icon-button .fa-icon,
 .item-actions .icon-button .btn-icon-img {
     width: 16px; height: 16px;
     display: block;
 }
+[data-theme="light"] .item-actions .icon-button .btn-icon-img {
+    filter: grayscale(1) opacity(0.7);
+}
+[data-theme="dark"] .item-actions .icon-button .btn-icon-img {
+    filter: brightness(0) invert(1) opacity(0.7);
+}
+.item-actions .icon-button:hover .btn-icon-img {
+    filter: none;
+    fill: var(--text-primary-color);
+}
+[data-theme="dark"] .item-actions .icon-button:hover .btn-icon-img {
+    filter: brightness(0) invert(1) opacity(1);
+}
+
 
 .list-item-body {
     font-size: 0.9em;
@@ -731,7 +882,7 @@ input:checked + .slider:before {
 }
 .list-item-body .code {
     font-family: monospace;
-    background-color: var(--body-bg-color);
+    background-color: var(--body-bg-color-surround);
     padding: 2px 4px;
     border-radius: 3px;
     font-size: 0.85em;
@@ -778,8 +929,8 @@ input:checked + .slider:before {
     height: 100%;
     overflow: auto;
     background-color: var(--modal-bg-overlay-color);
-    align-items: center; 
-    justify-content: center; 
+    align-items: center;
+    justify-content: center;
 }
 .modal.show {
     display: flex;
@@ -789,7 +940,7 @@ input:checked + .slider:before {
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     width: 90%;
-    max-width: 550px; 
+    max-width: 550px;
     animation: slideInModal 0.3s ease-out;
     max-height: 90vh;
     display: flex;
@@ -833,7 +984,7 @@ input:checked + .slider:before {
 
 .modal-form {
     padding: 20px;
-    overflow-y: auto; 
+    overflow-y: auto;
     flex-grow: 1;
 }
 .checkbox-group {
@@ -903,7 +1054,7 @@ input:checked + .slider:before {
     border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb-color); 
+    background: var(--scrollbar-thumb-color);
     border-radius: 5px;
     border: 2px solid transparent;
     background-clip: content-box;
@@ -921,7 +1072,7 @@ input:checked + .slider:before {
     font-style: italic;
     border: 2px dashed var(--border-light-color);
     border-radius: var(--border-radius);
-    background-color: var(--body-bg-color);
+    background-color: var(--admin-container-bg-color);
     transition: color var(--transition-speed) ease, border-color var(--transition-speed) ease, background-color var(--transition-speed) ease;
 }
 
@@ -947,7 +1098,7 @@ input:checked + .slider:before {
 @media (max-width: 768px) {
     .admin-sidebar {
         position: fixed;
-        left: -100%; 
+        left: -100%;
         width: 80%;
         max-width: 300px;
         height: 100%;
@@ -958,29 +1109,80 @@ input:checked + .slider:before {
     .admin-sidebar.open {
         left: 0;
     }
-    .admin-content {
-        padding: 15px;
-    }
-    .section-header {
+
+    .admin-main-header {
+        padding: 0 15px;
+        height: auto;
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
-    .header-actions {
+    .admin-main-header h2 {
+        font-size: 1.4em;
+    }
+    .header-actions-main {
         width: 100%;
+    }
+    .content-area {
+        padding: 15px;
+    }
+
+    .section-header-controls {
         flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
     }
-    .header-actions .search-input {
-        flex-grow: 1;
-        width: 100%;
-    }
-    .header-actions .button {
+    .section-header-controls .search-input,
+    .section-header-controls .button {
         width: 100%;
     }
     .columns {
         flex-direction: column;
     }
     .list-container {
-        grid-template-columns: 1fr; 
+        grid-template-columns: 1fr;
     }
+
+    .admin-container {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: unset;
+        max-height: none;
+        border-radius: 0;
+    }
+    .admin-page-container {
+        padding: 0;
+    }
+
+}
+
+/* Estilo para garantir que os ícones SVG dentro de botões e links na sidebar herdem a cor do texto do pai */
+.nav-list .nav-item .nav-icon,
+.sidebar-footer .button-link .nav-icon,
+.button .btn-icon-img {
+    /* A cor será controlada por 'filter' ou 'fill' específico do tema */
+}
+
+/* Para ícones SVG que são pretos por padrão, para ficarem claros no tema escuro */
+[data-theme="dark"] .nav-list .nav-item .nav-icon,
+[data-theme="dark"] .sidebar-footer .button-link .nav-icon,
+[data-theme="dark"] .item-actions .icon-button .btn-icon-img {
+    filter: brightness(0) invert(1) opacity(0.8);
+}
+
+[data-theme="dark"] .button.primary .btn-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+
+/* Hover para ícones na sidebar e footer no tema escuro */
+[data-theme="dark"] .sidebar-footer .button-link:hover .nav-icon {
+    filter: brightness(0) invert(1) opacity(1);
+}
+
+/* Ícone da aba ativa na sidebar no tema escuro */
+[data-theme="dark"] .nav-list .nav-item.active .nav-icon {
+    filter: brightness(0) invert(1);
 }

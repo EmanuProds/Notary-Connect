@@ -1,33 +1,59 @@
 // frontend/web/js/chatWebsocketService.js
 const ChatWebsocketService = {
   socket: null,
-  agentId: null, // This will be the username (e.g., "JOENIS")
-  agentName: null, // This will be the full name (e.g., "Joenis A. de Souza")
+  agentId: null, 
+  agentName: null, 
   reconnectAttempts: 0,
-  maxReconnectAttempts: 5, // Max number of reconnection attempts
-  reconnectDelay: 3000, // Initial delay in ms, will increase
-  callbacks: {}, // To store callbacks for different message types
+  maxReconnectAttempts: 5,
+  reconnectDelay: 3000,
+  callbacks: {},
   isConnected: false,
-  pendingMessages: [], // Queue for messages to send once connected
+  pendingMessages: [],
+
+  // Nova função para atualizar a UI do status da conexão
+  _updateConnectionStatusUI(status, message) {
+    const statusElement = window.ChatDomElements && window.ChatDomElements.connectionStatus 
+                          ? window.ChatDomElements.connectionStatus 
+                          : document.getElementById('connectionStatus');
+    if (statusElement) {
+      statusElement.textContent = message;
+      statusElement.className = 'connection-status fixed bottom-4 right-4 px-4 py-2 rounded-md text-sm font-medium shadow-md z-50'; // Reset classes
+      switch (status) {
+        case 'connected':
+          statusElement.classList.add('connected'); // Adiciona classe para fundo verde
+          break;
+        case 'disconnected':
+          statusElement.classList.add('disconnected'); // Adiciona classe para fundo vermelho
+          break;
+        case 'connecting':
+        default:
+          statusElement.classList.add('connecting'); // Adiciona classe para fundo amarelo/padrão
+          break;
+      }
+      console.log(`[ChatWebsocketService] UI Connection Status Updated: ${status} - ${message}`);
+    } else {
+      console.warn("[ChatWebsocketService] _updateConnectionStatusUI: connectionStatus element not found in DOM.");
+    }
+  },
 
   initialize(agentId, agentName) {
     console.log("[ChatWebsocketService] initialize: Initializing with agentId (username):", agentId, "agentName (full name):", agentName);
-    this.agentId = agentId; // Store the username as agentId
-    this.agentName = agentName; // Store the full name
+    this.agentId = agentId;
+    this.agentName = agentName;
+    this._updateConnectionStatusUI('connecting', 'Conectando...'); // Estado inicial
     this.connect();
-    return this; // Allow chaining
+    return this;
   },
 
   connect() {
-    // Determine WebSocket protocol (ws or wss)
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    // Construct WebSocket URL with agentId (username) and agentName (full name)
     const wsUrl = `${protocol}//${window.location.host}/chat?agentId=${this.agentId}&agentName=${encodeURIComponent(this.agentName)}`;
 
     console.log("[ChatWebsocketService] connect: Connecting to WebSocket:", wsUrl);
+    this._updateConnectionStatusUI('connecting', 'Conectando...'); // Atualiza UI ao tentar conectar
+
     this.socket = new WebSocket(wsUrl);
 
-    // Assign event handlers
     this.socket.onopen = this.handleOpen.bind(this);
     this.socket.onmessage = this.handleMessage.bind(this);
     this.socket.onclose = this.handleClose.bind(this);
@@ -37,21 +63,19 @@ const ChatWebsocketService = {
   handleOpen() {
     console.log("[ChatWebsocketService] handleOpen: Connection established.");
     this.isConnected = true;
-    this.reconnectAttempts = 0; // Reset reconnect attempts on successful connection
+    this.reconnectAttempts = 0;
+    this._updateConnectionStatusUI('connected', 'Conectado'); // Atualiza UI para conectado
 
-    // Send any pending messages
     while (this.pendingMessages.length > 0) {
       const message = this.pendingMessages.shift();
       console.log("[ChatWebsocketService] handleOpen: Sending pending message:", message);
       this.sendMessageInternal(message);
     }
     
-    // Request initial conversation list once connected
     if (window.ChatActions && typeof window.ChatActions.loadConversations === 'function') {
         console.log("[ChatWebsocketService] handleOpen: Requesting list of active conversations.");
-        // Adding a small delay to ensure other initializations might complete
         setTimeout(() => { 
-            window.ChatActions.loadConversations("active"); // Default to active tab
+            window.ChatActions.loadConversations("active");
         }, 200);
     }
   },
@@ -66,21 +90,22 @@ const ChatWebsocketService = {
       return;
     }
 
-    // Play notification sounds based on message type
     if (data.type === "new_message" && data.payload && data.payload.message && 
         (data.payload.message.senderType === "CLIENT" || data.payload.message.SENDER_TYPE === "CLIENT")) {
-      if (window.NotificationService) window.NotificationService.playMessageSound();
+      if (window.NotificationService && typeof window.NotificationService.playMessageSound === 'function') {
+        window.NotificationService.playMessageSound();
+      }
     }
-    if (data.type === "pending_conversation") { // A new conversation is pending for any agent in the sector
-      if (window.NotificationService) window.NotificationService.playNewChatSound();
+    if (data.type === "pending_conversation") {
+      if (window.NotificationService && typeof window.NotificationService.playNewChatSound === 'function') {
+        window.NotificationService.playNewChatSound();
+      }
     }
 
-    // Map server event type to a callback name and invoke if registered
     const callbackName = this.mapEventTypeToCallbackName(data.type);
     if (data.type && this.callbacks[callbackName]) {
       console.log(`[ChatWebsocketService] handleMessage: Calling callback '${callbackName}'.`);
       
-      // Specific handling for responses that include extra parameters alongside payload
       if (data.type === 'chat_history_response') {
         console.log(`[ChatWebsocketService] handleMessage: Passing to ${callbackName} - payload: (array of messages), conversationId: ${data.conversationId}`);
         this.callbacks[callbackName](data.payload, data.conversationId); 
@@ -88,10 +113,11 @@ const ChatWebsocketService = {
         console.log(`[ChatWebsocketService] handleMessage: Passing to ${callbackName} - payload: (array of conversations), tabType: ${data.tabType}`);
         this.callbacks[callbackName](data.payload, data.tabType);
       } 
-      // For other events, the main data is expected in data.payload
       else {
-        console.log(`[ChatWebsocketService] handleMessage: Passing to ${callbackName} - WebSocket message payload:`, data.payload);
-        this.callbacks[callbackName](data.payload); 
+        // Para os eventos como new_message, onChatTakenUpdate, etc., o 'data' já é o payload.
+        // A correção no chatEventHandlers já espera 'data' como o payload direto.
+        console.log(`[ChatWebsocketService] handleMessage: Passing to ${callbackName} - WebSocket message data:`, data);
+        this.callbacks[callbackName](data); // Passa 'data' diretamente
       }
     } else {
       console.warn(`[ChatWebsocketService] handleMessage: No callback registered for message type: ${data.type}`);
@@ -99,7 +125,6 @@ const ChatWebsocketService = {
   },
 
   mapEventTypeToCallbackName(eventType) {
-    // Maps server-side event types to client-side callback function names
     const map = {
         'chat_list_response': 'onChatListReceived',
         'chat_history_response': 'onChatHistoryReceived',
@@ -107,43 +132,54 @@ const ChatWebsocketService = {
         'message_sent_ack': 'onMessageSentAck',
         'take_chat_response': 'onTakeChatResponse',
         'end_chat_response': 'onEndChatResponse',
-        'chat_taken_update': 'onChatTakenUpdate', // When another agent takes a chat
-        'chat_closed_update': 'onChatClosedUpdate', // When a chat is closed by system/another agent
-        'pending_conversation': 'onPendingConversation', // A new unassigned conversation
-        'client_typing': 'onClientTyping' // Client is typing
-        // Add more mappings as needed
+        'chat_taken_update': 'onChatTakenUpdate',
+        'chat_closed_update': 'onChatClosedUpdate',
+        'pending_conversation': 'onPendingConversation',
+        'client_typing': 'onClientTyping'
     };
-    return map[eventType] || eventType; // Fallback to eventType itself if no mapping
+    return map[eventType] || eventType;
   },
 
   handleClose(event) {
     console.log(`[ChatWebsocketService] handleClose: Connection closed. Clean: ${event.wasClean}, Code: ${event.code}, Reason: ${event.reason}`);
     this.isConnected = false;
-    if (!event.wasClean) { // Attempt to reconnect if the closure was not clean (e.g., server crash, network issue)
-      console.warn("[ChatWebsocketService] handleClose: Connection was not clean. Attempting to reconnect...");
+    this._updateConnectionStatusUI('disconnected', 'Desconectado'); // Atualiza UI para desconectado
+
+    if (!event.wasClean && event.code !== 1000) { // Código 1000 é fechamento normal
+      console.warn("[ChatWebsocketService] handleClose: Connection was not clean or was unexpected. Attempting to reconnect...");
       this.attemptReconnect();
+    } else if (event.code === 1000 && this.reconnectAttempts > 0) {
+        // Se foi um fechamento limpo APÓS tentativas de reconexão, pode indicar que o usuário está offline
+        // ou o servidor está intencionalmente a fechar. Parar de tentar reconectar.
+        console.log("[ChatWebsocketService] handleClose: Clean close after reconnect attempts. Stopping further attempts.");
+        this.reconnectAttempts = this.maxReconnectAttempts; // Para evitar mais tentativas
     }
   },
 
   handleError(error) {
     console.error("[ChatWebsocketService] handleError: WebSocket error:", error);
-    // Reconnection is typically handled by onclose, but you could add logic here if needed
+    // A UI já deve estar como 'conectando' ou 'desconectado'.
+    // A reconexão é tratada pelo onclose.
+    // Poderia-se forçar um estado de 'erro' aqui se desejado:
+    // this._updateConnectionStatusUI('disconnected', 'Erro de conexão');
   },
 
   attemptReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      const delay = this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts -1) ; // Exponential backoff
+      const delay = this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts -1) ;
       console.log(`[ChatWebsocketService] attemptReconnect: Attempting to reconnect in ${delay/1000}s (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      this._updateConnectionStatusUI('connecting', `Reconectando (tentativa ${this.reconnectAttempts})...`); // Atualiza UI
       setTimeout(() => {
         this.connect();
       }, delay);
     } else {
       console.error("[ChatWebsocketService] attemptReconnect: Maximum reconnection attempts reached.");
-      if (window.ChatDomElements && typeof window.ChatDomElements.showAlert === 'function') {
-        window.ChatDomElements.showAlert("Não foi possível reconectar ao servidor. Por favor, recarregue a página.", "error");
+      this._updateConnectionStatusUI('disconnected', 'Falha ao reconectar'); // Atualiza UI
+      if (window.ChatUiUpdater && typeof window.ChatUiUpdater.showError === 'function') {
+        window.ChatUiUpdater.showError("Não foi possível reconectar ao servidor. Por favor, recarregue a página.");
       } else {
-        alert("Não foi possível reconectar ao servidor. Por favor, recarregue a página."); // Fallback
+        alert("Não foi possível reconectar ao servidor. Por favor, recarregue a página.");
       }
     }
   },
@@ -151,16 +187,17 @@ const ChatWebsocketService = {
   sendMessageInternal(messageObject) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       const messageString = JSON.stringify(messageObject);
-      console.log("[ChatWebsocketService] sendMessageInternal: Sending message:", messageString.substring(0,150)+"..."); // Log truncated message
+      console.log("[ChatWebsocketService] sendMessageInternal: Sending message:", messageString.substring(0,150)+"...");
       this.socket.send(messageString);
       return true;
     } else {
       console.warn("[ChatWebsocketService] sendMessageInternal: Connection not open. Adding to pending queue. Message:", messageObject);
       this.pendingMessages.push(messageObject);
-      // If socket is closed or closing, attempt to reconnect
       if (!this.socket || this.socket.readyState === WebSocket.CLOSED || this.socket.readyState === WebSocket.CLOSING) {
-          console.log("[ChatWebsocketService] sendMessageInternal: Socket is closed or closing. Attempting to reconnect.");
-          this.attemptReconnect();
+          if (this.reconnectAttempts < this.maxReconnectAttempts && this.socket?.readyState !== WebSocket.CONNECTING) {
+            console.log("[ChatWebsocketService] sendMessageInternal: Socket is closed or closing and not already connecting. Attempting to reconnect.");
+            this.attemptReconnect();
+          }
       }
       return false;
     }
@@ -171,13 +208,11 @@ const ChatWebsocketService = {
     this.callbacks = callbacksObject;
   },
 
-  // --- Public methods to send messages to the server ---
-
   requestConversations(tabType = "active") {
     console.log(`[ChatWebsocketService] requestConversations: Requesting conversation list for tab '${tabType}'.`);
     this.sendMessageInternal({
       type: "request_chat_list",
-      tabType: tabType, // e.g., "active", "pending", "closed"
+      tabType: tabType,
     });
   },
 
@@ -185,7 +220,7 @@ const ChatWebsocketService = {
     console.log(`[ChatWebsocketService] requestChatHistory: Requesting history for ConvID ${conversationId}.`);
     this.sendMessageInternal({
       type: "request_chat_history",
-      conversationId: String(conversationId), // Ensure it's a string
+      conversationId: String(conversationId),
       limit: limit,
       offset: offset
     });
@@ -194,34 +229,31 @@ const ChatWebsocketService = {
   sendTextMessage(conversationId, recipientJid, text, localMessageId) { 
     console.log(`[ChatWebsocketService] sendTextMessage: Sending to ConvID ${conversationId}, JID ${recipientJid}, LocalID ${localMessageId}. Text: "${text.substring(0,30)}..."`);
     this.sendMessageInternal({
-      type: "send_chat_message", // Generic type for sending any chat message
+      type: "send_chat_message",
       payload: {
         conversationId: String(conversationId),
-        to: recipientJid, // WhatsApp JID of the recipient
+        to: recipientJid,
         text: text,
-        id: localMessageId, // Frontend generated ID for tracking ACK
-        // messageType: "text" // Could be added if backend needs explicit type
+        id: localMessageId,
       },
     });
-    return localMessageId; // Return for local tracking
+    return localMessageId;
   },
 
   sendFileMessage(conversationId, recipientJid, fileData, localMessageId) { 
-    // fileData is expected to be an object like { url: "server_url_of_file", type: "image/png", name: "image.png", caption: "Optional" }
     console.log(`[ChatWebsocketService] sendFileMessage: Sending file to ConvID ${conversationId}, JID ${recipientJid}, LocalID ${localMessageId}. File data:`, fileData);
     this.sendMessageInternal({
-        type: "send_chat_message", // Using the same generic type
+        type: "send_chat_message",
         payload: {
             conversationId: String(conversationId),
             to: recipientJid,
-            media: { // Media object as expected by whatsapp-web.js or your backend handler
-                url: fileData.url, // URL where the file is hosted (after upload)
-                mimetype: fileData.type, // Mimetype of the file
-                filename: fileData.name, // Original filename
+            media: {
+                url: fileData.url,
+                mimetype: fileData.type,
+                filename: fileData.name,
             },
-            text: fileData.caption || "", // Caption for the media
-            id: localMessageId, // Frontend generated ID
-            // messageType: fileData.type.split('/')[0] // e.g., "image", "document", "video", "audio"
+            text: fileData.caption || "",
+            id: localMessageId,
         }
     });
     return localMessageId;
@@ -252,9 +284,8 @@ const ChatWebsocketService = {
   },
 
   sendTypingStatus(conversationId, isTyping) {
-    // console.log(`[ChatWebsocketService] sendTypingStatus: ConvID ${conversationId}, Typing: ${isTyping}`); // Can be too verbose
     this.sendMessageInternal({
-      type: "agent_typing", // Agent is typing
+      type: "agent_typing",
       conversationId: String(conversationId),
       isTyping: isTyping,
     });
@@ -265,9 +296,9 @@ const ChatWebsocketService = {
     this.sendMessageInternal({
       type: "transfer_chat",
       conversationId: String(conversationId),
-      targetType: "sector", // "sector" or "attendant"
-      targetId: sectorId,    // ID of the sector or attendant
-      message: message,      // Optional message to send to the client about the transfer
+      targetType: "sector",
+      targetId: sectorId,
+      message: message,
     });
   },
 
@@ -281,10 +312,8 @@ const ChatWebsocketService = {
       message: message,
     });
   },
-  // Add more methods as needed for other actions
 };
 
-// Expose to window if in a browser environment
 if (typeof window !== 'undefined') {
     window.ChatWebsocketService = ChatWebsocketService;
 }

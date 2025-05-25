@@ -1,137 +1,163 @@
 // web/js/chatDomElements.js
 // Elementos DOM para o chat
 window.ChatDomElements = {
-  // --- Elementos da Navbar de Ícones (Nova) ---
+  // --- Elementos da Barra Lateral de Lista de Chats ---
+  sidebar: null, // O contêiner da sidebar principal (classe .sidebar)
+  loggedInAgentName: null, // Span para o nome do agente logado (ID: loggedInAgentName)
+  sidebarTabsContainer: null, // O contêiner das abas (classe .sidebar-tabs)
+  // activeTabButton: null, // Especificamente o botão da aba "Ativos/Pendentes"
+  // closedTabButton: null, // Especificamente o botão da aba "Encerrados"
+  chatSearchInput: null, // Input de busca (ID: chatSearchInput)
+  conversationsList: null, // Lista de conversas (ID: conversationsList) - CORRIGIDO
+  
+  // --- Elementos da Área Principal do Chat ---
+  chatArea: null, // O contêiner da área de chat (classe .chat-area)
+  chatHeaderIcon: null, // Ícone no cabeçalho do chat (ID: chatHeaderIcon)
+  chatHeaderName: null, // Nome no cabeçalho do chat (ID: chatHeaderName)
+  endChatButton: null, // Botão de encerrar chat (ID: endChatButton)
+  
+  chatMessages: null, // Contêiner das mensagens (ID: chatMessages)
+  noChatSelectedIconPlaceholder: null, // Placeholder quando nenhum chat está selecionado (ID: noChatSelectedIconPlaceholder)
+  
+  typingIndicator: null, // Indicador de "digitando..." (ID: typingIndicator)
+  
+  chatInputControls: null, // Contêiner dos controles de input (ID: chatInputControls)
+  attachmentButton: null, // Botão de anexo (ID: attachmentButton - NOVO ID)
+  mediaUploadInput: null, // Input de upload de mídia (ID: mediaUploadInput)
+  messageInput: null, // Campo de input da mensagem (ID: messageInput)
+  sendMessageButton: null, // Botão de enviar mensagem (ID: sendMessageButton - NOVO ID)
+
+  // --- Elementos Globais/Outros ---
+  connectionStatus: null, // Indicador de status da conexão (ID: connectionStatus)
+  alertModal: null, // Modal de alerta (ID: alertModal)
+  alertModalMessage: null, // Mensagem no modal de alerta (ID: alertModalMessage)
+
+  // --- Elementos do chatDomElements.txt original que podem não existir no HTML atual ---
+  // Mantidos como null e serão reportados pelo validateElements se não encontrados
   iconNavbar: null,
   navConversasButton: null,
   navEncerradosButton: null,
   navDocumentosButton: null,
   navEditarButton: null,
   navSairButton: null,
-
-  // --- Elementos da Barra Lateral de Lista de Chats (Antiga .left-sidebar) ---
-  chatListSidebar: null, // Antigo 'sidebar'
-  mainMenuButton: null, // Botão de hamburguer na chat-list-sidebar
-  searchInput: null, // ID: search-chats-input no HTML
-  chatFilterTabsContainer: null, // ID: chat-filter-tabs no HTML
-  conversationsList: null, // ID: room-list no HTML (PRINCIPAL CORREÇÃO PARA CARREGAR CHATS)
-  roomListPlaceholder: null, // ID: room-list-placeholder no HTML
-
-  // --- Elementos da Área Principal do Chat ---
-  mainChatContent: null, // Nova classe para o container principal do chat
-  chatAreaHeader: null, // ID: chat-area-header no HTML
-  backToChatsMobileButton: null, // ID: back-to-chats-mobile no HTML
-  headerContactAvatar: null, // ID: header-contact-avatar no HTML
-  chatRoomTitleMain: null, // ID: chat-room-title-main no HTML (Nome do contato no header)
-  contactStatus: null, // ID: contact-status no HTML
-  searchInChatButton: null, // ID: search-in-chat-button no HTML
-  callButton: null, // ID: call-button no HTML
-  contactInfoButton: null, // ID: contact-info-button no HTML (Abre a right-sidebar)
-
-  messagesContainer: null, // ID: chat-messages no HTML
-  noChatPlaceholder: null, // ID: no-chat-placeholder no HTML
-  typingIndicator: null, // ID: typing-indicator no HTML
-
-  messageInputArea: null, // ID: message-input-area no HTML (Footer com input e botões)
-  attachFileButtonMain: null, // ID: attach-file-button-main no HTML
-  messageInput: null, // ID: message-input-main no HTML (PRINCIPAL CAMPO DE MENSAGEM)
-  emojiButton: null, // ID: emoji-button no HTML
-  sendMessageButton: null, // ID: send-message-button-main no HTML (PRINCIPAL BOTÃO DE ENVIAR)
-  // recordAudioButtonMain: null, // Se for usar: document.getElementById("record-audio-button-main")
-
-  // --- Elementos da Barra Lateral Direita (Informações do Contato) ---
-  rightSidebar: null, // ID: contact-info-panel no HTML
-  contactInfoHeaderTitle: null, // Dentro de .contact-info-header > h3
-  closeContactInfoButton: null, // ID: close-contact-info-button no HTML
-  panelContactAvatar: null, // ID: panel-contact-avatar no HTML
-  panelContactName: null, // ID: panel-contact-name no HTML
-  panelContactPhone: null, // ID: panel-contact-phone no HTML
-  addContactButton: null, // ID: add-contact-button no HTML
-  notificationToggle: null, // ID: notification-toggle no HTML
-  sharedMediaGrid: null, // ID: shared-media-grid no HTML
-
-  // --- Elementos que estavam no seu chatDomElements.txt original ---
-  // Mantidos para referência, mas podem não existir no chat.html atual
-  // ou precisam de IDs/classes correspondentes.
-  chatContainer: null, // Classe .app-container no HTML atual
-  // sidebar: null, // Agora é .icon-navbar e .chat-list-sidebar
-  chatArea: null, // Agora é .main-chat-content
-  welcomeScreen: null, // O noChatPlaceholder serve a um propósito similar
-  chatInterface: null, // O mainChatContent é a interface principal de chat
-
-  userNameElement: null, // Precisa ser adicionado ao HTML se necessário
-  userStatusElement: null, // Precisa ser adicionado ao HTML se necessário
-  logoutButton: null, // O botão de sair está na icon-navbar (nav-sair)
-
-  // chatHeader: null, // Agora é chatAreaHeader (ID: chat-area-header)
-  // contactAvatar: null, // Agora é headerContactAvatar (ID: header-contact-avatar)
-  contactName: null, // Agora é chatRoomTitleMain (ID: chat-room-title-main)
-  contactNumber: null, // Pode ser panelContactPhone (ID: panel-contact-phone) ou um novo
-
-  transferChatButton: null, // Precisa ser adicionado/mapeado se a funcionalidade existir
-  endChatButton: null, // Precisa ser adicionado/mapeado se a funcionalidade existir
-
-  // chatInputControls: null, // Agora é messageInputArea (ID: message-input-area)
-  // attachmentButton: null, // Agora é attachFileButtonMain (ID: attach-file-button-main)
-  // sendButton: null, // Agora é sendMessageButton (ID: send-message-button-main)
-
+  chatListSidebar: null, 
+  mainMenuButton: null,
+  // chatFilterTabsContainer: null, // Substituído por sidebarTabsContainer
+  roomListPlaceholder: null,
+  mainChatContent: null,
+  chatAreaHeader: null,
+  backToChatsMobileButton: null,
+  headerContactAvatar: null,
+  chatRoomTitleMain: null,
+  contactStatus: null,
+  searchInChatButton: null,
+  callButton: null,
+  contactInfoButton: null,
+  messagesContainer: null, // Substituído por chatMessages
+  noChatPlaceholder: null, // Usar noChatSelectedIconPlaceholder ou seu pai
+  messageInputArea: null, // Substituído por chatInputControls
+  attachFileButtonMain: null, // Substituído por attachmentButton
+  // messageInput: null, // já mapeado
+  emojiButton: null,
+  // sendMessageButton: null, // já mapeado
+  rightSidebar: null,
+  contactInfoHeaderTitle: null,
+  closeContactInfoButton: null,
+  panelContactAvatar: null,
+  panelContactName: null,
+  panelContactPhone: null,
+  addContactButton: null,
+  notificationToggle: null,
+  sharedMediaGrid: null,
+  chatContainer: null,
+  welcomeScreen: null,
+  chatInterface: null,
+  userNameElement: null,
+  userStatusElement: null,
+  logoutButton: null,
+  contactName: null,
+  contactNumber: null,
+  transferChatButton: null,
+  // endChatButton: null, // já mapeado
   transferModal: null,
-  closeModalButton: null,
-  sectorsList: null, // Dentro do modal de transferência, precisa de ID
-  attendantsList: null, // Dentro do modal de transferência, precisa de ID
+  closeModalButton: null, // Para o transferModal
+  sectorsList: null,
+  attendantsList: null,
+  // alertModal: null, // já mapeado
+  // alertMessage: null, // já mapeado
+  closeAlertButton: null, // Para o alertModal
 
-  alertModal: null,
-  alertMessage: null,
-  closeAlertButton: null,
-
-  fileInput: null, // Se houver um input type="file" específico para anexos.
-
-  // Inicializar elementos DOM
   init() {
     console.log("[ChatDomElements] Inicializando elementos DOM");
 
-    // --- Nova Navbar de Ícones ---
-    this.iconNavbar = document.querySelector(".icon-navbar");
+    // --- Elementos da Barra Lateral de Lista de Chats (Conforme chat.html do Canvas) ---
+    this.sidebar = document.querySelector(".sidebar");
+    this.loggedInAgentName = document.getElementById("loggedInAgentName");
+    this.sidebarTabsContainer = document.querySelector(".sidebar-tabs");
+    // Se precisar dos botões de aba individualmente:
+    // this.activeTabButton = this.sidebarTabsContainer ? this.sidebarTabsContainer.querySelector('[data-tab="active"]') : null;
+    // this.closedTabButton = this.sidebarTabsContainer ? this.sidebarTabsContainer.querySelector('[data-tab="closed"]') : null;
+    this.chatSearchInput = document.getElementById("chatSearchInput");
+    this.conversationsList = document.getElementById("conversationsList"); // CORRIGIDO
+
+    // --- Elementos da Área Principal do Chat (Conforme chat.html do Canvas) ---
+    this.chatArea = document.querySelector(".chat-area");
+    this.chatHeaderIcon = document.getElementById("chatHeaderIcon");
+    this.chatHeaderName = document.getElementById("chatHeaderName");
+    this.endChatButton = document.getElementById("endChatButton"); // ID do HTML do Canvas
+    
+    this.chatMessages = document.getElementById("chatMessages");
+    this.noChatSelectedIconPlaceholder = document.getElementById("noChatSelectedIconPlaceholder");
+    
+    this.typingIndicator = document.getElementById("typingIndicator");
+    
+    this.chatInputControls = document.getElementById("chatInputControls"); // ID do HTML do Canvas
+    // O botão de anexo no HTML do Canvas tem ID "attachmentButton"
+    // A imagem dentro dele não precisa ser selecionada separadamente aqui se o listener for no botão.
+    this.attachmentButton = document.getElementById("attachmentButton"); 
+    this.mediaUploadInput = document.getElementById("mediaUploadInput");
+    this.messageInput = document.getElementById("messageInput");
+    // O botão de enviar no HTML do Canvas tem ID "sendMessageButton"
+    this.sendMessageButton = document.getElementById("sendMessageButton");
+
+    // --- Elementos Globais/Outros (Conforme chat.html do Canvas) ---
+    this.connectionStatus = document.getElementById("connectionStatus");
+    this.alertModal = document.getElementById("alertModal");
+    this.alertModalMessage = document.getElementById("alertModalMessage");
+
+    // --- Tentativa de selecionar elementos do chatDomElements.txt original ---
+    // Muitos destes provavelmente serão null se o HTML do Canvas for mais simples.
+    this.iconNavbar = document.querySelector(".icon-navbar"); // Exemplo, pode não existir
     this.navConversasButton = document.getElementById("nav-conversas");
     this.navEncerradosButton = document.getElementById("nav-encerrados");
     this.navDocumentosButton = document.getElementById("nav-documentos");
     this.navEditarButton = document.getElementById("nav-editar");
-    this.navSairButton = document.getElementById("nav-sair"); // Corresponde ao antigo logoutButton?
+    this.navSairButton = document.getElementById("nav-sair");
 
-    // --- Barra Lateral de Lista de Chats (Antiga .left-sidebar) ---
-    this.chatListSidebar = document.querySelector(".chat-list-sidebar");
+    this.chatListSidebar = this.sidebar; // Reutilizando a referência
     this.mainMenuButton = document.getElementById("main-menu-button");
-    this.searchInput = document.getElementById("search-chats-input"); // Atualizado do original "search-input"
-    this.chatFilterTabsContainer = document.getElementById("chat-filter-tabs");
-    this.conversationsList = document.getElementById("room-list"); // <<< PRINCIPAL CORREÇÃO AQUI [cite: 1]
-    this.roomListPlaceholder = document.getElementById("room-list-placeholder");
+    this.roomListPlaceholder = document.getElementById("room-list-placeholder"); // Pode não existir
 
-    // --- Área Principal do Chat ---
-    this.mainChatContent = document.querySelector(".main-chat-content");
-    this.chatAreaHeader = document.getElementById("chat-area-header");
+    this.mainChatContent = this.chatArea; // Reutilizando a referência
+    this.chatAreaHeader = document.querySelector(".chat-header"); // Selecionando pelo seletor de classe do HTML do Canvas
     this.backToChatsMobileButton = document.getElementById("back-to-chats-mobile");
-    this.headerContactAvatar = document.getElementById("header-contact-avatar"); // Atualizado do original "contact-avatar"
-    this.chatRoomTitleMain = document.getElementById("chat-room-title-main"); // Atualizado do original "contact-name"
-    this.contactStatus = document.getElementById("contact-status");
+    this.headerContactAvatar = document.getElementById("chatHeaderIcon"); // Reutilizando o ícone do header
+    this.chatRoomTitleMain = this.chatHeaderName; // Reutilizando
+    this.contactStatus = document.getElementById("contact-status"); // Pode não existir
     this.searchInChatButton = document.getElementById("search-in-chat-button");
     this.callButton = document.getElementById("call-button");
     this.contactInfoButton = document.getElementById("contact-info-button");
 
-    this.messagesContainer = document.getElementById("chat-messages"); // Atualizado do original "messages-container"
-    this.noChatPlaceholder = document.getElementById("no-chat-placeholder");
-    this.typingIndicator = document.getElementById("typing-indicator");
+    this.messagesContainer = this.chatMessages; // Reutilizando
+    this.noChatPlaceholder = this.noChatSelectedIconPlaceholder ? this.noChatSelectedIconPlaceholder.parentElement : null;
+    
+    this.messageInputArea = this.chatInputControls; // Reutilizando
+    this.attachFileButtonMain = this.attachmentButton; // Reutilizando
+    this.emojiButton = document.getElementById("emoji-button"); // Pode não existir
 
-    this.messageInputArea = document.querySelector(".message-input-area"); // ID: message-input-area
-    this.attachFileButtonMain = document.getElementById("attach-file-button-main"); // Atualizado de "attachment-button"
-    this.messageInput = document.getElementById("message-input-main"); // Atualizado de "message-input"
-    this.emojiButton = document.getElementById("emoji-button");
-    this.sendMessageButton = document.getElementById("send-message-button-main"); // Atualizado de "send-button"
-
-    // --- Barra Lateral Direita (Informações do Contato) ---
-    this.rightSidebar = document.getElementById("contact-info-panel");
-    if (this.rightSidebar) { // Elementos dentro da rightSidebar
-        const header = this.rightSidebar.querySelector(".contact-info-header h3");
-        if (header) this.contactInfoHeaderTitle = header;
+    this.rightSidebar = document.getElementById("contact-info-panel"); // Pode não existir
+    if (this.rightSidebar) {
+        this.contactInfoHeaderTitle = this.rightSidebar.querySelector(".contact-info-header h3");
         this.closeContactInfoButton = document.getElementById("close-contact-info-button");
         this.panelContactAvatar = document.getElementById("panel-contact-avatar");
         this.panelContactName = document.getElementById("panel-contact-name");
@@ -141,120 +167,85 @@ window.ChatDomElements = {
         this.sharedMediaGrid = document.getElementById("shared-media-grid");
     }
 
-    // --- Elementos do esquema original do chatDomElements.txt (verificar se ainda são necessários e se os IDs/classes existem) ---
-    this.chatContainer = document.querySelector(".app-container"); // Classe geral da aplicação
-    // this.sidebar = this.chatListSidebar; // Referência para compatibilidade, se necessário
-    this.chatArea = this.mainChatContent; // Referência para compatibilidade
+    this.chatContainer = document.querySelector(".container"); // Classe geral da aplicação
+    this.welcomeScreen = this.noChatPlaceholder; 
+    this.chatInterface = this.chatArea; 
 
-    // Estes provavelmente não existem mais com esses IDs/classes exatas no novo HTML
-    // ou foram substituídos. Se precisar deles, adicione os IDs/classes corretos ao HTML.
-    this.welcomeScreen = document.getElementById("no-chat-placeholder"); // Reaproveitando o placeholder
-    this.chatInterface = this.mainChatContent; // O conteúdo principal do chat
+    this.userNameElement = document.getElementById("user-name"); 
+    this.userStatusElement = document.getElementById("user-status"); 
+    this.logoutButton = this.navSairButton; 
 
-    this.userNameElement = document.getElementById("user-name"); // Precisa de ID "user-name" no HTML
-    this.userStatusElement = document.getElementById("user-status"); // Precisa de ID "user-status" no HTML
-    this.logoutButton = this.navSairButton; // Mapeando para o novo botão de sair
+    this.contactName = this.chatHeaderName; 
+    this.contactNumber = document.getElementById("contact-number"); 
+    this.transferChatButton = document.getElementById("transfer-chat-button"); // ID do HTML do Canvas para o botão de transferir, se existir.
 
-    // this.chatHeader = this.chatAreaHeader; // Mapeado acima
-    this.contactName = this.chatRoomTitleMain; // Mapeado acima
-    this.contactNumber = document.getElementById("contact-number"); // Precisa de ID "contact-number" no HTML
-    this.transferChatButton = document.getElementById("transfer-button"); // Precisa de ID "transfer-button" no HTML
-    this.endChatButton = document.getElementById("close-chat-button"); // Precisa de ID "close-chat-button" no HTML
-
-    // this.chatInputControls = this.messageInputArea; // Mapeado acima
-    this.attachmentButton = this.attachFileButtonMain; // Mapeado acima
-    // this.sendButton = this.sendMessageButton; // Mapeado acima
-
-    this.transferModal = document.getElementById("transfer-modal"); // Precisa de ID "transfer-modal" no HTML
+    this.transferModal = document.getElementById("transfer-modal"); 
     if (this.transferModal) {
-        this.closeModalButton = this.transferModal.querySelector(".close-button"); // Assumindo uma classe comum
-        this.sectorsList = document.getElementById("sectors-list-select"); // Precisa de ID "sectors-list-select"
-        this.attendantsList = document.getElementById("attendants-list-select"); // Precisa de ID "attendants-list-select"
+        this.closeModalButton = this.transferModal.querySelector(".close-button"); 
+        this.sectorsList = document.getElementById("sectors-list-select"); 
+        this.attendantsList = document.getElementById("attendants-list-select"); 
+    }
+    
+    if (this.alertModal) { // O botão de fechar o alertModal não está no HTML do Canvas
+        this.closeAlertButton = this.alertModal.querySelector(".close-alert-button"); // Exemplo de seletor
     }
 
-
-    this.alertModal = document.getElementById("alert-modal"); // Precisa de ID "alert-modal" no HTML
-    if (this.alertModal) {
-        this.alertMessage = this.alertModal.querySelector(".alert-message-content"); // Assumindo uma classe
-        this.closeAlertButton = this.alertModal.querySelector(".close-button"); // Assumindo uma classe comum
-    }
-
-    // this.fileInput // Se tiver um <input type="file"> específico, adicione um ID e selecione aqui.
-                      // O attachFileButtonMain já tem um listener que clica em um input de arquivo,
-                      // mas esse input não tem um ID explícito no HTML fornecido.
-                      // Para agora, deixaremos nulo. Se for o mesmo que o de anexos,
-                      // seu script já deve lidar com isso através do clique no botão.
-
-    // Verificar se todos os elementos foram encontrados
     this.validateElements();
 
-    console.log("[ChatDomElements] Elementos DOM inicializados");
+    console.log("[ChatDomElements] Elementos DOM inicializados (alguns podem estar 'null' se não presentes no HTML).");
     return this;
   },
 
   validateElements() {
     const missingElements = [];
-    // Itera sobre as propriedades do objeto e verifica se são nulas
+    const optionalElements = [ // Lista de elementos que são sabidamente opcionais ou não existem no HTML atual do Canvas
+        "iconNavbar", "navConversasButton", "navEncerradosButton", "navDocumentosButton",
+        "navEditarButton", "navSairButton", "mainMenuButton", "roomListPlaceholder",
+        "backToChatsMobileButton", "contactStatus", "searchInChatButton", "callButton",
+        "contactInfoButton", "emojiButton", "rightSidebar", "contactInfoHeaderTitle",
+        "closeContactInfoButton", "panelContactAvatar", "panelContactName", "panelContactPhone",
+        "addContactButton", "notificationToggle", "sharedMediaGrid", "userNameElement",
+        "userStatusElement", "logoutButton", "contactNumber", "transferChatButton",
+        "transferModal", "closeModalButton", "sectorsList", "attendantsList", "closeAlertButton"
+        // Adicione outros IDs aqui que você sabe que são de funcionalidades não implementadas no HTML atual
+    ];
+
     for (const key in this) {
       if (this.hasOwnProperty(key) && typeof this[key] !== 'function' && this[key] === null) {
-        // Opcional: Adicionar exceções para elementos que são sabidamente opcionais
-        // if (key === 'optionalElement') continue;
-        missingElements.push(key);
+        if (!optionalElements.includes(key)) { // Só reporta como "crítico" se não for opcional
+            missingElements.push(key);
+        } else {
+            // console.log(`[ChatDomElements] Elemento opcional '${key}' não encontrado (OK).`);
+        }
       }
     }
 
     if (missingElements.length > 0) {
-      console.warn("[ChatDomElements] Elementos não encontrados (ou não presentes no HTML atual):", missingElements.join(", "));
+      // Este aviso agora só mostrará elementos que deveriam existir com base no HTML do Canvas, mas não foram encontrados
+      console.warn("[ChatDomElements] Elementos ESSENCIAIS não encontrados (verifique IDs no HTML e no chatDomElements.js):", missingElements.join(", "));
     }
   },
 
-  // Mostrar alerta (adaptado do seu original, mas pode ser global)
+  // A função showAlert foi movida para ChatUiUpdater ou pode ser global.
+  // Se precisar dela aqui, descomente e adapte.
+  /*
   showAlert(message, type = "info") {
     console.log(`[ChatDomElements] Mostrando alerta: ${message} (${type})`);
-    // Idealmente, esta função seria movida para um utilitário de UI global
-    // ou o ChatUiUpdater lidaria com isso.
-    if (this.alertModal && this.alertMessage && this.closeAlertButton) {
-      this.alertMessage.textContent = message;
-      // Adicionar classes de tipo ao alertMessage ou alertModal para estilização
-      this.alertModal.className = 'alert-modal-custom show'; // Adicione classes para estilizar
-      this.alertModal.classList.add(`alert-${type}`);
+    if (this.alertModal && this.alertModalMessage) {
+      this.alertModalMessage.textContent = message;
+      this.alertModal.className = 'alert-modal show'; // Reset classes
+      this.alertModal.classList.add(`alert-${type}`); // Adiciona tipo específico
+      this.alertModal.style.display = "block";
 
-      this.alertModal.style.display = "block"; // Ou flex, dependendo do seu CSS
-
-      const closeBtn = this.closeAlertButton;
-      const tempCloseHandler = () => {
-          this.alertModal.style.display = "none";
-          this.alertModal.classList.remove(`alert-${type}`, 'show');
-          closeBtn.removeEventListener('click', tempCloseHandler);
-      };
-      closeBtn.addEventListener('click', tempCloseHandler);
-
-      // Fechar automaticamente após 5 segundos (opcional)
-      // setTimeout(tempCloseHandler, 5000);
+      // Adicionar um botão de fechar se não houver um ou lógica para fechar
+      // setTimeout(() => {
+      //   this.alertModal.style.display = "none";
+      //   this.alertModal.classList.remove('show', `alert-${type}`);
+      // }, 5000);
     } else {
       console.warn("[ChatDomElements] Elementos do modal de alerta não configurados. Usando alert nativo.");
       alert(`${type.toUpperCase()}: ${message}`);
     }
   },
-
-  // Funções createConversationElement e createMessageElement foram movidas para ChatUiUpdater.js
-  // onde fazem mais sentido, pois são específicas da atualização da UI.
-
-  // Formatar timestamp (pode ser movido para ChatUtils.js)
-  formatTime(timestamp) {
-    if (!timestamp) return "";
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return "";
-
-    const today = new Date();
-    if (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    ) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } else {
-      return date.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
-    }
-  },
+  */
 };

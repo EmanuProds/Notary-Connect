@@ -4,212 +4,193 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notary Connect - Administração</title>
     <link rel="stylesheet" href="./css/adminStyles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
 </head>
 <body>
-    <div class="admin-container">
-        <aside class="admin-sidebar">
-            <div class="sidebar-header">
-                <img src="./img/icons/logo.svg" alt="Logo do Projeto" class="logo" onerror="this.src='https://placehold.co/40x40/FFFFFF/3498DB?text=L'">
-                <h1>Administração do Sistema</h1>
-            </div>
-            <nav class="nav-list">
-                <ul>
-                    <li>
-                        <a href="#" class="nav-item active" data-section="roboSection">
-                            <img src="./img/icons/robot.svg" alt="Ícone Robô" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-robot fa-icon" style="display:none;"></i> Robô do WhatsApp
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-item" data-section="respostasSection">
-                            <img src="./img/icons/responses.svg" alt="Ícone Respostas" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-reply-all fa-icon" style="display:none;"></i> Respostas Automáticas
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-item" data-section="funcionariosSection">
-                            <img src="./img/icons/users.svg" alt="Ícone Funcionários" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-users-cog fa-icon" style="display:none;"></i> Funcionários
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-item" data-section="setoresSection">
-                             <img src="./img/icons/sectors.svg" alt="Ícone Setores" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-sitemap fa-icon" style="display:none;"></i> Setores
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-item" data-section="configuracoesSection">
-                            <img src="./img/icons/settings.svg" alt="Ícone Configurações" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-cogs fa-icon" style="display:none;"></i> Configurações
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <div id="connectionStatus" class="connection-status">
-                    Conectando...
+    <div class="admin-page-container"> <div class="admin-container">
+            <aside class="admin-sidebar">
+                <div class="sidebar-header">
+                    <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="logo">
+                    <h1>Administração do Sistema</h1> 
                 </div>
-                <button id="viewLogsBtn" class="button-link">
-                    <img src="./img/icons/logs.svg" alt="Ícone Logs" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                    <i class="fas fa-file-alt fa-icon" style="display:none;"></i> Ver Logs
-                </button>
-                 <button id="openDevToolsBtnAdmin" class="button-link">
-                    <img src="./img/icons/devtools.svg" alt="Ícone DevTools" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                    <i class="fas fa-tools fa-icon" style="display:none;"></i> Ferramentas DevTools
-                </button>
-                <button id="logoutBtn" class="button-link">
-                    <img src="./img/icons/logout.svg" alt="Ícone Logout" class="nav-icon" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                    <i class="fas fa-sign-out-alt fa-icon" style="display:none;"></i> Sair
-                </button>
-            </div>
-        </aside>
-
-        <main class="admin-content">
-            <section id="roboSection" class="content-section active">
-                <header class="section-header">
-                    <h2>Status do Robô e Código QR</h2>
-                </header>
-                <div class="section-body columns">
-                    <div class="column">
-                        <div class="card">
-                            <h3>Código QR WhatsApp</h3>
-                            <div id="qrDisplay" class="qr-code-display">
-                                <p>Aguardando Código QR...</p>
-                            </div>
-                            <p id="qrStatusText" class="status-text">Inicializando...</p>
-                            <div id="botActions" class="bot-actions" style="display: none;">
-                                <button id="pauseBotBtn" class="button icon-button">
-                                     <img src="./img/icons/pause.svg" alt="Pausar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                                     <i class="fas fa-pause fa-icon" style="display:none;"></i> Pausar Robô
-                                </button>
-                                <button id="restartBotBtn" class="button icon-button danger">
-                                    <img src="./img/icons/restart.svg" alt="Reiniciar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                                    <i class="fas fa-redo fa-icon" style="display:none;"></i> Reiniciar Robô
-                                </button>
-                            </div>
-                        </div>
+                <nav class="nav-list">
+                    <ul>
+                        <li>
+                            <a href="#" class="nav-item active" data-section="roboSection">
+                                <img src="./img/icons/robot.svg" alt="Ícone Robô" class="nav-icon"> Robô do WhatsApp
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item" data-section="respostasSection">
+                                <img src="./img/icons/responses.svg" alt="Ícone Respostas" class="nav-icon"> Respostas Automáticas
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item" data-section="funcionariosSection">
+                                <img src="./img/icons/users.svg" alt="Ícone Funcionários" class="nav-icon"> Funcionários
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item" data-section="setoresSection">
+                                 <img src="./img/icons/sectors.svg" alt="Ícone Setores" class="nav-icon"> Setores e Serviços
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-item" data-section="configuracoesSection">
+                                <img src="./img/icons/settings.svg" alt="Ícone Configurações" class="nav-icon"> Configurações
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="sidebar-footer">
+                    <div id="connectionStatus" class="connection-status">
+                        Conectando...
                     </div>
-                    <div class="column">
-                        <div class="card">
-                            <h3>Informações do Sistema</h3>
-                            <ul class="info-list">
-                                <li><strong>Status:</strong> <span id="systemStatus" class="status-value">--</span></li>
-                                <li><strong>Atendentes Online:</strong> <span id="onlineAttendants" class="status-value">--</span></li>
-                                <li><strong>Conversas Ativas:</strong> <span id="activeConversations" class="status-value">--</span></li>
-                                <li><strong>Última Atualização:</strong> <span id="lastUpdate" class="status-value">--</span></li>
-                            </ul>
-                        </div>
-                    </div>
+                    <button id="viewLogsBtn" class="button-link">
+                        <img src="./img/icons/logs.svg" alt="Ícone Logs" class="nav-icon"> Ver Logs
+                    </button>
+                     <button id="openDevToolsBtnAdmin" class="button-link" style="display: none;"> 
+                        <img src="./img/icons/devtools.svg" alt="Ícone DevTools" class="nav-icon"> Ferramentas DevTools
+                    </button>
+                    <button id="logoutBtn" class="button-link">
+                        <img src="./img/icons/logout.svg" alt="Ícone Logout" class="nav-icon"> Sair
+                    </button>
                 </div>
-            </section>
+            </aside>
 
-            <section id="respostasSection" class="content-section">
-                <header class="section-header">
-                    <h2>Respostas Automáticas</h2>
-                    <div class="header-actions">
-                        <input type="text" id="responseSearchInput" placeholder="Buscar respostas..." class="search-input">
-                        <button id="addResponseBtn" class="button primary">
-                            <img src="./img/icons/add.svg" alt="Adicionar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-plus fa-icon" style="display:none;"></i> Nova Resposta
-                        </button>
-                    </div>
+            <main class="admin-main-content"> 
+                 <header class="admin-main-header">
+                    <h2 id="activeSectionTitle">Status do Robô e Código QR</h2>
+                    <div class="header-actions-main">
+                         </div>
                 </header>
-                <div id="responseList" class="list-container">
-                    </div>
-            </section>
 
-            <section id="funcionariosSection" class="content-section">
-                <header class="section-header">
-                    <h2>Gerenciar Funcionários</h2>
-                     <div class="header-actions">
-                        <input type="text" id="attendantSearchInput" placeholder="Buscar funcionários..." class="search-input">
-                        <button id="addAttendantBtn" class="button primary">
-                            <img src="./img/icons/add-user.svg" alt="Adicionar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-user-plus fa-icon" style="display:none;"></i> Novo Funcionário
-                        </button>
-                    </div>
-                </header>
-                <div id="attendantList" class="list-container">
-                    </div>
-            </section>
+                <div class="content-area"> 
+                    <section id="roboSection" class="content-section active">
+                        <div class="section-body columns">
+                            <div class="column">
+                                <div class="card">
+                                    <h3>Código QR WhatsApp</h3>
+                                    <div id="qrDisplay" class="qr-code-display">
+                                        <p>Aguardando Código QR...</p>
+                                    </div>
+                                    <p id="qrStatusText" class="status-text">Inicializando...</p>
+                                    <div id="botActions" class="bot-actions" style="display: none;">
+                                        <button id="pauseBotBtn" class="button icon-button">
+                                             <img src="./img/icons/pause.svg" alt="Pausar" class="btn-icon-img"> <span>Pausar Robô</span>
+                                        </button>
+                                        <button id="restartBotBtn" class="button icon-button danger">
+                                            <img src="./img/icons/restart.svg" alt="Reiniciar" class="btn-icon-img"> <span>Reiniciar Robô</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="card">
+                                    <h3>Informações do Sistema</h3>
+                                    <ul class="info-list">
+                                        <li><strong>Status:</strong> <span id="systemStatus" class="status-value">--</span></li>
+                                        <li><strong>Atendentes Online:</strong> <span id="onlineAttendants" class="status-value">--</span></li>
+                                        <li><strong>Conversas Ativas:</strong> <span id="activeConversations" class="status-value">--</span></li>
+                                        <li><strong>Última Atualização:</strong> <span id="lastUpdate" class="status-value">--</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
-            <section id="setoresSection" class="content-section">
-                <header class="section-header">
-                    <h2>Gerenciar Setores</h2>
-                     <div class="header-actions">
-                        <input type="text" id="sectorSearchInput" placeholder="Buscar setores..." class="search-input">
-                        <button id="addSectorBtn" class="button primary">
-                            <img src="./img/icons/add-folder.svg" alt="Adicionar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-folder-plus fa-icon" style="display:none;"></i> Novo Setor
-                        </button>
-                    </div>
-                </header>
-                <div id="sectorList" class="list-container">
-                    </div>
-            </section>
+                    <section id="respostasSection" class="content-section">
+                        <div class="section-header-controls"> 
+                            <input type="text" id="responseSearchInput" placeholder="Buscar respostas..." class="search-input">
+                            <button id="addResponseBtn" class="button primary">
+                                <img src="./img/icons/add.svg" alt="Adicionar" class="btn-icon-img"> Nova Resposta
+                            </button>
+                        </div>
+                        <div id="responseList" class="list-container">
+                        </div>
+                    </section>
 
-            <section id="configuracoesSection" class="content-section">
-                <header class="section-header">
-                    <h2>Configurações Gerais</h2>
-                </header>
-                <form id="configForm" class="config-form card">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="config_bot_active">Ativar Robô de Respostas:</label>
-                            <label class="switch">
-                                <input type="checkbox" id="config_bot_active" name="bot_active">
-                                <span class="slider round"></span>
-                            </label>
+                    <section id="funcionariosSection" class="content-section">
+                        <div class="section-header-controls">
+                            <input type="text" id="attendantSearchInput" placeholder="Buscar funcionários..." class="search-input">
+                            <button id="addAttendantBtn" class="button primary">
+                                <img src="./img/icons/add-user.svg" alt="Adicionar" class="btn-icon-img"> Novo Funcionário
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="config_bot_response_delay">Delay de Resposta do Robô (ms):</label>
-                            <input type="number" id="config_bot_response_delay" name="bot_response_delay" value="1000" min="0">
+                        <div id="attendantList" class="list-container">
                         </div>
-                         <div class="form-group full-width">
-                            <label for="config_bot_working_days">Dias de Funcionamento do Robô (0 = Domingo, 6 = Sábado):</label>
-                            <input type="text" id="config_bot_working_days" name="bot_working_days" placeholder="Ex: 1,2,3,4,5">
+                    </section>
+
+                    <section id="setoresSection" class="content-section">
+                         <div class="section-header-controls">
+                            <input type="text" id="sectorSearchInput" placeholder="Buscar setores..." class="search-input">
+                            <button id="addSectorBtn" class="button primary">
+                                <img src="./img/icons/add-folder.svg" alt="Adicionar" class="btn-icon-img"> Novo Setor/Serviço
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="config_bot_working_hours_start">Início Horário Robô:</label>
-                            <input type="time" id="config_bot_working_hours_start" name="bot_working_hours_start">
+                        <div id="sectorList" class="list-container">
                         </div>
-                        <div class="form-group">
-                            <label for="config_bot_working_hours_end">Fim Horário Robô:</label>
-                            <input type="time" id="config_bot_working_hours_end" name="bot_working_hours_end">
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="config_bot_out_of_hours_message">Mensagem Fora de Horário:</label>
-                            <textarea id="config_bot_out_of_hours_message" name="bot_out_of_hours_message" rows="3"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="config_enable_sound_notifications">Ativar Notificações Sonoras (Chat):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="config_enable_sound_notifications" name="enable_sound_notifications">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label for="config_notification_sound">Som de Notificação (Chat):</label>
-                            <select id="config_notification_sound" name="notification_sound">
-                                <option value="default">Padrão</option>
-                                <option value="bell">Sino</option>
-                                <option value="chime">Timbre</option>
-                                </select>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" id="saveConfigBtn" class="button primary">
-                            <img src="./img/icons/save.svg" alt="Salvar" class="btn-icon-img" onerror="this.parentElement.querySelector('.fa-icon').style.display='inline-block'; this.style.display='none';">
-                            <i class="fas fa-save fa-icon" style="display:none;"></i> Salvar Configurações
-                        </button>
-                    </div>
-                </form>
-            </section>
-        </main>
-    </div>
+                    </section>
+
+                    <section id="configuracoesSection" class="content-section">
+                        <form id="configForm" class="config-form card">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="config_bot_active">Ativar Robô de Respostas:</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="config_bot_active" name="bot_active">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="config_bot_response_delay">Delay de Resposta do Robô (ms):</label>
+                                    <input type="number" id="config_bot_response_delay" name="bot_response_delay" value="1000" min="0">
+                                </div>
+                                 <div class="form-group full-width">
+                                    <label for="config_bot_working_days">Dias de Funcionamento do Robô (0=Dom, 6=Sáb):</label>
+                                    <input type="text" id="config_bot_working_days" name="bot_working_days" placeholder="Ex: 1,2,3,4,5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="config_bot_working_hours_start">Início Horário Robô:</label>
+                                    <input type="time" id="config_bot_working_hours_start" name="bot_working_hours_start">
+                                </div>
+                                <div class="form-group">
+                                    <label for="config_bot_working_hours_end">Fim Horário Robô:</label>
+                                    <input type="time" id="config_bot_working_hours_end" name="bot_working_hours_end">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="config_bot_out_of_hours_message">Mensagem Fora de Horário:</label>
+                                    <textarea id="config_bot_out_of_hours_message" name="bot_out_of_hours_message" rows="3"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="config_enable_sound_notifications">Ativar Notificações Sonoras (Chat):</label>
+                                    <label class="switch">
+                                        <input type="checkbox" id="config_enable_sound_notifications" name="enable_sound_notifications">
+                                        <span class="slider round"></span>
+                                    </label>
+                                </div>
+                                <div class="form-group">
+                                    <label for="config_notification_sound">Som de Notificação (Chat):</label>
+                                    <select id="config_notification_sound" name="notification_sound">
+                                        <option value="default">Padrão</option>
+                                        <option value="bell">Sino</option>
+                                        <option value="chime">Timbre</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" id="saveConfigBtn" class="button primary">
+                                    <img src="./img/icons/save.svg" alt="Salvar" class="btn-icon-img"> Salvar Configurações
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+                </div> 
+            </main>
+        </div> 
+    </div> 
+
 
     <div id="responseModal" class="modal">
         <div class="modal-content">
@@ -359,5 +340,5 @@
     <div id="alertContainer" class="alert-container-fixed"></div>
 
     <script src="./js/adminScript.js"></script>
-    </body>
+</body>
 </html>
