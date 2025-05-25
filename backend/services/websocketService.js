@@ -460,20 +460,25 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbService
 
 // Função para ser chamada por um serviço externo (ex: WsWhatsApp.js) quando uma nova mensagem do CLIENTE é recebida e salva.
 function handleNewClientMessage(conversation, savedMessageDetails) {
-  if (conversation && conversation.USER_USERNAME && savedMessageDetails && savedMessageDetails.SENDER_TYPE === 'CLIENT') {
+  if (conversation && conversation.ID && conversation.USER_USERNAME && savedMessageDetails && savedMessageDetails.SENDER_TYPE === 'CLIENT') {
+    const messageData = {
+      type: 'new_message',
+      conversationId: conversation.ID,
+      message: savedMessageDetails 
+    };
+    // Log Temporário Adicionado
+    if(sendLogGlobal) sendLogGlobal(`[WS] Enviando new_message para atendente: ${JSON.stringify(messageData)}`, "debug");
     if(sendLogGlobal) sendLogGlobal(`[WS] Distribuindo nova mensagem do cliente para atendente ${conversation.USER_USERNAME} na conversa ${conversation.ID}. Detalhes: ${JSON.stringify(savedMessageDetails).substring(0,100)}`, "debug");
+    
     helperSendMessageToAttendant(
       conversation.USER_USERNAME, // agentId (username)
-      {
-        type: 'new_message',
-        conversationId: conversation.ID,
-        message: savedMessageDetails 
-      }
+      messageData
     );
   } else {
-    if(sendLogGlobal && conversation) {
+    if(sendLogGlobal) {
         let reason = "Motivo desconhecido";
         if (!conversation) reason = "conversa é nula/indefinida.";
+        else if (!conversation.ID) reason = `conversation.ID é nulo/indefinido.`;
         else if (!conversation.USER_USERNAME) reason = `conversa ${conversation.ID} não tem USER_USERNAME (atendente designado).`;
         else if (!savedMessageDetails) reason = "savedMessageDetails é nulo/indefinido.";
         else if (savedMessageDetails.SENDER_TYPE !== 'CLIENT') reason = `mensagem não é do tipo CLIENT (tipo: ${savedMessageDetails.SENDER_TYPE}).`;

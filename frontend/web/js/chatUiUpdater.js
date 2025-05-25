@@ -155,6 +155,8 @@ window.ChatUiUpdater = {
     const stringConversationId = String(conversationId);
 
     this.activeConversationId = stringConversationId; 
+    // Log Adicionado: Modificação de activeConversationId
+    console.log("[ChatUiUpdater] activeConversationId definido para:", this.activeConversationId, "em selectConversation");
     this.highlightActiveConversation();
 
     const conversation = this.getActiveConversationDetails(); 
@@ -355,6 +357,8 @@ window.ChatUiUpdater = {
   },
 
   addNewMessage(conversationId, message) {
+    // Log Adicionado: No início da função addNewMessage
+    console.log(`[DEBUG] addNewMessage START: conversationId: ${conversationId}, message:`, JSON.stringify(message));
     console.log(`[ChatUiUpdater] addNewMessage: Adicionando nova mensagem à conversa ${conversationId}. Mensagem:`, JSON.stringify(message).substring(0,200)+"...");
     const stringConversationId = String(conversationId);
     
@@ -396,30 +400,45 @@ window.ChatUiUpdater = {
 
     this.updateConversationInList(stringConversationId, updatesForList);
 
-    if (String(this.activeConversationId) !== stringConversationId) {
-      console.warn(`[ChatUiUpdater] addNewMessage: Nova mensagem para conversa ${conversationId} que NÃO está ativa (ativa: ${this.activeConversationId}). Lista atualizada, mas chat não.`);
+    // Log Adicionado: Antes da condição if (String(this.activeConversationId) === stringConversationId)
+    console.log(`[DEBUG] addNewMessage: Checking active conversation. this.activeConversationId: ${this.activeConversationId}, stringConversationId: ${stringConversationId}`);
+
+    if (String(this.activeConversationId) === stringConversationId) {
+      // Log Adicionado: Dentro da condição
+      console.log("[DEBUG] addNewMessage: Condição para exibir mensagem no chat ativo é VERDADEIRA.");
+
+      const { chatMessages } = window.ChatDomElements || {};
+      if (!chatMessages) {
+        // Log Adicionado: Se chatMessages não for encontrado
+        console.error("[DEBUG] addNewMessage: ERRO CRÍTICO - chatMessages não encontrado dentro do bloco de chat ativo.");
+        console.error("[ChatUiUpdater] addNewMessage: Container de mensagens (chatMessages) não encontrado.");
+        return;
+      }
+
+      const placeholder = chatMessages.querySelector('.p-4.text-center.text-gray-500');
+      if (placeholder) placeholder.remove();
+
+      const messageElement = this.createMessageElement(message); // Chamada já estava correta
+      
+      // Log Adicionado: Antes de chamar chatMessages.appendChild(messageElement)
+      console.log("[DEBUG] addNewMessage: Anexando messageElement ao chatMessages.");
+      chatMessages.appendChild(messageElement); // Anexar ao DOM já estava correto
+      // Log Adicionado: Depois de anexar
+      console.log("[DEBUG] addNewMessage: messageElement anexado.");
+
+      setTimeout(() => {
+          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll após adicionar já estava correto e presente
+          console.log("[DEBUG] addNewMessage: Scroll do chat realizado.");
+      }, 100); 
+
       if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
         if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
       }
-      return;
-    }
-
-    const { chatMessages } = window.ChatDomElements || {};
-    if (!chatMessages) {
-      console.error("[ChatUiUpdater] addNewMessage: Container de mensagens (chatMessages) não encontrado.");
-      return;
-    }
-    const placeholder = chatMessages.querySelector('.p-4.text-center.text-gray-500');
-    if (placeholder) placeholder.remove();
-
-    const messageElement = this.createMessageElement(message);
-    chatMessages.appendChild(messageElement);
-    setTimeout(() => {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 100); 
-
-    if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
-      if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
+    } else {
+      console.warn(`[ChatUiUpdater] addNewMessage: Nova mensagem para conversa ${conversationId} que NÃO está ativa (ativa: ${this.activeConversationId}). Lista atualizada, mas chat não exibirá nova mensagem diretamente.`);
+      if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
+        if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
+      }
     }
   },
   
@@ -543,6 +562,8 @@ window.ChatUiUpdater = {
        
         if (selectAfterUpdate && String(this.activeConversationId) !== stringConversationId) {
             console.log(`[ChatUiUpdater] updateConversationInList: Conversa ${conversationId} atualizada e selectAfterUpdate é true. SELECIONANDO.`);
+            // Log Adicionado: Antes de chamar selectConversation
+            console.log("[ChatUiUpdater] updateConversationInList está prestes a chamar selectConversation. Novo ID será:", stringConversationId);
             this.selectConversation(stringConversationId); 
         } else if (selectAfterUpdate && String(this.activeConversationId) === stringConversationId) {
             console.log(`[ChatUiUpdater] updateConversationInList: Conversa ${conversationId} é a ativa e selectAfterUpdate é true. RE-AVALIANDO UI para chat ativo.`);
@@ -694,7 +715,10 @@ window.ChatUiUpdater = {
 
   clearChatArea(showWelcome = true) {
     console.log("[ChatUiUpdater] clearChatArea: Limpando área de chat. Mostrar welcome:", showWelcome);
+    const oldActiveConversationId = this.activeConversationId;
     this.activeConversationId = null;
+    // Log Adicionado: Modificação de activeConversationId
+    console.log("[ChatUiUpdater] activeConversationId alterado de:", oldActiveConversationId, "para:", this.activeConversationId, "em clearChatArea");
     const { chatMessages, noChatSelectedIconPlaceholder, chatInputControls, endChatButton } = window.ChatDomElements || {};
 
     if (chatMessages) {

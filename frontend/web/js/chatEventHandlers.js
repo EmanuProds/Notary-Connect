@@ -58,11 +58,11 @@ window.ChatEventHandlers = {
             }
           },
 
-          onNewMessage: (data) => { // 'data' aqui é o payload que ChatWebsocketService passou
+          onNewMessage: (data) => { // 'data' agora contém 'type' e 'payload'
             console.log("[ChatEventHandlers] onNewMessage: New message received. Data object (payload from WS):", JSON.stringify(data));
-            // Ajustado para esperar conversationId e message dentro do objeto 'data' (que é o payload)
-            if (data && data.message && typeof data.conversationId !== 'undefined') {
-                const { conversationId, message } = data;
+            // Condição e desestruturação ajustadas para acessar data.payload
+            if (data.payload && data.payload.message && typeof data.payload.conversationId !== 'undefined') {
+                const { conversationId, message } = data.payload;
                 console.log(`[ChatEventHandlers] onNewMessage: Processing message for ConvID ${conversationId}.`);
                 if (window.ChatUiUpdater && typeof window.ChatUiUpdater.addNewMessage === 'function') {
                     window.ChatUiUpdater.addNewMessage(String(conversationId), message);
@@ -70,7 +70,8 @@ window.ChatEventHandlers = {
                      console.error("[ChatEventHandlers] onNewMessage: ChatUiUpdater.addNewMessage is not a function.");
                 }
             } else {
-                console.warn("[ChatEventHandlers] onNewMessage: Invalid data structure or missing conversationId/message fields in received payload:", data);
+                // O log de aviso já mostra 'data', que incluirá 'payload' se existir
+                console.warn("[ChatEventHandlers] onNewMessage: Invalid data structure (expected data.payload with message and conversationId), or missing fields. Received data:", data);
             }
           },
 
@@ -103,6 +104,8 @@ window.ChatEventHandlers = {
                 console.log("[ChatEventHandlers] onTakeChatResponse: Data being passed to ChatUiUpdater.updateConversationInList:", JSON.stringify(updatedConversationData));
 
                 if (window.ChatUiUpdater && typeof window.ChatUiUpdater.updateConversationInList === 'function') {
+                    // Log Adicionado: Chamada para updateConversationInList com selectAfterUpdate=true
+                    console.log("[ChatEventHandlers] onTakeChatResponse chamando updateConversationInList com selectAfterUpdate=true. Conversation ID:", String(conversationFromServer.ID));
                     window.ChatUiUpdater.updateConversationInList(String(conversationFromServer.ID), updatedConversationData, true);
                     if (window.ChatUiUpdater && typeof window.ChatUiUpdater.showNotification === 'function') {
                       window.ChatUiUpdater.showNotification("Chat assumido com sucesso!", "success");
@@ -142,12 +145,15 @@ window.ChatEventHandlers = {
             // Ajustado para esperar conversationId, agentId, agentName diretamente em 'data' (que é o payload)
             if (window.ChatUiUpdater && typeof window.ChatUiUpdater.updateConversationInList === 'function' && data && typeof data.conversationId !== 'undefined') {
               const { conversationId, agentId, agentName } = data; // agentId is username, agentName is full name
+              const selectAfterUpdateFlag = String(window.ChatUiUpdater.activeConversationId) === String(conversationId);
+              // Log Adicionado: Chamada para updateConversationInList com selectAfterUpdate
+              console.log("[ChatEventHandlers] onChatTakenUpdate chamando updateConversationInList. selectAfterUpdate será:", selectAfterUpdateFlag, ". Conversation ID:", String(conversationId));
               window.ChatUiUpdater.updateConversationInList(String(conversationId), {
                 USER_ID: agentId, // Store username as USER_ID for consistency in some parts of UI
                 USER_USERNAME: agentId, 
                 USER_NAME_ASSIGNED: agentName, // Store the full name
                 STATUS: 'active'
-              }, String(window.ChatUiUpdater.activeConversationId) === String(conversationId)); // selectAfterUpdate if it's the current chat
+              }, selectAfterUpdateFlag); // selectAfterUpdate if it's the current chat
 
               if (String(window.ChatUiUpdater.activeConversationId) === String(conversationId)) {
                   // Use agentName for the system message, fallback to agentId
@@ -177,16 +183,49 @@ window.ChatEventHandlers = {
             }
           },
 
-          onPendingConversation: (data) => { // 'data' é o payload (o objeto da conversa)
-            console.log("[ChatEventHandlers] onPendingConversation: New pending conversation received:", JSON.stringify(data));
-            // Ajustado para esperar ID diretamente em 'data' (que é o payload)
-            if (window.ChatUiUpdater && typeof window.ChatUiUpdater.addOrUpdateConversationInList === 'function' && data && typeof data.ID !== 'undefined') {
-              window.ChatUiUpdater.addOrUpdateConversationInList(data, 'active');
+          onPendingConversation: (data) => { // 'data' agora contém 'type' e 'payload'
+            // Log ajustado para mostrar o payload da conversa
+            console.log("[ChatEventHandlers] onPendingConversation: New pending conversation event received. Conversation data:", JSON.stringify(data.payload));
+            // Condição ajustada para verificar data.payload e data.payload.ID
+            if (window.ChatUiUpdater && typeof window.ChatUiUpdater.addOrUpdateConversationInList === 'function' && data.payload && typeof data.payload.ID !== 'undefined') {
+              // Chamada ajustada para passar data.payload
+              window.ChatUiUpdater.addOrUpdateConversationInList(data.payload, 'active');
               if (window.NotificationService && typeof window.NotificationService.playNewChatSound === 'function') {
                 window.NotificationService.playNewChatSound();
               }
+
+              // Nova lógica para adicionar a última mensagem se o chat pendente estiver ativo
+              if (window.ChatUiUpdater && window.ChatUiUpdater.activeConversationId && 
+                  String(window.ChatUiUpdater.activeConversationId) === String(data.payload.ID)) {
+                
+                console.log(`[ChatEventHandlers] onPendingConversation: Chat pendente ${data.payload.ID} está ativo. Tentando adicionar última mensagem.`);
+
+                // Construir o objeto de mensagem
+                // Assumindo que data.payload (a conversa) tem LAST_MESSAGE, LAST_MESSAGE_TIME e CLIENT_NAME
+                // LAST_MESSAGE_ID e LAST_MESSAGE_TYPE não foram explicitamente mencionados como disponíveis em data.payload
+                const constructedMessage = {
+                    ID: data.payload.LAST_MESSAGE_ID || `pending_msg_${data.payload.ID}_${Date.now()}`,
+                    CONTENT: data.payload.LAST_MESSAGE || "[Mensagem não disponível]",
+                    TIMESTAMP: data.payload.LAST_MESSAGE_TIME || new Date().toISOString(),
+                    SENDER_TYPE: 'CLIENT',
+                    MESSAGE_TYPE: data.payload.LAST_MESSAGE_TYPE || 'chat', 
+                    CLIENT_NAME: data.payload.CLIENT_NAME, 
+                    // Outros campos que createMessageElement possa esperar ou utilizar
+                    // (ex: AGENT_NAME, MEDIA_URL - mas estes não fariam sentido para uma última mensagem de cliente que tornou a conversa pendente)
+                };
+
+                console.log("[ChatEventHandlers] onPendingConversation: Constructed message:", JSON.stringify(constructedMessage));
+                
+                if (typeof window.ChatUiUpdater.addNewMessage === 'function') {
+                    window.ChatUiUpdater.addNewMessage(String(data.payload.ID), constructedMessage);
+                } else {
+                    console.warn("[ChatEventHandlers] onPendingConversation: ChatUiUpdater.addNewMessage não é uma função.");
+                }
+              }
+
             } else {
-                console.warn("[ChatEventHandlers] onPendingConversation: Invalid data, ID missing, or ChatUiUpdater.addOrUpdateConversationInList is not a function. Received payload:", data);
+                // Log de aviso ajustado para mostrar todo o objeto 'data' para depuração
+                console.warn("[ChatEventHandlers] onPendingConversation: Invalid data structure (expected data.payload with ID), or ChatUiUpdater.addOrUpdateConversationInList is not a function. Received data:", data);
             }
           },
 
