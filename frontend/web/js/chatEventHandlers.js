@@ -141,16 +141,21 @@ window.ChatEventHandlers = {
             console.log("[ChatEventHandlers] onChatTakenUpdate: Chat taken by another attendant:", data);
             // Ajustado para esperar conversationId, agentId, agentName diretamente em 'data' (que é o payload)
             if (window.ChatUiUpdater && typeof window.ChatUiUpdater.updateConversationInList === 'function' && data && typeof data.conversationId !== 'undefined') {
-              const { conversationId, agentId, agentName } = data;
+              const { conversationId, agentId, agentName } = data; // agentId is username, agentName is full name
               window.ChatUiUpdater.updateConversationInList(String(conversationId), {
-                USER_ID: agentId,
+                USER_ID: agentId, // Store username as USER_ID for consistency in some parts of UI
                 USER_USERNAME: agentId, 
+                USER_NAME_ASSIGNED: agentName, // Store the full name
                 STATUS: 'active'
-              }, String(window.ChatUiUpdater.activeConversationId) === String(conversationId));
+              }, String(window.ChatUiUpdater.activeConversationId) === String(conversationId)); // selectAfterUpdate if it's the current chat
 
               if (String(window.ChatUiUpdater.activeConversationId) === String(conversationId)) {
-                  if(typeof window.ChatUiUpdater.addSystemMessage === 'function') window.ChatUiUpdater.addSystemMessage(`Atendimento assumido por ${agentName || agentId || 'outro atendente'}.`, String(conversationId));
-                  if (window.ChatDomElements && window.ChatWebsocketService && window.ChatWebsocketService.agentId !== agentId) {
+                  // Use agentName for the system message, fallback to agentId
+                  const displayName = agentName || agentId || 'outro atendente';
+                  if(typeof window.ChatUiUpdater.addSystemMessage === 'function') window.ChatUiUpdater.addSystemMessage(`Atendimento assumido por ${displayName}.`, String(conversationId));
+                  
+                  // Disable controls if the current user is NOT the one who took the chat
+                  if (window.ChatDomElements && window.ChatWebsocketService && String(window.ChatWebsocketService.agentId) !== String(agentId)) {
                       if(window.ChatDomElements.chatInputControls) window.ChatDomElements.chatInputControls.style.display = "none";
                       if(window.ChatDomElements.endChatButton) window.ChatDomElements.endChatButton.style.display = "none";
                       console.log(`[ChatEventHandlers] onChatTakenUpdate: Controls disabled for ConvID ${conversationId} as it was taken by another agent.`);

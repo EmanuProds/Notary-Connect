@@ -97,7 +97,27 @@ window.ChatUiUpdater = {
     const lastMessageText = conversation.LAST_MESSAGE || conversation.content || "Sem mensagens";
     const truncatedPreview = lastMessageText.length > 35 ? lastMessageText.substring(0, 32) + "..." : lastMessageText;
     
-    const showTakeButton = conversation.STATUS === "pending" && !conversation.USER_ID;
+    const loggedInAgentId = window.ChatWebsocketService && window.ChatWebsocketService.agentId ? String(window.ChatWebsocketService.agentId) : null;
+    let statusText = conversation.STATUS || '';
+    let statusClass = conversation.STATUS === 'active' ? 'bg-green-500 text-white' : (conversation.STATUS === 'pending' ? 'bg-yellow-400 text-yellow-800' : 'bg-gray-400 text-white');
+    let statusStyle = "text-transform: uppercase;"; // default style
+
+    if (conversation.STATUS === 'active' && conversation.USER_USERNAME && loggedInAgentId) {
+        if (String(conversation.USER_USERNAME) !== loggedInAgentId) {
+            statusText = `Com ${conversation.USER_NAME_ASSIGNED || conversation.USER_USERNAME}`;
+            statusStyle = ""; // Not uppercase for longer names
+        } else {
+            statusText = "Ativo com você";
+            statusStyle = ""; // Not uppercase
+        }
+    } else if (conversation.STATUS === 'pending') {
+        statusText = "Pendente";
+    } else if (conversation.STATUS === 'closed') {
+        statusText = "Encerrado";
+    }
+
+
+    const showTakeButton = conversation.STATUS === "pending" && !conversation.USER_ID && !conversation.USER_USERNAME;
 
     item.innerHTML = `
       <div class="flex items-center">
@@ -105,7 +125,7 @@ window.ChatUiUpdater = {
         <div class="flex-grow overflow-hidden">
           <div class="flex justify-between items-start mb-1">
             <span class="chat-item-name font-semibold text-sm text-slate-800 truncate mr-2">${clientName}</span>
-            <span class="chat-status-indicator text-xs font-semibold uppercase px-2 py-0.5 rounded-full ${conversation.STATUS === 'active' ? 'bg-green-500 text-white' : (conversation.STATUS === 'pending' ? 'bg-yellow-400 text-yellow-800' : 'bg-gray-400 text-white')}">${conversation.STATUS || ''}</span>
+            <span class="chat-status-indicator text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}" style="${statusStyle}">${statusText}</span>
           </div>
           <div class="chat-item-id text-xs text-slate-500 truncate">${conversation.CLIENT_WHATSAPP_ID || conversation.CLIENT_JID || ''}</div>
           <div class="chat-item-preview text-xs text-slate-700 italic truncate">${truncatedPreview}</div>

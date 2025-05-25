@@ -422,42 +422,46 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
                                     SENDER_TYPE: "CLIENT" 
                                 };
 
-                                if (conversationDetailsForUI.USER_ID && conversationDetailsForUI.USER_USERNAME) {
-                                    globalSendLog(`[WhatsApp_WWJS] Encaminhando new_message para atendente ${conversationDetailsForUI.USER_USERNAME}. Robô respondeu: ${botReplied}`, 'debug');
-                                    globalWebsocketService.sendMessageToAttendant(conversationDetailsForUI.USER_USERNAME, {
-                                        type: "new_message",
-                                        payload: {
-                                            conversationId: conversation.ID,
-                                            message: messageForUi
-                                        }
-                                    });
-                                } else { 
-                                    globalSendLog(`[WhatsApp_WWJS] Transmitindo pending_conversation para todos atendentes. Robô respondeu: ${botReplied}`, 'debug');
+                                // Chamar a nova função centralizada handleNewClientMessage do websocketService.
+                                // Ela verificará internamente se USER_USERNAME existe e se SENDER_TYPE é 'CLIENT'.
+                                // Passamos conversationDetailsForUI (para USER_USERNAME, ID) e savedMsgInDb (para SENDER_TYPE, e o resto da msg).
+                                globalSendLog(`[WhatsApp_WWJS] Tentando notificar via handleNewClientMessage para ConvID ${conversationDetailsForUI.ID}, Atendente: ${conversationDetailsForUI.USER_USERNAME}`, 'debug');
+                                globalWebsocketService.handleNewClientMessage(conversationDetailsForUI, savedMsgInDb);
+
+                                // Se a conversa não tiver um atendente designado (USER_USERNAME não está presente),
+                                // então transmitimos como uma conversa pendente.
+                                // A função handleNewClientMessage não envia nada se USER_USERNAME não estiver definido.
+                                if (!conversationDetailsForUI.USER_USERNAME) {
+                                    globalSendLog(`[WhatsApp_WWJS] Transmitindo pending_conversation (pois não há USER_USERNAME) para todos atendentes. Robô respondeu: ${botReplied}. ConvID: ${conversationDetailsForUI.ID}`, 'debug');
+                                    
+                                    // Reconstruindo o payload para pending_conversation com base nos dados disponíveis
+                                    // (conversationDetailsForUI já deve ter a maioria dos dados atualizados)
+                                    const pendingPayload = {
+                                        ID: conversationDetailsForUI.ID,
+                                        CLIENT_ID: conversationDetailsForUI.CLIENT_ID,
+                                        CLIENT_JID: conversationDetailsForUI.CLIENT_JID || senderJid,
+                                        CLIENT_NAME: conversationDetailsForUI.CLIENT_NAME || senderName,
+                                        CLIENT_WHATSAPP_ID: conversationDetailsForUI.CLIENT_JID || senderJid,
+                                        CLIENT_PROFILE_PIC: conversationDetailsForUI.CLIENT_PROFILE_PIC || senderProfilePic,
+                                        USER_ID: null,
+                                        USER_USERNAME: null,
+                                        STATUS: conversationDetailsForUI.STATUS || 'pending', // Deve ser 'pending' aqui
+                                        SECTOR: conversationDetailsForUI.SECTOR_NAME || conversationDetailsForUI.SECTOR || null, // SECTOR_NAME ou SECTOR
+                                        CREATED_AT: conversationDetailsForUI.CREATED_AT,
+                                        UPDATED_AT: conversationDetailsForUI.UPDATED_AT,
+                                        LAST_MESSAGE_TIMESTAMP: savedMsgInDb.timestamp || messageTimestamp,
+                                        UNREAD_MESSAGES: conversationDetailsForUI.UNREAD_MESSAGES || 1, // Pode ser que getConversationById já calcule isso
+                                        LAST_MESSAGE: savedMsgInDb.content || displayMessageContent,
+                                        LAST_MESSAGE_TYPE: savedMsgInDb.messageType || messageType,
+                                        LAST_MESSAGE_TIME_FORMATTED: savedMsgInDb.timestamp // Usar o timestamp do BD que é mais preciso
+                                    };
                                     globalWebsocketService.broadcastToAttendants({
                                         type: "pending_conversation", 
-                                        payload: { 
-                                            ID: conversation.ID,
-                                            CLIENT_ID: dbClient.ID,
-                                            CLIENT_JID: senderJid,
-                                            CLIENT_NAME: senderName,
-                                            CLIENT_WHATSAPP_ID: senderJid, 
-                                            CLIENT_PROFILE_PIC: senderProfilePic,
-                                            USER_ID: null, 
-                                            USER_USERNAME: null,
-                                            STATUS: 'pending',
-                                            SECTOR: null, 
-                                            CREATED_AT: conversation.CREATED_AT,
-                                            UPDATED_AT: conversation.UPDATED_AT, 
-                                            LAST_MESSAGE_TIMESTAMP: messageTimestamp,
-                                            UNREAD_MESSAGES: 1, 
-                                            LAST_MESSAGE: displayMessageContent,
-                                            LAST_MESSAGE_TYPE: messageType,
-                                            LAST_MESSAGE_TIME_FORMATTED: messageTimestamp
-                                        }
+                                        payload: pendingPayload
                                     });
                                 }
                             } else {
-                                globalSendLog(`[WhatsApp_WWJS] Não foi possível obter detalhes da conversa ${conversation.ID} para UI.`, 'warn');
+                                globalSendLog(`[WhatsApp_WWJS] Não foi possível obter detalhes da conversa ${conversation.ID} para UI (conversationDetailsForUI é null).`, 'warn');
                             }
                         }
                     } else {
