@@ -40,18 +40,38 @@
     </style>
 </head>
 <body class="bg-gray-100 p-1 sm:p-2 md:p-4">
-    <div class="container mx-auto flex flex-col md:flex-row h-full w-full max-w-screen-2xl shadow-lg rounded-lg overflow-hidden">
-        <div class="sidebar w-full md:w-96 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
-            <div class="sidebar-header flex items-center justify-center gap-2 p-4 bg-primary text-white h-20">
-                <img src="./img/icons/users.svg" alt="Ícone Clientes" class="w-6 h-6" style="filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(200%) contrast(100%);"/>
-                <span class="font-semibold text-lg">Clientes - <span id="loggedInAgentName">Atendente</span></span>
+    <div class="container mx-auto flex h-full w-full max-w-screen-2xl shadow-lg rounded-lg overflow-hidden">
+        <!-- Icon Bar -->
+        <div class="icon-bar w-16 bg-primary text-white flex flex-col items-center py-4 space-y-4 flex-shrink-0">
+            <!-- User Profile Icon (Top) -->
+            <div class="icon-bar-item user-profile-icon-container" title="Perfil do Atendente">
+                <img src="./img/icons/user.svg" alt="Perfil do Atendente" class="icon-bar-icon">
             </div>
 
-            <div class="sidebar-tabs">
-                <div class="sidebar-tab active" data-tab="active">Ativos/Pendentes</div>
-                <div class="sidebar-tab" data-tab="closed">Encerrados</div>
+            <!-- Spacer to push chat icons down a bit if needed, or manage with flex properties -->
+            <div class="flex-grow"></div>
+
+            <!-- Pending Chats Icon -->
+            <div class="icon-bar-item" data-tab="active" title="Ativos/Pendentes">
+                <img src="./img/icons/chats-teardrop.svg" alt="Ativos/Pendentes" class="icon-bar-icon">
             </div>
 
+            <!-- Closed Chats Icon -->
+            <div class="icon-bar-item" data-tab="closed" title="Encerrados">
+                <img src="./img/icons/archive-icon.svg" alt="Encerrados" class="icon-bar-icon">
+            </div>
+            
+            <!-- Spacer to push agent name to bottom -->
+            <div class="flex-grow"></div>
+
+            <!-- Name of logged in agent -->
+            <div class="icon-bar-agent-name p-2 text-center text-xs">
+                <span id="loggedInAgentName" class="font-semibold">Atendente</span>
+            </div>
+        </div>
+
+        <!-- Chat List Panel -->
+        <div class="chat-list-panel w-full md:w-80 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
             <div class="sidebar-search p-3 border-b border-gray-200">
                 <input type="text" id="chatSearchInput" placeholder="Buscar por nome, setor, ID..." class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-sm">
             </div>
@@ -59,6 +79,8 @@
                 <div class="p-4 text-center text-gray-500">Carregando chats...</div>
             </div>
         </div>
+
+        <!-- Main Chat Area -->
         <div class="chat-area flex-grow flex flex-col bg-gray-50">
             <div class="chat-header flex items-center justify-between p-4 bg-primary text-white h-20">
                 <div id="currentChatHeader" class="chat-header-title flex items-center gap-2">

@@ -1,575 +1,636 @@
 /* web/public/css/chatStyles.css */
+
+/* Material Design 3 Light Theme Color Palette */
 :root {
-    /* Color Palette */
-    --primary-color: #007bff; /* Main brand color */
-    --primary-darker: #0056b3; /* Darker shade for hover/active states */
-    --secondary-color: #6c757d; /* Secondary text or elements */
-    --success-color: #28a745; /* Success indicators */
-    --success-darker: #1e7e34;
-    --danger-color: #dc3545; /* Error or critical actions */
-    --danger-darker: #c82333;
-    --warning-color: #ffc107; /* Warnings or pending states */
-    --warning-darker: #d39e00; /* Used for PENDENTE_ANALISADO status */
-    --info-color: #17a2b8; /* Informational messages */
-    --light-gray: #f8f9fa; /* Light backgrounds */
-    --medium-gray: #e9ecef; /* Borders, dividers */
-    --dark-gray: #343a40; /* Dark text or backgrounds */
-    --text-light: #ffffff; /* Text on dark backgrounds */
-    --text-dark: #212529; /* Text on light backgrounds */
-    
+    --md-sys-color-primary: #6750A4;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #EADDFF;
+    --md-sys-color-on-primary-container: #21005D;
+    --md-sys-color-secondary: #625B71;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-secondary-container: #E8DEF8;
+    --md-sys-color-on-secondary-container: #1D192B;
+    --md-sys-color-tertiary: #7D5260;
+    --md-sys-color-on-tertiary: #FFFFFF;
+    --md-sys-color-tertiary-container: #FFD8E4;
+    --md-sys-color-on-tertiary-container: #31111D;
+    --md-sys-color-error: #B3261E;
+    --md-sys-color-on-error: #FFFFFF;
+    --md-sys-color-error-container: #F9DEDC;
+    --md-sys-color-on-error-container: #410E0B;
+    --md-sys-color-background: #FFFBFE;
+    --md-sys-color-on-background: #1C1B1F;
+    --md-sys-color-surface: #FFFBFE;
+    --md-sys-color-on-surface: #1C1B1F;
+    --md-sys-color-surface-variant: #E7E0EC;
+    --md-sys-color-on-surface-variant: #49454F;
+    --md-sys-color-outline: #79747E;
+    --md-sys-color-outline-variant: #CAC4D0;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-inverse-surface: #313033;
+    --md-sys-color-inverse-on-surface: #F4EFF4;
+    --md-sys-color-inverse-primary: #D0BCFF;
+    --md-sys-color-surface-dim: #DED8E1; /* M3 Surface Tints */
+    --md-sys-color-surface-bright: #FFFBFE;
+    --md-sys-color-surface-container-lowest: #FFFFFF;
+    --md-sys-color-surface-container-low: #F7F2FA;
+    --md-sys-color-surface-container: #F3EDF7;
+    --md-sys-color-surface-container-high: #ECE6F0;
+    --md-sys-color-surface-container-highest: #E6E0E9;
+
+    /* Layout specific variables */
+    --icon-bar-bg: var(--md-sys-color-surface-container-low);
+    --chat-list-panel-bg: var(--md-sys-color-surface);
+    --chat-area-bg: var(--md-sys-color-background);
+    --header-bg: var(--md-sys-color-surface-container-high); /* General header background */
+    --header-text-color: var(--md-sys-color-on-surface-variant);
+    --input-bg: var(--md-sys-color-surface-container-highest);
+    --input-border-color: var(--md-sys-color-outline);
+    --input-focus-border-color: var(--md-sys-color-primary);
+    --button-primary-bg: var(--md-sys-color-primary);
+    --button-primary-text: var(--md-sys-color-on-primary);
+    --button-danger-bg: var(--md-sys-color-error);
+    --button-danger-text: var(--md-sys-color-on-error);
+
     /* Typography */
     --font-family-sans: 'Inter', sans-serif;
+    --md-sys-typescale-label-large-font-family-name: 'Inter';
+    --md-sys-typescale-label-large-font-weight: 500; /* Medium */
+    --md-sys-typescale-label-large-size: 0.875rem; /* 14px */
+    --md-sys-typescale-body-medium-font-family-name: 'Inter';
+    --md-sys-typescale-body-medium-font-weight: 400; /* Regular */
+    --md-sys-typescale-body-medium-size: 0.875rem; /* 14px */
+    --md-sys-typescale-body-large-font-family-name: 'Inter';
+    --md-sys-typescale-body-large-font-weight: 400; /* Regular */
+    --md-sys-typescale-body-large-size: 1rem; /* 16px */
+    --md-sys-typescale-title-medium-font-family-name: 'Inter';
+    --md-sys-typescale-title-medium-font-weight: 500; /* Medium */
+    --md-sys-typescale-title-medium-size: 1rem; /* 16px */
 
     /* Sizing and Spacing */
-    --header-height: 64px; /* Consistent height for headers */
-    --header-padding-y: 1rem; /* Vertical padding for headers (Tailwind p-4) */
-    --header-font-size: 1.125rem; /* Font size for headers (Tailwind text-lg) */
+    --header-height: 64px;
+    --header-padding-y: 1rem;
+    --header-font-size: var(--md-sys-typescale-title-medium-size);
 
-    /* Specific Status Colors */
-    --pending-analyzed-bg: #fde68a; /* Background for 'pending-analyzed' (Tailwind amber-200) */
-    --pending-analyzed-text: #92400e; /* Text color for 'pending-analyzed' (Tailwind amber-800) */
-    --pending-analyzed-border: #f59e0b; /* Border color for 'pending-analyzed' (Tailwind amber-500) */
+    /* Specific Status Colors (map to M3 roles) */
+    --pending-analyzed-bg: var(--md-sys-color-tertiary-container);
+    --pending-analyzed-text: var(--md-sys-color-on-tertiary-container);
+    --pending-analyzed-border: var(--md-sys-color-tertiary);
 
-    --system-notification-bg: #eef2f7; /* Background for system messages */
-    --system-notification-text: #4b5563; /* Text color for system messages */
-    --system-notification-border: #cbd5e1; /* Border for system messages */
+    --system-notification-bg: var(--md-sys-color-surface-container);
+    --system-notification-text: var(--md-sys-color-on-surface-variant);
+    --system-notification-border: var(--md-sys-color-outline-variant);
 }
 
+/* Material Design 3 Dark Theme Color Palette */
+html[data-theme="dark"] {
+    --md-sys-color-primary: #D0BCFF;
+    --md-sys-color-on-primary: #381E72;
+    --md-sys-color-primary-container: #4F378B;
+    --md-sys-color-on-primary-container: #EADDFF;
+    --md-sys-color-secondary: #CCC2DC;
+    --md-sys-color-on-secondary: #332D41;
+    --md-sys-color-secondary-container: #4A4458;
+    --md-sys-color-on-secondary-container: #E8DEF8;
+    --md-sys-color-tertiary: #EFB8C8;
+    --md-sys-color-on-tertiary: #492532;
+    --md-sys-color-tertiary-container: #633B48;
+    --md-sys-color-on-tertiary-container: #FFD8E4;
+    --md-sys-color-error: #F2B8B5;
+    --md-sys-color-on-error: #601410;
+    --md-sys-color-error-container: #8C1D18;
+    --md-sys-color-on-error-container: #F9DEDC;
+    --md-sys-color-background: #1C1B1F;
+    --md-sys-color-on-background: #E6E1E5;
+    --md-sys-color-surface: #1C1B1F;
+    --md-sys-color-on-surface: #E6E1E5;
+    --md-sys-color-surface-variant: #49454F;
+    --md-sys-color-on-surface-variant: #CAC4D0;
+    --md-sys-color-outline: #938F99;
+    --md-sys-color-outline-variant: #49454F;
+    --md-sys-color-shadow: #000000;
+    --md-sys-color-inverse-surface: #E6E1E5;
+    --md-sys-color-inverse-on-surface: #313033;
+    --md-sys-color-inverse-primary: #6750A4;
+    --md-sys-color-surface-dim: #141218; /* M3 Surface Tints for Dark */
+    --md-sys-color-surface-bright: #3B383E;
+    --md-sys-color-surface-container-lowest: #0F0D13;
+    --md-sys-color-surface-container-low: #1D1B20;
+    --md-sys-color-surface-container: #211F26;
+    --md-sys-color-surface-container-high: #2B2931;
+    --md-sys-color-surface-container-highest: #36343B;
+
+    /* Layout specific variables for dark theme */
+    --icon-bar-bg: var(--md-sys-color-surface-container-low);
+    --chat-list-panel-bg: var(--md-sys-color-surface);
+    --chat-area-bg: var(--md-sys-color-background);
+    --header-bg: var(--md-sys-color-surface-container-high);
+    --header-text-color: var(--md-sys-color-on-surface-variant);
+    --input-bg: var(--md-sys-color-surface-container-highest);
+    --input-border-color: var(--md-sys-color-outline);
+    --input-focus-border-color: var(--md-sys-color-primary);
+    --button-primary-bg: var(--md-sys-color-primary);
+    --button-primary-text: var(--md-sys-color-on-primary);
+    --button-danger-bg: var(--md-sys-color-error);
+    --button-danger-text: var(--md-sys-color-on-error);
+
+    /* Specific Status Colors (map to M3 roles for dark) */
+    --pending-analyzed-bg: var(--md-sys-color-tertiary-container);
+    --pending-analyzed-text: var(--md-sys-color-on-tertiary-container);
+    --pending-analyzed-border: var(--md-sys-color-tertiary);
+
+    --system-notification-bg: var(--md-sys-color-surface-container);
+    --system-notification-text: var(--md-sys-color-on-surface-variant);
+    --system-notification-border: var(--md-sys-color-outline-variant);
+}
+
+/* Basic body and HTML styling */
 body {
     font-family: var(--font-family-sans);
-    background-color: #eef2f7; /* Light bluish-gray page background */
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
     margin: 0;
-    display: flex; /* For centering container */
+    display: flex;
     min-height: 100vh;
-    overflow-x: hidden; /* Prevent horizontal scroll on the page */
+    overflow-x: hidden;
 }
 
 .container {
     display: flex;
-    flex-direction: column; /* Stack sidebar and chat-area on mobile */
     width: 100%;
-    max-width: 100%; /* Full width on mobile */
-    margin: 0; /* No margins on mobile */
-    background-color: var(--text-light);
-    border-radius: 0; /* No rounded corners on mobile */
-    box-shadow: none; /* No shadow on mobile */
+    max-width: 100%;
+    margin: 0;
+    background-color: var(--md-sys-color-surface);
+    border-radius: 0;
+    box-shadow: none;
     overflow: hidden;
-    height: 100vh; /* Full viewport height */
+    height: 100vh;
 }
 
-/* --- Sidebar (Chat List) --- */
-.sidebar {
-    width: 100%; /* Full width on mobile */
-    height: auto; /* Auto height on mobile */
-    max-height: 40vh; /* Limit sidebar height on mobile */
-    border-right: none; /* No right border on mobile */
-    border-bottom: 1px solid var(--medium-gray); /* Bottom border on mobile */
+/* --- Icon Bar --- */
+.icon-bar {
+    width: 72px;
+    background-color: var(--icon-bar-bg);
     display: flex;
     flex-direction: column;
+    align-items: center;
+    padding: 16px 0; /* Vertical padding */
     flex-shrink: 0;
-    background-color: #fcfdff; /* Slightly off-white sidebar background */
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,0.06), 0 4px 5px 0 rgba(0,0,0,0.06); /* M3 Elevation 2-dp */
+    gap: 12px; /* Consistent gap between items */
 }
 
-.sidebar-header {
-    padding: var(--header-padding-y) 1rem;
-    background-color: var(--primary-color);
-    color: var(--text-light);
-    font-weight: 600; /* semibold */
-    text-align: center;
-    flex-shrink: 0;
-    font-size: var(--header-font-size);
+.icon-bar-item {
+    width: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem; /* Tailwind gap-2 */
+    border-radius: 16px; /* M3 large rounded corners */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    background-color: transparent; /* Default no background */
+}
+
+.icon-bar-icon {
+    width: 28px;
+    height: 28px;
+    /* Default icon color for light theme (maps to --md-sys-color-on-surface-variant) */
+    filter: invert(28%) sepia(8%) saturate(1148%) hue-rotate(205deg) brightness(90%) contrast(87%);
+}
+
+.icon-bar-item:hover {
+    background-color: var(--md-sys-color-surface-container-high); /* Hover background */
+}
+
+.icon-bar-item.active {
+    background-color: var(--md-sys-color-primary-container); /* Active background */
+}
+
+.icon-bar-item.active .icon-bar-icon {
+    /* Active icon color for light theme (maps to --md-sys-color-on-primary-container) */
+    filter: invert(9%) sepia(24%) saturate(6794%) hue-rotate(237deg) brightness(98%) contrast(103%);
+}
+
+/* User profile icon at the top - specific container if needed, or rely on .icon-bar-item */
+.user-profile-icon-container .icon-bar-icon {
+    /* Could have slightly different styling if needed, e.g. background for the image if not transparent */
+}
+
+/* Agent name at the bottom */
+.icon-bar-agent-name {
+    /* margin-top: auto; -- Handled by flex-grow spacers in HTML */
+    padding: 8px;
+    text-align: center;
+    font-size: var(--md-sys-typescale-label-large-size);
+    color: var(--md-sys-color-on-surface-variant);
+    word-break: break-word; /* Ensure long names wrap */
+}
+
+
+/* Dark Theme adjustments for icons */
+html[data-theme="dark"] .icon-bar-icon {
+    /* Default icon color for dark theme (maps to --md-sys-color-on-surface-variant) */
+    filter: invert(81%) sepia(10%) saturate(200%) hue-rotate(205deg) brightness(90%) contrast(87%);
+}
+
+html[data-theme="dark"] .icon-bar-item.active .icon-bar-icon {
+    /* Active icon color for dark theme (maps to --md-sys-color-on-primary-container) */
+    filter: invert(85%) sepia(23%) saturate(3800%) hue-rotate(200deg) brightness(108%) contrast(100%);
+}
+
+/* --- Chat List Panel --- */
+.chat-list-panel {
+    width: 320px; /* M3 recommended panel width */
+    background-color: var(--chat-list-panel-bg);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+/* Header for Chat List Panel (was .sidebar-header) */
+.chat-list-panel-header { /* Assuming you might add a dedicated header div */
+    padding: var(--header-padding-y) 1rem;
+    background-color: var(--header-bg);
+    color: var(--header-text-color);
+    font-weight: var(--md-sys-typescale-title-medium-font-weight);
+    font-size: var(--md-sys-typescale-title-medium-size);
+    text-align: center;
+    flex-shrink: 0;
     min-height: var(--header-height);
     box-sizing: border-box;
-    position: relative;
-}
-
-.sidebar-header img { /* For icon in sidebar header */
-    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(200%) contrast(100%); /* Makes SVG white */
-    width: 1.5rem; 
-    height: 1.5rem;
-}
-
-.sidebar-tabs {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
     display: flex;
-    border-bottom: 1px solid var(--medium-gray);
-    background-color: var(--light-gray);
-}
-.sidebar-tab {
-    flex-grow: 1;
-    padding: 0.75rem 0.5rem; /* Tailwind py-3 px-2 */
-    text-align: center;
-    cursor: pointer;
-    font-weight: 500; /* medium */
-    font-size: 0.875rem; /* text-sm */
-    color: var(--secondary-color);
-    border-bottom: 3px solid transparent;
-    transition: color 0.2s ease, border-color 0.2s ease;
-}
-.sidebar-tab:hover {
-    color: var(--primary-darker);
-}
-.sidebar-tab.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
-    font-weight: 600; /* semibold */
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
-.sidebar-search {
-    padding: 0.75rem; /* Tailwind p-3 */
-    border-bottom: 1px solid var(--medium-gray);
+.sidebar-search { /* Search bar within chat list panel */
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
     flex-shrink: 0;
+    background-color: var(--chat-list-panel-bg); /* Ensure it matches panel */
 }
 .sidebar-search input {
     width: 100%;
-    padding: 0.75rem 1rem; /* Tailwind py-2 px-4 */
-    border: 1px solid #cbd5e1; /* Tailwind gray-300 */
-    border-radius: 0.375rem; /* rounded-md */
-    font-size: 0.875rem; /* text-sm */
+    padding: 10px 16px; /* M3 text field padding */
+    background-color: var(--input-bg);
+    color: var(--md-sys-color-on-surface);
+    border: 1px solid var(--input-border-color);
+    border-radius: 16px; /* M3 text field corner radius */
+    font-size: var(--md-sys-typescale-body-large-size);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .sidebar-search input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); /* Focus ring */
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 1px var(--input-focus-border-color); /* Focus ring */
+}
+.sidebar-search input::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .chat-list-items {
     flex-grow: 1;
     overflow-y: auto;
+    background-color: var(--chat-list-panel-bg);
 }
 .chat-item {
-    padding: 1rem; /* Tailwind p-4 */
-    border-bottom: 1px solid var(--medium-gray);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 .chat-item:hover {
-    background-color: #f1f5f9; /* Tailwind gray-100 */
+    background-color: var(--md-sys-color-surface-container-high);
 }
 .chat-item.active {
-    background-color: #e0e7ff; /* Tailwind indigo-100 or similar for active chat */
-    border-left: 4px solid var(--primary-color);
-    padding-left: calc(1rem - 4px); /* Adjust padding to account for border */
+    background-color: var(--md-sys-color-primary-container);
+    /* border-left: 4px solid var(--md-sys-color-primary); Remove old border style */
+    /* padding-left: calc(1rem - 4px); */
+}
+.chat-item.active .chat-item-name {
+    color: var(--md-sys-color-on-primary-container);
+}
+.chat-item.active .chat-item-sector,
+.chat-item.active .chat-item-preview,
+.chat-item.active .chat-item-timestamp,
+.chat-item.active .chat-item-id {
+    color: var(--md-sys-color-on-primary-container);
+    opacity: 0.8;
 }
 
-.chat-item-details {
-    display: flex;
-    align-items: center; 
-}
 
+.chat-item-details { display: flex; align-items: center; }
 .chat-item-profile-pic {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    margin-right: 0.75rem; /* Tailwind mr-3 */
-    background-color: var(--medium-gray); /* Placeholder color */
-    object-fit: cover;
-    flex-shrink: 0;
+    width: 40px; height: 40px; border-radius: 50%;
+    margin-right: 12px;
+    background-color: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    display: flex; align-items: center; justify-content: center; font-weight: 500;
+    object-fit: cover; flex-shrink: 0;
 }
-
-.chat-item-info {
-    flex-grow: 1;
-    overflow: hidden; /* For text-overflow ellipsis */
-    display: flex;
-    flex-direction: column;
-}
-
-.chat-item-name-status {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.25rem; /* Tailwind mb-1 */
-}
+.chat-item-info { flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; }
+.chat-item-name-status { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
 .chat-item-name {
-    font-weight: 600; /* semibold */
-    font-size: 0.9375rem; /* Slightly larger than text-sm */
-    color: #1e293b; /* Tailwind slate-800 */
-    white-space: normal; /* Allow name to wrap */
-    word-break: break-word;
-    margin-right: 0.5rem; /* Space for status indicator */
+    font-weight: var(--md-sys-typescale-title-medium-font-weight);
+    font-size: var(--md-sys-typescale-title-medium-size);
+    color: var(--md-sys-color-on-surface);
+    white-space: normal; word-break: break-word; margin-right: 8px;
 }
-.chat-item-id { /* Client ID style */
-    font-size: 0.75rem; /* text-xs */
-    color: #64748b; /* slate-500 */
+.chat-item-id {
+    font-size: 0.75rem;
+    color: var(--md-sys-color-on-surface-variant);
     display: block;
 }
-
 .chat-item-sector, .chat-item-preview, .chat-item-timestamp {
-    font-size: 0.8125rem; /* Slightly smaller than text-sm */
-    color: #475569; /* Tailwind slate-600 */
-    margin-top: 0.125rem; /* Tailwind mt-0.5 */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: var(--md-sys-typescale-body-medium-size);
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.chat-item-preview {
-    color: #334155; /* Tailwind slate-700 */
-    font-style: italic;
-}
+.chat-item-preview { font-style: normal; } /* Remove italic for M3 */
 
 .chat-item .take-chat-button {
-    margin-top: 0.5rem; /* Tailwind mt-2 */
-    padding: 0.375rem 0.75rem; /* Tailwind py-1.5 px-3 */
-    background-color: var(--success-color);
-    color: white;
-    border: none;
-    border-radius: 0.375rem; /* rounded-md */
-    cursor: pointer;
-    font-size: 0.8125rem;
-    font-weight: 500; /* medium */
+    margin-top: 8px; padding: 6px 12px;
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none; border-radius: 16px; /* M3 button shape */
+    cursor: pointer; font-size: var(--md-sys-typescale-label-large-size);
+    font-weight: var(--md-sys-typescale-label-large-font-weight);
     transition: background-color 0.2s ease;
-    align-self: flex-start;
-    display: inline-flex; 
-    align-items: center;
-    gap: 0.25rem; /* Tailwind gap-1 */
+    align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;
 }
-.chat-item .take-chat-button:hover { background-color: var(--success-darker); }
-.chat-item .take-chat-button img { /* Icon within take chat button */
-    width: 0.875rem; height: 0.875rem; filter: brightness(0) invert(1);
-}
+.chat-item .take-chat-button:hover { background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.chat-item .take-chat-button img { width: 1rem; height: 1rem; filter: brightness(0) invert(1); }
+.chat-item .take-chat-button:hover img { filter: brightness(0) invert(10%) sepia(80%) saturate(5000%) hue-rotate(250deg); }
 
 
-.chat-item.has-new-message { /* Indicates new unread messages */
-    border-left: 4px solid var(--warning-color);
-    padding-left: calc(1rem - 4px);
-}
-.chat-item.has-new-message .chat-item-name {
-    font-weight: 700; /* bold */
-}
-.chat-item.has-new-message.pending-analyzed { /* Specific style for pending-analyzed with new message */
-    border-left-color: var(--pending-analyzed-border);
-}
-.chat-item.has-new-message.pending-analyzed .chat-item-name {
-    color: var(--pending-analyzed-text);
-}
+.chat-item.has-new-message { /* No specific border, rely on font weight or dot indicator if added */ }
+.chat-item.has-new-message .chat-item-name { font-weight: 700; /* Bold */ }
+.chat-item.has-new-message.pending-analyzed .chat-item-name { color: var(--pending-analyzed-text); }
+.chat-item.auto-released .chat-item-name { color: var(--md-sys-color-error); }
 
-.chat-item.auto-released { /* Indicates chat was auto-released */
-    border-left: 4px solid var(--danger-color);
-    padding-left: calc(1rem - 4px);
+.chat-status-indicator {
+    padding: 4px 10px; border-radius: 8px; /* M3 chip-like style */
+    font-size: 0.7rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.02em; white-space: nowrap; flex-shrink: 0;
 }
-.chat-item.auto-released .chat-item-name { color: var(--danger-darker); }
+.chat-status-indicator.active { background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.chat-status-indicator.pending { background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+.chat-status-indicator.closed { background-color: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); }
+.chat-status-indicator.other-attendant { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.chat-status-indicator.released { background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
+.chat-status-indicator.pending-analyzed { background-color: var(--pending-analyzed-bg); color: var(--pending-analyzed-text); }
 
-.chat-status-indicator { /* General status badge style */
-    padding: 0.25rem 0.625rem; /* Tailwind py-1 px-2.5 */
-    border-radius: 9999px; /* rounded-full */
-    font-size: 0.6875rem; /* Between text-xs and text-xxs */
-    font-weight: 600; /* semibold */
-    text-transform: uppercase;
-    letter-spacing: 0.025em; /* tracking-wide */
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-/* Specific status indicator colors */
-.chat-status-indicator.active { background-color: var(--success-color); color: white; }
-.chat-status-indicator.pending { background-color: var(--warning-color); color: #78350f; /* Tailwind amber-900 */ }
-.chat-status-indicator.closed { background-color: var(--secondary-color); color: white; }
-.chat-status-indicator.other-attendant { background-color: #8b5cf6; color: white; } /* Tailwind violet-500 */
-.chat-status-indicator.released { background-color: var(--danger-color); color: white; }
-.chat-status-indicator.pending-analyzed {
-    background-color: var(--pending-analyzed-bg);
-    color: var(--pending-analyzed-text);
-}
-
-
-/* --- Chat Area (Messages and Input) --- */
+/* --- Chat Area --- */
 .chat-area {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%; 
-    overflow: hidden; /* Prevent content from overflowing chat area */
-    background-color: #f9fafb; /* Tailwind gray-50 */
+    flex-grow: 1; display: flex; flex-direction: column;
+    height: 100%; overflow: hidden;
+    background-color: var(--chat-area-bg);
 }
 
 .chat-header {
-    background-color: var(--primary-color);
-    color: var(--text-light);
-    padding: var(--header-padding-y) 1rem; 
-    font-size: var(--header-font-size); 
-    font-weight: 600; 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--primary-darker);
-    min-height: var(--header-height);
-    box-sizing: border-box;
+    background-color: var(--header-bg);
+    color: var(--header-text-color);
+    padding: var(--header-padding-y) 1rem;
+    font-size: var(--header-font-size);
+    font-weight: var(--md-sys-typescale-title-medium-font-weight);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0; border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    min-height: var(--header-height); box-sizing: border-box;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 3px 1px rgba(0,0,0,0.03); /* M3 Elevation 1-dp like */
 }
-.chat-header-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem; 
+.chat-header-title { display: flex; align-items: center; gap: 0.75rem; }
+.chat-header-title img {
+    width: 1.75rem; height: 1.75rem; opacity: 0.7;
+    /* Consider direct SVG fill via JS for M3 theming */
+    filter: invert(30%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(80%) contrast(100%);
 }
-.chat-header-title img { /* Icon in chat header */
-    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(200%) contrast(100%);
-    opacity: 0.8; 
-    width: 1.5rem; 
-    height: 1.5rem;
+html[data-theme="dark"] .chat-header-title img {
+    filter: invert(80%) sepia(10%) saturate(100%) hue-rotate(180deg) brightness(100%) contrast(90%);
 }
 
 .chat-header .end-chat-button {
-    padding: 0.5rem 1rem; 
-    background-color: var(--danger-color);
-    color: white;
-    border: none;
-    border-radius: 0.375rem; 
-    cursor: pointer;
-    font-size: 0.875rem; 
-    font-weight: 500; 
+    padding: 8px 16px;
+    background-color: var(--button-danger-bg);
+    color: var(--button-danger-text);
+    border: none; border-radius: 20px; /* M3 full rounded button */
+    cursor: pointer; font-size: var(--md-sys-typescale-label-large-size);
+    font-weight: var(--md-sys-typescale-label-large-font-weight);
     transition: background-color 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem; 
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 1px 2px 0 var(--md-sys-color-shadow); /* M3 Elevation 1-dp */
 }
-.chat-header .end-chat-button:hover { background-color: var(--danger-darker); }
-.chat-header .end-chat-button svg { width: 1.25rem; height: 1.25rem; }
+.chat-header .end-chat-button:hover { background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
+.chat-header .end-chat-button svg { width: 1.125rem; height: 1.125rem; }
 
 
 .chat-messages {
-    flex-grow: 1;
-    padding: 1rem; 
-    overflow-y: auto; /* Enable scrolling for messages */
-    display: flex;
-    flex-direction: column;
-    background-color: #f3f4f6; /* Tailwind gray-100, message area background */
-    gap: 0.75rem; /* Space between messages */
+    flex-grow: 1; padding: 1rem; overflow-y: auto;
+    display: flex; flex-direction: column;
+    background-color: var(--chat-area-bg); /* Match chat area background */
+    gap: 0.75rem;
 }
-.message { /* Base message bubble style */
-    padding: 0.625rem 1rem; 
-    border-radius: 0.5rem; 
-    max-width: 80%; 
-    word-wrap: break-word; /* Ensure long words break */
-    position: relative;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1); 
-    line-height: 1.6;
-    font-size: 0.9375rem; /* Slightly larger message text */
+.message {
+    padding: 0.75rem 1rem; /* M3 standard padding */
+    border-radius: 16px; /* M3 corner radius */
+    max-width: 75%; word-wrap: break-word; position: relative;
+    line-height: 1.5; font-size: var(--md-sys-typescale-body-large-size);
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.08); /* Subtle shadow for messages */
 }
-.message.client { /* Client's message bubble */
-    background-color: var(--text-light);
-    align-self: flex-start; /* Align to the left */
-    color: var(--text-dark);
-    border: 1px solid var(--medium-gray);
+.message.client {
+    background-color: var(--md-sys-color-surface-container-high); /* Client bubble */
+    color: var(--md-sys-color-on-surface);
+    align-self: flex-start;
+    border-top-right-radius: 16px; border-bottom-right-radius: 16px;
+    border-top-left-radius: 4px; border-bottom-left-radius: 4px; /* M3 asymmetric radius */
 }
-.message.agent { /* Agent's message bubble */
-    background-color: var(--primary-color);
-    color: var(--text-light);
-    align-self: flex-end; /* Align to the right */
+.message.agent {
+    background-color: var(--md-sys-color-primary-container); /* Agent bubble */
+    color: var(--md-sys-color-on-primary-container);
+    align-self: flex-end;
+    border-top-left-radius: 16px; border-bottom-left-radius: 16px;
+    border-top-right-radius: 4px; border-bottom-right-radius: 4px; /* M3 asymmetric radius */
 }
-.message-info { /* Timestamp/sender info */
-    font-size: 0.6875rem; 
-    color: #9ca3af; /* Tailwind gray-400 */
-    margin-top: 0.25rem; 
-    display: block;
+.message-info {
+    font-size: 0.7rem; margin-top: 4px; display: block;
+    opacity: 0.8;
 }
-.message.client .message-info { text-align: left; color: #6b7280; /* Tailwind gray-500 */ }
-.message.agent .message-info { text-align: right; color: #bfdbfe; /* Tailwind blue-200 */ }
+.message.client .message-info { text-align: left; color: var(--md-sys-color-on-surface-variant); }
+.message.agent .message-info { text-align: right; color: var(--md-sys-color-on-primary-container); }
 
-.message.system-notification-message { /* System generated messages */
+.message.system-notification-message {
     background-color: var(--system-notification-bg);
     color: var(--system-notification-text);
-    align-self: center; 
-    font-style: italic;
-    font-size: 0.8rem;
-    max-width: 90%;
-    text-align: center;
+    align-self: center; font-style: italic; font-size: 0.8rem;
+    max-width: 90%; text-align: center;
     border: 1px dashed var(--system-notification-border);
-    box-shadow: none;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    box-shadow: none; margin-top: 0.5rem; margin-bottom: 0.5rem;
+    border-radius: 8px;
 }
 
-/* Styles for media content within messages */
-.message .media-content { max-width: 100%; height: auto; display: block; margin-top: 0.5rem; border-radius: 0.375rem; }
+.message .media-content { max-width: 100%; height: auto; display: block; margin-top: 0.5rem; border-radius: 8px; }
 .message .media-content.image { max-height: 250px; object-fit: contain; }
-.message .media-content.video { max-height: 250px; }
-.message .media-content.audio { width: 100%; }
-.message .media-content.document { /* Style for document links */
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #e5e7eb; /* Tailwind gray-200 */
-    padding: 0.5rem 0.75rem; 
-    border-radius: 0.375rem; 
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500; 
-    transition: background-color 0.2s;
-    font-size: 0.875rem; 
+.message .media-content.document {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background-color: var(--md-sys-color-surface-container-highest);
+    padding: 0.5rem 0.75rem; border-radius: 8px;
+    color: var(--md-sys-color-primary); text-decoration: none;
+    font-weight: 500; transition: background-color 0.2s;
+    font-size: var(--md-sys-typescale-label-large-size);
 }
-.message .media-content.document:hover { background-color: #d1d5db; /* Tailwind gray-300 */ }
-.message .media-content.document .btn-icon { width: 1.125rem; height: 1.125rem; } /* Icon inside document link */
-.message .media-content.document img { width: 1.125rem; height: 1.125rem; }
+.message .media-content.document:hover { background-color: var(--md-sys-color-surface-dim); }
+.message .media-content.document img { width: 1.125rem; height: 1.125rem; filter: invert(39%) sepia(98%) saturate(1789%) hue-rotate(195deg) brightness(100%) contrast(101%); }
 
 
 .typing-indicator {
-    font-style: italic;
-    color: var(--secondary-color);
-    padding: 0 1rem 0.5rem; 
-    font-size: 0.8125rem; 
+    font-style: italic; color: var(--md-sys-color-on-surface-variant);
+    padding: 0 1rem 0.5rem; font-size: var(--md-sys-typescale-body-medium-size);
 }
 
 .chat-input-area {
-    display: flex;
-    padding: 0.75rem; 
-    border-top: 1px solid var(--medium-gray);
-    flex-shrink: 0;
-    background-color: var(--text-light);
-    align-items: center;
-    gap: 0.5rem; 
+    display: flex; padding: 0.75rem 1rem;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    flex-shrink: 0; background-color: var(--md-sys-color-surface-container-low); /* Slightly different from chat area bg */
+    align-items: center; gap: 0.75rem;
 }
-.chat-input-area input[type="text"] { /* Message input field */
-    flex-grow: 1;
-    padding: 0.625rem 1rem; 
-    border: 1px solid #cbd5e1; /* Tailwind gray-300 */
-    border-radius: 0.375rem; 
-    font-size: 0.875rem; 
+.chat-input-area input[type="text"] {
+    flex-grow: 1; padding: 12px 16px; /* M3 text field padding */
+    background-color: var(--input-bg);
+    color: var(--md-sys-color-on-surface);
+    border: 1px solid var(--input-border-color);
+    border-radius: 20px; /* M3 text field full radius */
+    font-size: var(--md-sys-typescale-body-large-size);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .chat-input-area input[type="text"]:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); /* Focus ring */
+    border-color: var(--input-focus-border-color);
+    box-shadow: 0 0 0 1px var(--input-focus-border-color);
 }
-.chat-input-area button { /* General button style in input area (Send button) */
-    padding: 0.625rem 1rem; 
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 0.375rem; 
-    cursor: pointer;
-    font-size: 0.875rem; 
-    font-weight: 500; 
-    transition: background-color 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem; 
+.chat-input-area input[type="text"]::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
 }
-.chat-input-area button:hover { background-color: var(--primary-darker); }
-.chat-input-area button svg { width: 1.25rem; height: 1.25rem; }
 
+.chat-input-area button { /* Send button */
+    padding: 10px 20px; /* M3 button padding */
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-text);
+    border: none; border-radius: 20px; /* M3 full rounded button */
+    cursor: pointer; font-size: var(--md-sys-typescale-label-large-size);
+    font-weight: var(--md-sys-typescale-label-large-font-weight);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 1px 2px 0 var(--md-sys-color-shadow); /* M3 Elevation 1-dp */
+}
+.chat-input-area button:hover {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    box-shadow: 0 2px 4px -1px var(--md-sys-color-shadow); /* M3 Elevation 2-dp */
+}
+.chat-input-area button svg { width: 1.125rem; height: 1.125rem; }
 
-.chat-input-area .upload-button { /* Specific style for upload button */
-    padding: 0.625rem; 
-    /* background-color: transparent; Default was primary, changed to match HTML structure */
-    background-color: #f3f4f6; /* Tailwind gray-100, or transparent if preferred */
-    color: var(--secondary-color); /* Text color for icon if not using SVG filter */
-    border: none;
-    border-radius: 0.375rem; /* rounded-md, or rounded-full from HTML */
-    cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.chat-input-area .upload-button { /* Attachment button - M3 Icon Button style */
+    padding: 8px; background-color: transparent;
+    color: var(--md-sys-color-on-surface-variant); border: none;
+    border-radius: 50%; /* M3 icon button is circular */
+    cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease;
+    display: inline-flex; align-items: center; justify-content: center;
 }
 .chat-input-area .upload-button:hover {
-    background-color: #e5e7eb; /* Tailwind gray-200 */
-    color: var(--primary-color);
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-primary);
 }
 .chat-input-area .upload-button img { /* Icon for upload button */
-    filter: invert(40%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(100%) contrast(90%); /* Default icon color */
-    width: 1.25rem; 
-    height: 1.25rem;
-    transition: filter 0.3s ease;
+    width: 1.5rem; height: 1.5rem;
+    /* Default icon color, should be updated to use M3 icon colors */
+    filter: invert(40%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(100%) contrast(90%);
 }
 .chat-input-area .upload-button:hover img {
-    filter: invert(39%) sepia(98%) saturate(1789%) hue-rotate(195deg) brightness(100%) contrast(101%); /* Primary color for icon on hover */
+    /* Primary color for icon on hover */
+    filter: invert(39%) sepia(98%) saturate(1789%) hue-rotate(195deg) brightness(100%) contrast(101%);
+}
+html[data-theme="dark"] .chat-input-area .upload-button img {
+    filter: invert(80%) sepia(10%) saturate(100%) hue-rotate(180deg) brightness(100%) contrast(90%);
+}
+html[data-theme="dark"] .chat-input-area .upload-button:hover img {
+    filter: invert(80%) sepia(50%) saturate(5000%) hue-rotate(200deg) brightness(100%) contrast(100%);
+}
+
+.chat-input-area input[type="file"] { display: none; }
+
+.no-chat-selected {
+    flex-grow: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    font-size: var(--md-sys-typescale-title-medium-size);
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: center; padding: 2rem;
+    background-color: var(--chat-area-bg);
+}
+.no-chat-selected img {
+    width: 4rem; height: 4rem; margin-bottom: 1rem;
+    opacity: 0.5;
+    /* M3 themed icon for placeholder */
+    filter: invert(50%) sepia(10%) saturate(500%) hue-rotate(180deg) brightness(100%) contrast(90%);
+}
+html[data-theme="dark"] .no-chat-selected img {
+    filter: invert(80%) sepia(10%) saturate(100%) hue-rotate(180deg) brightness(70%) contrast(90%);
 }
 
 
-.chat-input-area input[type="file"] { display: none; } /* Hide default file input */
-
-.no-chat-selected { /* Placeholder when no chat is active */
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.125rem; 
-    color: #6b7280; /* Tailwind gray-500 */
-    text-align: center;
-    padding: 2rem; 
-    background-color: #f3f4f6; /* Tailwind gray-100 */
-}
-.no-chat-selected img { /* Icon for no-chat-selected placeholder */
-    width: 4rem; 
-    height: 4rem; 
-    margin-bottom: 1rem; 
-    /* filter is set inline in HTML, can be moved here if preferred */
-}
-
-/* Connection Status Indicator (bottom right) */
+/* Connection Status Indicator */
 .connection-status {
-    position: fixed;
-    bottom: 1rem; 
-    right: 1rem; 
-    padding: 0.5rem 1rem; 
-    border-radius: 0.375rem; 
-    font-size: 0.875rem; 
-    font-weight: 500; 
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); 
-    z-index: 50;
-    transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    position: fixed; bottom: 1rem; right: 1rem;
+    padding: 8px 16px; border-radius: 16px; /* M3 chip style */
+    font-size: var(--md-sys-typescale-label-large-size);
+    font-weight: var(--md-sys-typescale-label-large-font-weight);
+    box-shadow: 0 2px 5px 1px var(--md-sys-color-shadow); /* M3 Elevation 3-dp */
+    z-index: 50; transition: opacity 0.3s ease, background-color 0.3s ease;
 }
-.connection-status.connected { background-color: var(--success-color); color: white; }
-.connection-status.connecting { background-color: var(--warning-color); color: var(--text-dark); }
-.connection-status.disconnected { background-color: var(--danger-color); color: white; }
+.connection-status.connected { background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.connection-status.connecting { background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+.connection-status.disconnected { background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
 
-/* Alert Modal (top center) */
+/* Alert Modal */
 .alert-modal {
-    position: fixed;
-    top: 1.25rem; 
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0.75rem 1.5rem; 
-    border-radius: 0.375rem; 
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); 
-    z-index: 100; 
-    font-size: 0.875rem; 
-    font-weight: 500; 
-    min-width: 280px;
-    text-align: center;
-    display: none; 
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out, top 0.3s ease-in-out;
+    position: fixed; top: 1.25rem; left: 50%; transform: translateX(-50%);
+    padding: 12px 20px; border-radius: 12px; /* M3 dialog like */
+    box-shadow: 0 4px 8px 3px var(--md-sys-color-shadow); /* M3 Elevation 6-dp */
+    z-index: 100; font-size: var(--md-sys-typescale-body-large-size);
+    font-weight: 500; min-width: 280px; text-align: center;
+    display: none; opacity: 0;
+    transition: opacity 0.3s ease, top 0.3s ease;
 }
-.alert-modal.show { display: block; opacity: 1; top: 1.75rem; } /* Animation for showing */
-.alert-modal.error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; } 
-.alert-modal.success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; } 
-.alert-modal.warning { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; } 
+.alert-modal.show { display: block; opacity: 1; top: 1.75rem; }
+.alert-modal.error { background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); border: 1px solid var(--md-sys-color-error); }
+.alert-modal.success { background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); border: 1px solid var(--md-sys-color-primary); }
+.alert-modal.warning { background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); border: 1px solid var(--md-sys-color-tertiary); }
 
-.btn-icon { /* Utility class for icons within buttons or links */
-    width: 1.25em; 
-    height: 1.25em;
-    display: inline-block; 
-    vertical-align: middle;
-}
+.btn-icon { width: 1.25em; height: 1.25em; display: inline-block; vertical-align: middle; }
+
+/* Scrollbar Styling */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--md-sys-color-surface-container-low); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--md-sys-color-on-surface-variant); }
 
 /* --- Media Queries for Responsiveness --- */
-@media (min-width: 768px) { /* Styles for medium screens and up (desktop) */
+@media (min-width: 768px) {
     .container {
-        flex-direction: row; /* Sidebar and chat-area side-by-side */
-        max-width: 1500px; /* Max width for desktop layout */
-        margin: 1rem auto; /* Center container on desktop */
-        border-radius: 0.75rem; /* Rounded corners for desktop container */
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Desktop shadow */
-        height: calc(100vh - 2rem); /* Adjust height for desktop margins */
+        max-width: 100%; /* Allow full width usage */
+        margin: 0; /* No margin on desktop, use full screen */
+        border-radius: 0; /* No border radius on desktop */
+        box-shadow: none; /* No shadow on desktop */
+        height: 100vh; /* Full viewport height */
     }
 
-    .sidebar {
-        width: 350px; /* Fixed width for sidebar on desktop */
-        max-height: none; /* Remove max-height limit */
-        border-right: 1px solid var(--medium-gray); /* Right border for separation */
-        border-bottom: none; /* Remove bottom border */
-    }
+    /* .sidebar class was removed, styles moved to .icon-bar and .chat-list-panel */
+    /* .chat-list-panel retains its desktop width defined above */
 
-    .chat-area {
-        height: 100%; /* Full height within the container */
-    }
-
-    .message {
-        font-size: 0.9375rem; 
-        max-width: 70%; /* Adjust max-width of messages for wider screens */
-    }
+    .chat-area { height: 100%; }
+    .message { max-width: 70%; }
 }
+
+/* Remove old sidebar tab styling */
+.sidebar-tabs { display: none; }

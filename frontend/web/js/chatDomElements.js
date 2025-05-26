@@ -2,9 +2,13 @@
 // Elementos DOM para o chat
 window.ChatDomElements = {
   // --- Elementos da Barra Lateral de Lista de Chats ---
-  sidebar: null, // O contêiner da sidebar principal (classe .sidebar)
+  // sidebar: null, // REMOVED - Replaced by iconBar and chatListPanel
   loggedInAgentName: null, // Span para o nome do agente logado (ID: loggedInAgentName)
-  sidebarTabsContainer: null, // O contêiner das abas (classe .sidebar-tabs)
+  // sidebarTabsContainer: null, // REMOVED - Replaced by iconBar
+  iconBar: null, // NEW - Container for the new icon-based navigation
+  iconBarItems: null, // NEW - Collection of clickable items in the icon bar (with data-tab)
+  chatListPanel: null, // NEW - Container for search and conversations list
+
   // activeTabButton: null, // Especificamente o botão da aba "Ativos/Pendentes"
   // closedTabButton: null, // Especificamente o botão da aba "Encerrados"
   chatSearchInput: null, // Input de busca (ID: chatSearchInput)
@@ -40,9 +44,9 @@ window.ChatDomElements = {
   navDocumentosButton: null,
   navEditarButton: null,
   navSairButton: null,
-  chatListSidebar: null, 
+  // chatListSidebar: null, // REMOVED - Conceptually replaced by chatListPanel
   mainMenuButton: null,
-  // chatFilterTabsContainer: null, // Substituído por sidebarTabsContainer
+  // chatFilterTabsContainer: null, // Was an alias for sidebarTabsContainer
   roomListPlaceholder: null,
   mainChatContent: null,
   chatAreaHeader: null,
@@ -90,17 +94,17 @@ window.ChatDomElements = {
   init() {
     console.log("[ChatDomElements] Inicializando elementos DOM");
 
-    // --- Elementos da Barra Lateral de Lista de Chats (Conforme chat.html do Canvas) ---
-    this.sidebar = document.querySelector(".sidebar");
-    this.loggedInAgentName = document.getElementById("loggedInAgentName");
-    this.sidebarTabsContainer = document.querySelector(".sidebar-tabs");
-    // Se precisar dos botões de aba individualmente:
-    // this.activeTabButton = this.sidebarTabsContainer ? this.sidebarTabsContainer.querySelector('[data-tab="active"]') : null;
-    // this.closedTabButton = this.sidebarTabsContainer ? this.sidebarTabsContainer.querySelector('[data-tab="closed"]') : null;
-    this.chatSearchInput = document.getElementById("chatSearchInput");
-    this.conversationsList = document.getElementById("conversationsList"); // CORRIGIDO
+    // --- Elementos da Nova Estrutura de Layout ---
+    this.iconBar = document.querySelector(".icon-bar");
+    this.iconBarItems = this.iconBar ? this.iconBar.querySelectorAll(".icon-bar-item[data-tab]") : null; // Selects only items with data-tab
+    this.chatListPanel = document.querySelector(".chat-list-panel");
 
-    // --- Elementos da Área Principal do Chat (Conforme chat.html do Canvas) ---
+    // --- Elementos Existentes (Conforme chat.html) ---
+    this.loggedInAgentName = document.getElementById("loggedInAgentName"); // Still in icon-bar
+    this.chatSearchInput = document.getElementById("chatSearchInput"); // Now in chatListPanel
+    this.conversationsList = document.getElementById("conversationsList"); // Now in chatListPanel
+
+    // --- Elementos da Área Principal do Chat (Conforme chat.html) ---
     this.chatArea = document.querySelector(".chat-area");
     this.chatHeaderIcon = document.getElementById("chatHeaderIcon");
     this.chatHeaderName = document.getElementById("chatHeaderName");
@@ -132,13 +136,13 @@ window.ChatDomElements = {
     this.navEncerradosButton = document.getElementById("nav-encerrados");
     this.navDocumentosButton = document.getElementById("nav-documentos");
     this.navEditarButton = document.getElementById("nav-editar");
-    this.navSairButton = document.getElementById("nav-sair");
+    this.navSairButton = document.getElementById("nav-sair"); // Kept for now, may be null
 
-    this.chatListSidebar = this.sidebar; // Reutilizando a referência
-    this.mainMenuButton = document.getElementById("main-menu-button");
+    // this.chatListSidebar = this.sidebar; // REMOVED - sidebar is removed
+    this.mainMenuButton = document.getElementById("main-menu-button"); // Kept for now, may be null
     this.roomListPlaceholder = document.getElementById("room-list-placeholder"); // Pode não existir
 
-    this.mainChatContent = this.chatArea; // Reutilizando a referência
+    this.mainChatContent = this.chatArea; // Reutilizando a referência (chatArea is still valid)
     this.chatAreaHeader = document.querySelector(".chat-header"); // Selecionando pelo seletor de classe do HTML do Canvas
     this.backToChatsMobileButton = document.getElementById("back-to-chats-mobile");
     this.headerContactAvatar = document.getElementById("chatHeaderIcon"); // Reutilizando o ícone do header
@@ -200,29 +204,43 @@ window.ChatDomElements = {
     const missingElements = [];
     const optionalElements = [ // Lista de elementos que são sabidamente opcionais ou não existem no HTML atual do Canvas
         "iconNavbar", "navConversasButton", "navEncerradosButton", "navDocumentosButton",
-        "navEditarButton", "navSairButton", "mainMenuButton", "roomListPlaceholder",
+        "navEditarButton", "navSairButton", "mainMenuButton", "roomListPlaceholder", // mainMenuButton and navSairButton might be removed if not in new UI
         "backToChatsMobileButton", "contactStatus", "searchInChatButton", "callButton",
         "contactInfoButton", "emojiButton", "rightSidebar", "contactInfoHeaderTitle",
         "closeContactInfoButton", "panelContactAvatar", "panelContactName", "panelContactPhone",
         "addContactButton", "notificationToggle", "sharedMediaGrid", "userNameElement",
-        "userStatusElement", "logoutButton", "contactNumber", "transferChatButton",
-        "transferModal", "closeModalButton", "sectorsList", "attendantsList", "closeAlertButton"
-        // Adicione outros IDs aqui que você sabe que são de funcionalidades não implementadas no HTML atual
+        "userStatusElement", "logoutButton", // logoutButton depends on navSairButton
+        "contactNumber", "transferChatButton",
+        "transferModal", "closeModalButton", "sectorsList", "attendantsList", "closeAlertButton",
+        // Removed 'sidebar' and 'sidebarTabsContainer' from being checked as essential if they are null.
+        // Added 'chatListPanel' as potentially essential for the new layout, if used by other parts.
+        // 'iconBar' and 'iconBarItems' are new, their absence might be critical if other logic depends on them.
     ];
 
     for (const key in this) {
-      if (this.hasOwnProperty(key) && typeof this[key] !== 'function' && this[key] === null) {
-        if (!optionalElements.includes(key)) { // Só reporta como "crítico" se não for opcional
-            missingElements.push(key);
-        } else {
-            // console.log(`[ChatDomElements] Elemento opcional '${key}' não encontrado (OK).`);
+        // Skip functions and inherited properties
+        if (typeof this[key] === 'function' || !this.hasOwnProperty(key)) {
+            continue;
         }
-      }
+
+        if (this[key] === null) {
+            // Elements that are expected to be part of the new core UI, even if previously optional or new
+            const newCoreElements = ["iconBar", "iconBarItems", "chatListPanel"]; 
+            
+            if (newCoreElements.includes(key)) {
+                 // If a new core element is null, it's a potential issue.
+                console.warn(`[ChatDomElements] Novo elemento central '${key}' não encontrado. Isso pode ser um problema.`);
+                missingElements.push(`${key} (novo central)`);
+            } else if (!optionalElements.includes(key)) {
+                 // If an old "essential" element (not in optional list) is null, it's an issue.
+                missingElements.push(`${key} (antigo essencial)`);
+            }
+            // If in optionalElements and null, we don't add to missingElements (as before)
+        }
     }
 
     if (missingElements.length > 0) {
-      // Este aviso agora só mostrará elementos que deveriam existir com base no HTML do Canvas, mas não foram encontrados
-      console.warn("[ChatDomElements] Elementos ESSENCIAIS não encontrados (verifique IDs no HTML e no chatDomElements.js):", missingElements.join(", "));
+      console.warn("[ChatDomElements] Elementos não encontrados ou com problemas (verifique IDs/classes no HTML e seletores no chatDomElements.js):", missingElements.join(", "));
     }
   },
 

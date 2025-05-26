@@ -184,6 +184,7 @@ async function findOrCreateConversation(clientJid, clientName = null, clientProf
 }
 
 async function saveMessage(messageData) { 
+  console.log('[DEBUG_SENDER_TYPE] sqliteChat - saveMessage - messageData RECEBIDO:', JSON.stringify(messageData));
   const { conversationId, message_platform_id, senderType, senderId, messageType, content, mediaUrl = null, timestamp } = messageData;
   log(`[saveMessage] Salvando mensagem para ConvID ${conversationId}. PlatformID: ${message_platform_id}, Sender: ${senderType}/${senderId}, Tipo: ${messageType}`, "debug");
   if (typeof conversationId === 'undefined' || conversationId === null) {
@@ -205,7 +206,9 @@ async function saveMessage(messageData) {
     await runQuery(`UPDATE CONVERSATIONS SET LAST_MESSAGE_TIMESTAMP = ?, UPDATED_AT = CURRENT_TIMESTAMP ${unreadIncrementSql} WHERE ID = ?`, [messageTimestamp, conversationId]);
     log(`[saveMessage] Conversa ${conversationId} atualizada. Incremento não lidas (se cliente): ${unreadIncrementSql !== ""}`, "debug");
 
-    return { id: result.lastID, ...messageData, timestamp: messageTimestamp, READ_BY_USER: readByUser, READ_BY_CLIENT: readByClient };
+    const dataToReturn = { id: result.lastID, ...messageData, timestamp: messageTimestamp, READ_BY_USER: readByUser, READ_BY_CLIENT: readByClient };
+    console.log('[DEBUG_SENDER_TYPE] sqliteChat - saveMessage - dataToReturn ANTES de retornar:', JSON.stringify(dataToReturn));
+    return dataToReturn;
   } catch (error) {
     log(`Erro ao salvar mensagem (Platform ID: ${message_platform_id}, ConvID: ${conversationId}): ${error.message}`, "error");
     if (error.message.includes("UNIQUE constraint failed: MESSAGES.MESSAGE_PLATFORM_ID")) {

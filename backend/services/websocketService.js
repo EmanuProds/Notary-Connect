@@ -521,14 +521,22 @@ function initializeWebSocketServer(server, logFunction, wsAppInstance, dbService
 
 // Função para ser chamada por um serviço externo (ex: WsWhatsApp.js) quando uma nova mensagem do CLIENTE é recebida e salva.
 function handleNewClientMessage(conversation, savedMessageDetails) {
-  if (conversation && conversation.USER_USERNAME && savedMessageDetails && savedMessageDetails.SENDER_TYPE === 'CLIENT') {
+  console.log('[DEBUG_SENDER_TYPE] websocketService - handleNewClientMessage - savedMessageDetails RECEBIDO:', JSON.stringify(savedMessageDetails));
+  console.log('[DEBUG_SENDER_TYPE] websocketService - handleNewClientMessage - savedMessageDetails.senderType (camelCase):', savedMessageDetails ? savedMessageDetails.senderType : 'N/A');
+  console.log('[DEBUG_SENDER_TYPE] websocketService - handleNewClientMessage - savedMessageDetails.SENDER_TYPE (UPPER_CASE):', savedMessageDetails ? savedMessageDetails.SENDER_TYPE : 'N/A');
+  
+  // 1. Padronize a Verificação de senderType
+  if (conversation && conversation.USER_USERNAME && savedMessageDetails && savedMessageDetails.senderType === 'CLIENT') {
     if(sendLogGlobal) sendLogGlobal(`[WS] Distribuindo nova mensagem do cliente para atendente ${conversation.USER_USERNAME} na conversa ${conversation.ID}. Detalhes: ${JSON.stringify(savedMessageDetails).substring(0,100)}`, "debug");
     helperSendMessageToAttendant(
       conversation.USER_USERNAME, // agentId (username)
+      // 2. Estruture o Payload para o Evento new_message
       {
         type: 'new_message',
-        conversationId: conversation.ID,
-        message: savedMessageDetails 
+        payload: { // Adicionar este nível
+          conversationId: conversation.ID,
+          message: savedMessageDetails 
+        }
       }
     );
   } else {
@@ -537,7 +545,8 @@ function handleNewClientMessage(conversation, savedMessageDetails) {
         if (!conversation) reason = "conversa é nula/indefinida.";
         else if (!conversation.USER_USERNAME) reason = `conversa ${conversation.ID} não tem USER_USERNAME (atendente designado).`;
         else if (!savedMessageDetails) reason = "savedMessageDetails é nulo/indefinido.";
-        else if (savedMessageDetails.SENDER_TYPE !== 'CLIENT') reason = `mensagem não é do tipo CLIENT (tipo: ${savedMessageDetails.SENDER_TYPE}).`;
+        // 1. (cont.) Atualize também a mensagem de log para referenciar savedMessageDetails.senderType
+        else if (savedMessageDetails.senderType !== 'CLIENT') reason = `mensagem não é do tipo CLIENT (tipo: ${savedMessageDetails.senderType}).`;
         
         sendLogGlobal(`[WS] Nova mensagem do cliente não será enviada diretamente para um atendente via handleNewClientMessage. ${reason}`, "debug");
     }

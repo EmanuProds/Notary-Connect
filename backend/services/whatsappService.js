@@ -390,6 +390,7 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
                             message_platform_id: msg.id.id, 
                             senderType: "CLIENT",
                             senderId: senderJid,
+                            CLIENT_NAME: senderName, // <--- LINHA ADICIONADA
                             messageType: messageType,
                             content: displayMessageContent, 
                             timestamp: messageTimestamp,
@@ -398,6 +399,7 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
                             mediaUrl: mediaUrl 
                         };
                         
+                        console.log('[DEBUG_SENDER_TYPE] whatsappService - messageDataForDb ANTES de saveMessage:', JSON.stringify(messageDataForDb));
                         const savedMsgInDb = await globalDbServices.chat.saveMessage(messageDataForDb);
                         globalSendLog(`[WhatsApp_WWJS] Mensagem de ${senderName} salva no DB. ID DB: ${savedMsgInDb.id}, Conv ID ${conversation.ID}.`, 'debug');
 
@@ -424,9 +426,9 @@ async function connectToWhatsApp(sendLogFunction, websocketServiceInstance, dbSe
 
                                 // Chamar a nova função centralizada handleNewClientMessage do websocketService.
                                 // Ela verificará internamente se USER_USERNAME existe e se SENDER_TYPE é 'CLIENT'.
-                                // Passamos conversationDetailsForUI (para USER_USERNAME, ID) e savedMsgInDb (para SENDER_TYPE, e o resto da msg).
-                                globalSendLog(`[WhatsApp_WWJS] Tentando notificar via handleNewClientMessage para ConvID ${conversationDetailsForUI.ID}, Atendente: ${conversationDetailsForUI.USER_USERNAME}`, 'debug');
-                                globalWebsocketService.handleNewClientMessage(conversationDetailsForUI, savedMsgInDb);
+                                // Passamos conversationDetailsForUI (para USER_USERNAME, ID) e messageForUi (que contém CLIENT_NAME).
+                                globalSendLog(`[WhatsApp_WWJS] Tentando notificar via handleNewClientMessage para ConvID ${conversationDetailsForUI.ID}, Atendente: ${conversationDetailsForUI.USER_USERNAME}. MessageForUI: ${JSON.stringify(messageForUi).substring(0,100)}`, 'debug');
+                                globalWebsocketService.handleNewClientMessage(conversationDetailsForUI, messageForUi);
 
                                 // Se a conversa não tiver um atendente designado (USER_USERNAME não está presente),
                                 // então transmitimos como uma conversa pendente.

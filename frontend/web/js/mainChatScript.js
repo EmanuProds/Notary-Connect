@@ -1,111 +1,41 @@
 // mainChatScript.js
 // Este script gerencia a lógica principal da interface de chat.
 
-// Espera o DOM estar completamente carregado antes de executar o script.
+// --- INÍCIO: Lógica de Aplicação de Tema ---
+// Esta função deve ser executada o mais cedo possível, idealmente antes do DOMContentLoaded
+// para evitar flash de conteúdo com tema incorreto.
+function applyChatPageTheme() {
+    const THEME_STORAGE_KEY = 'theme'; // Chave usada pelo index.html
+    let themeToApply = 'light'; // Padrão se nada for encontrado ou erro
+
+    try {
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme === 'dark' || savedTheme === 'light') {
+            themeToApply = savedTheme;
+        } else if (savedTheme) {
+            console.warn(`[ChatTheme] Valor de tema inválido ('${savedTheme}') encontrado no localStorage. Usando padrão 'light'.`);
+        }
+        // Se savedTheme for null (não definido), themeToApply permanece 'light'
+    } catch (e) {
+        console.error("[ChatTheme] Erro ao acessar localStorage para aplicar tema. Usando padrão 'light'. Erro:", e);
+        // themeToApply já é 'light'
+    }
+    
+    document.documentElement.setAttribute('data-theme', themeToApply);
+    console.log(`[ChatTheme] Tema aplicado na inicialização da página: ${themeToApply}`);
+}
+
+// Aplica o tema assim que este script for carregado.
+// Não espera pelo DOMContentLoaded para esta parte específica,
+// para minimizar a chance de FOUC (Flash Of Unstyled Content) ou tema incorreto.
+applyChatPageTheme();
+// --- FIM: Lógica de Aplicação de Tema ---
+
+
+// Espera o DOM estar completamente carregado antes de executar o restante do script.
 document.addEventListener('DOMContentLoaded', async () => {
-    const THEME_STORAGE_KEY_CHAT = 'notaryConnectTheme'; // Mesma chave do localStorage
-
-    // --- INÍCIO: Lógica de Aplicação de Tema (Integrada e Refinada) ---
-    const applyChatTheme = (theme) => {
-        document.documentElement.setAttribute('data-theme', theme);
-        console.log(`[ChatTheme] Tema aplicado: ${theme}`);
-    };
-
-    const checkSystemThemeFallbackForChat = () => {
-        let theme = 'light'; // Padrão
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            theme = 'dark';
-        }
-        console.log(`[ChatTheme] Fallback do sistema: ${theme}`);
-        applyChatTheme(theme);
-        // Não salva no localStorage aqui, pois é apenas um fallback se nada estiver salvo
-    };
-
-    const initializePageChatTheme = () => {
-        let themeToApply = 'light'; // Padrão se nada for encontrado
-        let themeOrigin = 'padrão do script';
-
-        try {
-            const savedTheme = localStorage.getItem(THEME_STORAGE_KEY_CHAT);
-            if (savedTheme) {
-                themeToApply = savedTheme;
-                themeOrigin = 'localStorage';
-            } else {
-                // Se não houver tema salvo, tenta obter do Electron ou do sistema
-                if (window.electronAPI && typeof window.electronAPI.getSystemTheme === 'function') {
-                    console.log("[ChatTheme] Sem tema salvo. Tentando obter do Electron API...");
-                    window.electronAPI.getSystemTheme().then(themeFromElectron => {
-                        console.log(`[ChatTheme] Tema inicial do Electron: ${themeFromElectron}`);
-                        applyChatTheme(themeFromElectron);
-                        // Não salva no localStorage para permitir que o tema do Electron mude dinamicamente se não houver preferência do usuário
-                    }).catch(err => {
-                        console.warn("[ChatTheme] Erro ao obter tema inicial do Electron, usando fallback do S.O.:", err);
-                        checkSystemThemeFallbackForChat();
-                    });
-                    return; // Retorna para evitar aplicar o 'light' padrão desnecessariamente
-                } else {
-                    // Fallback para tema do sistema se Electron API não disponível
-                    console.log("[ChatTheme] Sem tema salvo e Electron API indisponível. Usando fallback do S.O.");
-                    checkSystemThemeFallbackForChat();
-                    return; // Retorna para evitar aplicar o 'light' padrão
-                }
-            }
-        } catch (e) {
-            console.warn("[ChatTheme] Erro ao acessar localStorage. Tentando fallback do Electron/S.O.:", e);
-            if (window.electronAPI && typeof window.electronAPI.getSystemTheme === 'function') {
-                window.electronAPI.getSystemTheme().then(applyChatTheme).catch(() => checkSystemThemeFallbackForChat());
-            } else {
-                checkSystemThemeFallbackForChat();
-            }
-            return;
-        }
-        
-        console.log(`[ChatTheme] Tema a ser aplicado na inicialização: ${themeToApply} (origem: ${themeOrigin})`);
-        applyChatTheme(themeToApply);
-    };
-
-    initializePageChatTheme();
-
-    // Listener para mudanças de tema do sistema operacional (via matchMedia)
-    // Só aplica se não houver tema explicitamente salvo pelo usuário no localStorage
-    if (window.matchMedia) {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            try {
-                if (!localStorage.getItem(THEME_STORAGE_KEY_CHAT)) {
-                    const newSystemTheme = event.matches ? 'dark' : 'light';
-                    console.log(`[ChatTheme] Mudança de tema do S.O. detectada (sem preferência salva): ${newSystemTheme}`);
-                    applyChatTheme(newSystemTheme);
-                } else {
-                    console.log("[ChatTheme] Mudança de tema do S.O. ignorada pois existe preferência salva no localStorage.");
-                }
-            } catch (e) {
-                // Em caso de erro ao acessar localStorage, aplica o tema do sistema
-                const newSystemTheme = event.matches ? 'dark' : 'light';
-                console.warn(`[ChatTheme] Erro ao verificar localStorage na mudança de tema do S.O. Aplicando ${newSystemTheme}. Erro:`, e);
-                applyChatTheme(newSystemTheme);
-            }
-        });
-    }
-
-    // Listener para atualizações de tema vindas do processo principal do Electron
-    // Só aplica se não houver tema explicitamente salvo pelo usuário no localStorage
-    if (window.electronAPI && typeof window.electronAPI.onSystemThemeUpdate === 'function') {
-        window.electronAPI.onSystemThemeUpdate((themeFromElectron) => {
-            try {
-                if (!localStorage.getItem(THEME_STORAGE_KEY_CHAT)) {
-                    console.log(`[ChatTheme] Atualização de tema do Electron recebida (sem preferência salva): ${themeFromElectron}`);
-                    applyChatTheme(themeFromElectron);
-                } else {
-                    console.log("[ChatTheme] Atualização de tema do Electron ignorada pois existe preferência salva no localStorage.");
-                }
-            } catch (e) {
-                 // Em caso de erro ao acessar localStorage, aplica o tema do Electron
-                console.warn(`[ChatTheme] Erro ao verificar localStorage na atualização de tema do Electron. Aplicando ${themeFromElectron}. Erro:`, e);
-                applyChatTheme(themeFromElectron);
-            }
-        });
-    }
-    // --- FIM: Lógica de Aplicação de Tema ---
+    // A lógica de tema que estava aqui foi movida para fora e simplificada.
+    // O restante do script de inicialização do chat continua aqui.
 
     console.log("[Chat] Evento DOMContentLoaded. Inicializando interface de atendimento...");
 
@@ -213,7 +143,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (window.ChatWebsocketService.isConnected) {
             if (window.ChatActions && typeof window.ChatActions.loadConversations === "function") {
                 console.log("[Chat] WebSocket já conectado. Solicitando conversas iniciais...");
-                const defaultTab = window.ChatDomElements.chatFilterTabsContainer?.querySelector('.filter-tab.active')?.dataset.tab || 'active';
+                // Updated to use new iconBar selectors
+                let defaultTab = 'active'; // Default to 'active'
+                if (window.ChatDomElements && window.ChatDomElements.iconBar) {
+                    const activeIconItem = window.ChatDomElements.iconBar.querySelector('.icon-bar-item.active[data-tab]');
+                    if (activeIconItem && activeIconItem.dataset.tab) {
+                        defaultTab = activeIconItem.dataset.tab;
+                    }
+                }
+                console.log(`[Chat] Default tab for initial load: ${defaultTab}`);
                 window.ChatActions.loadConversations(defaultTab);
             }
         } else {

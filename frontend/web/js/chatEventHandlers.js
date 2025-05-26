@@ -58,19 +58,24 @@ window.ChatEventHandlers = {
             }
           },
 
-          onNewMessage: (data) => { // 'data' aqui é o payload que ChatWebsocketService passou
-            console.log("[ChatEventHandlers] onNewMessage: New message received. Data object (payload from WS):", JSON.stringify(data));
-            // Ajustado para esperar conversationId e message dentro do objeto 'data' (que é o payload)
-            if (data && data.message && typeof data.conversationId !== 'undefined') {
-                const { conversationId, message } = data;
-                console.log(`[ChatEventHandlers] onNewMessage: Processing message for ConvID ${conversationId}.`);
+          onNewMessage: (data) => { // 'data' here is the full WebSocket message: { type: "new_message", payload: { conversationId: "...", message: {...} } }
+            console.log("[ChatEventHandlers] onNewMessage: New message received. Full WS data object:", JSON.stringify(data));
+            
+            // Correctly access conversationId and the message object from data.payload
+            if (data && data.payload && data.payload.message && typeof data.payload.conversationId !== 'undefined') {
+                const { conversationId, message } = data.payload; // Destructure from data.payload
+                
+                console.log(`[ChatEventHandlers] onNewMessage: Processing message for ConvID ${conversationId}. Message details:`, JSON.stringify(message));
+                
+                // The 'message' object here should contain SENDER_TYPE, CONTENT, TIMESTAMP etc.
+                // This 'message' object is passed to ChatUiUpdater.addNewMessage
                 if (window.ChatUiUpdater && typeof window.ChatUiUpdater.addNewMessage === 'function') {
                     window.ChatUiUpdater.addNewMessage(String(conversationId), message);
                 } else {
                      console.error("[ChatEventHandlers] onNewMessage: ChatUiUpdater.addNewMessage is not a function.");
                 }
             } else {
-                console.warn("[ChatEventHandlers] onNewMessage: Invalid data structure or missing conversationId/message fields in received payload:", data);
+                console.warn("[ChatEventHandlers] onNewMessage: Invalid data structure or missing conversationId/message fields in data.payload. Received data:", data);
             }
           },
 
@@ -177,16 +182,37 @@ window.ChatEventHandlers = {
             }
           },
 
-          onPendingConversation: (data) => { // 'data' é o payload (o objeto da conversa)
-            console.log("[ChatEventHandlers] onPendingConversation: New pending conversation received:", JSON.stringify(data));
-            // Ajustado para esperar ID diretamente em 'data' (que é o payload)
-            if (window.ChatUiUpdater && typeof window.ChatUiUpdater.addOrUpdateConversationInList === 'function' && data && typeof data.ID !== 'undefined') {
-              window.ChatUiUpdater.addOrUpdateConversationInList(data, 'active');
+          onPendingConversation: (data) => { // 'data' is the full WS message: { type: "pending_conversation", payload: { /* conversation object */ } }
+            console.log("[ChatEventHandlers] onPendingConversation: Full WebSocket data received:", JSON.stringify(data));
+            
+            const conversationObject = data.payload; // Extract the conversation object from data.payload
+
+            if (window.ChatUiUpdater && typeof window.ChatUiUpdater.addOrUpdateConversationInList === 'function' && 
+                conversationObject && typeof conversationObject.ID !== 'undefined') {
+              
+              console.log("[ChatEventHandlers] onPendingConversation: Processing conversation object:", JSON.stringify(conversationObject));
+              window.ChatUiUpdater.addOrUpdateConversationInList(conversationObject, 'active');
+              
+              // If the updated pending conversation is the currently active one, refresh its message view
+              if (window.ChatUiUpdater && String(window.ChatUiUpdater.activeConversationId) === String(conversationObject.ID)) {
+                console.log(`[ChatEventHandlers] onPendingConversation: Active chat ${conversationObject.ID} was updated. Reloading history to show new message.`);
+                if (window.ChatActions && typeof window.ChatActions.loadChatHistory === 'function') {
+                  window.ChatActions.loadChatHistory(conversationObject.ID);
+                } else {
+                  console.error("[ChatEventHandlers] onPendingConversation: ChatActions.loadChatHistory is not available to refresh active chat.");
+                }
+              }
+              
               if (window.NotificationService && typeof window.NotificationService.playNewChatSound === 'function') {
                 window.NotificationService.playNewChatSound();
               }
             } else {
-                console.warn("[ChatEventHandlers] onPendingConversation: Invalid data, ID missing, or ChatUiUpdater.addOrUpdateConversationInList is not a function. Received payload:", data);
+                let errorReason = "";
+                if (!conversationObject) errorReason = "conversationObject (data.payload) is null or undefined.";
+                else if (typeof conversationObject.ID === 'undefined') errorReason = "conversationObject.ID is undefined.";
+                else if (!(window.ChatUiUpdater && typeof window.ChatUiUpdater.addOrUpdateConversationInList === 'function')) errorReason = "ChatUiUpdater.addOrUpdateConversationInList is not a function.";
+                
+                console.warn(`[ChatEventHandlers] onPendingConversation: Conditions not met. Reason: ${errorReason}. Received full data:`, data);
             }
           },
 
@@ -262,7 +288,8 @@ window.ChatEventHandlers = {
         attachmentButton,
         mediaUploadInput,
         endChatButton,
-        sidebarTabsContainer,
+        // sidebarTabsContainer, // Replaced by iconBar
+        iconBar, // New element for tab/view switching
         transferChatButton,
         transferModal,
         contactInfoButton,
@@ -321,26 +348,37 @@ window.ChatEventHandlers = {
         console.warn("[ChatEventHandlers] endChatButton not found in ChatDomElements.");
     }
     
-    if (sidebarTabsContainer) {
-        sidebarTabsContainer.addEventListener('click', (event) => {
-            const clickedTab = event.target.closest('.sidebar-tab');
-            if (!clickedTab || !clickedTab.dataset.tab) return;
+    // Updated tab switching logic for the new icon bar
+    if (iconBar) {
+        iconBar.addEventListener('click', (event) => {
+            const clickedItem = event.target.closest('.icon-bar-item[data-tab]');
+            if (!clickedItem || !clickedItem.dataset.tab) {
+                // Could be a click on the profile icon or empty space, ignore for tab switching.
+                return;
+            }
 
-            sidebarTabsContainer.querySelectorAll('.sidebar-tab').forEach(tab => tab.classList.remove('active'));
-            clickedTab.classList.add('active');
+            // Remove 'active' class from all icon bar items with data-tab
+            if (window.ChatDomElements && window.ChatDomElements.iconBarItems) {
+                window.ChatDomElements.iconBarItems.forEach(item => item.classList.remove('active'));
+            }
+            // Add 'active' class to the clicked item
+            clickedItem.classList.add('active');
 
-            const tabType = clickedTab.dataset.tab;
-            console.log(`[ChatEventHandlers] Sidebar tab selected: ${tabType}`);
+            const tabType = clickedItem.dataset.tab;
+            console.log(`[ChatEventHandlers] Icon bar item selected: ${tabType}`);
 
             if (window.ChatActions && typeof window.ChatActions.loadConversations === 'function') {
                 window.ChatActions.loadConversations(tabType);
             }
+            // setActiveTab in ChatUiUpdater might also need to know about the visual change,
+            // or its logic might be purely for data/state management.
+            // For now, we assume its primary role is to ensure the correct list is displayed.
             if (window.ChatUiUpdater && typeof window.ChatUiUpdater.setActiveTab === 'function') {
-                window.ChatUiUpdater.setActiveTab(tabType);
+                window.ChatUiUpdater.setActiveTab(tabType); // This might internally call loadConversations or similar
             }
         });
     } else {
-        console.warn("[ChatEventHandlers] sidebarTabsContainer (class: .sidebar-tabs) not found in ChatDomElements.");
+        console.warn("[ChatEventHandlers] iconBar not found in ChatDomElements. Tab switching will not work.");
     }
 
     if (transferChatButton) {

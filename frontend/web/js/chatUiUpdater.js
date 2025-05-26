@@ -10,10 +10,13 @@ window.ChatUiUpdater = {
 
   initialize() {
     console.log("[ChatUiUpdater] initialize: ChatUiUpdater inicializado.");
-    if (window.ChatDomElements && window.ChatDomElements.sidebarTabsContainer) {
+    // Changed to check for iconBarItems as sidebarTabsContainer is obsolete
+    if (window.ChatDomElements && window.ChatDomElements.iconBarItems) {
         this.setActiveTab(this.currentTab); // Define a aba inicial e renderiza
     } else {
-        console.warn("[ChatUiUpdater] initialize: sidebarTabsContainer não encontrado. A aba inicial pode não ser renderizada corretamente.");
+        console.warn("[ChatUiUpdater] initialize: iconBarItems não encontrado. A aba inicial pode não ser renderizada corretamente ou o estado visual dos ícones não será atualizado.");
+        // Still attempt to render conversations for the default currentTab if iconBarItems is missing,
+        // as the list rendering itself doesn't depend on the icon bar visual state.
         this.renderCurrentTabConversations();
     }
     return this; 
@@ -306,22 +309,41 @@ window.ChatUiUpdater = {
 
   createMessageElement(message) {
     const messageElement = document.createElement("div");
-    const senderTypeActual = message.SENDER_TYPE || message.senderType || 'unknown';
-    messageElement.className = `message p-2.5 rounded-lg max-w-[80%] shadow break-words ${senderTypeActual.toLowerCase() === 'agent' ? 'bg-primary text-white self-end' : 'bg-white text-gray-800 self-start border border-gray-200'}`;
-    if (senderTypeActual.toLowerCase() === 'system') {
-        messageElement.classList.remove('bg-primary', 'text-white', 'self-end', 'bg-white', 'text-gray-800', 'self-start', 'border', 'border-gray-200', 'shadow');
-        messageElement.classList.add('bg-blue-50', 'text-blue-700', 'self-center', 'italic', 'text-sm', 'max-w-[90%]', 'text-center', 'border', 'border-dashed', 'border-blue-200', 'my-2');
-    }
+    
+    // Standardize senderType access and normalize for comparison
+    const senderTypeFromMessage = message.senderType || message.SENDER_TYPE || 'unknown';
+    const senderTypeActualNormalized = senderTypeFromMessage.toUpperCase(); // For reliable comparisons
 
+    messageElement.className = `message p-2.5 rounded-lg max-w-[80%] shadow break-words`;
+    if (senderTypeActualNormalized === 'AGENT') {
+        messageElement.classList.add('bg-primary', 'text-white', 'self-end');
+    } else if (senderTypeActualNormalized === 'CLIENT') {
+        messageElement.classList.add('bg-white', 'text-gray-800', 'self-start', 'border', 'border-gray-200');
+    } else if (senderTypeActualNormalized === 'SYSTEM') {
+        messageElement.classList.add('bg-blue-50', 'text-blue-700', 'self-center', 'italic', 'text-sm', 'max-w-[90%]', 'text-center', 'border', 'border-dashed', 'border-blue-200', 'my-2');
+        messageElement.classList.remove('shadow'); // System messages typically don't have shadow
+    } else { // BOT or unknown
+        messageElement.classList.add('bg-gray-200', 'text-gray-800', 'self-start', 'border', 'border-gray-300'); // Default style for BOT or unknown
+    }
+    
     messageElement.dataset.id = String(message.ID || message.id || `local_${Date.now()}`); 
 
-    let senderNameDisplay = 'Sistema';
-    if (senderTypeActual === 'AGENT') {
-        senderNameDisplay = message.AGENT_NAME || (window.ChatWebsocketService ? window.ChatWebsocketService.agentName : null) || 'Atendente';
-    } else if (senderTypeActual === 'CLIENT') {
-        senderNameDisplay = message.CLIENT_NAME || 'Cliente';
-    } else if (senderTypeActual === 'BOT') {
+    let senderNameDisplay = '';
+    if (senderTypeActualNormalized === 'AGENT') {
+        // AGENT_NAME is set by backend's getConversationHistory
+        // SENDER_ID is the agent's username, good fallback
+        senderNameDisplay = message.AGENT_NAME || message.SENDER_ID || 'Atendente';
+    } else if (senderTypeActualNormalized === 'CLIENT') {
+        // CLIENT_NAME is set by backend's getConversationHistory
+        // SENDER_ID is the client's JID, less ideal fallback but better than generic "Cliente"
+        senderNameDisplay = message.CLIENT_NAME || message.SENDER_ID || 'Cliente';
+    } else if (senderTypeActualNormalized === 'BOT') {
         senderNameDisplay = 'Robô Notary Connect';
+    } else if (senderTypeActualNormalized === 'SYSTEM') {
+        senderNameDisplay = 'Sistema'; // Though system messages usually don't show a name header
+    } else {
+        senderNameDisplay = 'Desconhecido';
+        console.warn(`[ChatUiUpdater] createMessageElement: Tipo de remetente não reconhecido: '${senderTypeFromMessage}'`, message);
     }
 
     const messageTime = this.formatTime(message.TIMESTAMP || message.timestamp); 
@@ -341,7 +363,7 @@ window.ChatUiUpdater = {
         } else if (messageTypeActual === 'video') {
             contentHTML = `<video controls src="${message.MEDIA_URL}" class="${mediaBaseClasses} max-h-60"></video>`;
              if (textContent && textContent !== message.MEDIA_URL && textContent !== `(${messageTypeActual})`) contentHTML += `<div class="message-text mt-1 text-sm">${escapedTextContent}</div>`;
-        } else { 
+        } else { // Default to document for other media types with URL
             contentHTML = `
                 <a href="${message.MEDIA_URL}" target="_blank" rel="noopener noreferrer" class="${mediaBaseClasses} inline-flex items-center gap-2 bg-gray-200 hover:bg-gray-300 p-2 rounded text-primary hover:text-primary-darker font-medium text-sm">
                     <img src="./img/icons/document.svg" alt="Documento" class="w-5 h-5 flex-shrink-0" style="filter: invert(39%) sepia(98%) saturate(1789%) hue-rotate(195deg) brightness(100%) contrast(101%);" />
@@ -352,12 +374,16 @@ window.ChatUiUpdater = {
         contentHTML = `<div class="message-text text-sm">${escapedTextContent}</div>`;
     }
     
-    const senderDisplayElement = senderTypeActual.toLowerCase() !== 'system' ? `<div class="sender-name text-xs font-semibold mb-0.5 ${senderTypeActual.toLowerCase() === 'agent' ? 'text-blue-200' : 'text-gray-600'}">${window.ChatUtils ? window.ChatUtils.escapeHtml(senderNameDisplay) : senderNameDisplay}</div>` : '';
+    // System messages usually don't have a name header. Bots and other types might.
+    const showSenderNameDiv = senderTypeActualNormalized !== 'SYSTEM';
+    const senderNameClass = senderTypeActualNormalized === 'AGENT' ? 'text-blue-200' : 'text-gray-600'; // Example class based on type
+
+    const senderDisplayElement = showSenderNameDiv ? `<div class="sender-name text-xs font-semibold mb-0.5 ${senderNameClass}">${window.ChatUtils ? window.ChatUtils.escapeHtml(senderNameDisplay) : senderNameDisplay}</div>` : '';
 
     messageElement.innerHTML = `
       ${senderDisplayElement}
       ${contentHTML}
-      <div class="message-info text-xs mt-1 ${senderTypeActual.toLowerCase() === 'agent' ? 'text-blue-200 text-right' : 'text-gray-500 text-left'}">${messageTime}</div>
+      <div class="message-info text-xs mt-1 ${senderTypeActualNormalized.toLowerCase() === 'agent' ? 'text-blue-200 text-right' : 'text-gray-500 text-left'}">${messageTime}</div>
     `;
     return messageElement;
   },
@@ -375,12 +401,14 @@ window.ChatUiUpdater = {
         LAST_MESSAGE_TIME: message.TIMESTAMP || message.timestamp,
         UNREAD_MESSAGES: (currentConv) => { 
             if (String(this.activeConversationId) === stringConversationId && document.hasFocus()) {
-                if (window.ChatActions && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client")) {
+                // Standardized to message.senderType
+                if (window.ChatActions && message.senderType === "CLIENT") { 
                     window.ChatActions.markMessagesAsRead(stringConversationId); 
                 }
                 return 0; 
             }
-            if (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") {
+            // Standardized to message.senderType
+            if (message.senderType === "CLIENT") { 
                 const convInList = this.getConversationFromListById(stringConversationId);
                 const newUnread = convInList ? (convInList.UNREAD_MESSAGES || 0) + 1 : 1;
                 return newUnread;
@@ -406,7 +434,8 @@ window.ChatUiUpdater = {
 
     if (String(this.activeConversationId) !== stringConversationId) {
       console.warn(`[ChatUiUpdater] addNewMessage: Nova mensagem para conversa ${conversationId} que NÃO está ativa (ativa: ${this.activeConversationId}). Lista atualizada, mas chat não.`);
-      if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
+      // Standardized to message.senderType
+      if (window.NotificationService && message.senderType === "CLIENT" && !document.hasFocus()) { 
         if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
       }
       return;
@@ -426,7 +455,8 @@ window.ChatUiUpdater = {
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }, 100); 
 
-    if (window.NotificationService && (message.SENDER_TYPE === "CLIENT" || message.senderType === "client") && !document.hasFocus()) {
+    // Standardized to message.senderType
+    if (window.NotificationService && message.senderType === "CLIENT" && !document.hasFocus()) { 
       if (typeof window.NotificationService.playMessageSound === 'function') window.NotificationService.playMessageSound();
     }
   },
@@ -752,22 +782,42 @@ window.ChatUiUpdater = {
     console.log(`[ChatUiUpdater] setActiveTab: Definindo aba ativa para '${tabType}'. Aba anterior: ${this.currentTab}`);
     this.currentTab = tabType;
     
-    const tabsContainer = window.ChatDomElements && window.ChatDomElements.sidebarTabsContainer;
-    if (tabsContainer) {
-        const tabButtons = tabsContainer.querySelectorAll(".sidebar-tab"); 
-        tabButtons.forEach(button => {
-            button.classList.toggle("active", button.dataset.tab === tabType);
+    // Updated to use iconBarItems for visual state
+    const iconBarItems = window.ChatDomElements && window.ChatDomElements.iconBarItems;
+    if (iconBarItems && iconBarItems.length > 0) {
+        iconBarItems.forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.tab === tabType) {
+                item.classList.add('active');
+            }
         });
     } else {
-        console.warn("[ChatUiUpdater] setActiveTab: sidebarTabsContainer não encontrado para atualizar classes das abas.");
+        console.warn("[ChatUiUpdater] setActiveTab: iconBarItems não encontrado ou vazio. Não foi possível atualizar o estado visual dos ícones da aba.");
     }
 
-    if (this.activeConversationId) {
-        console.log(`[ChatUiUpdater] setActiveTab: Limpando área de chat ao mudar para aba ${tabType} pois uma conversa estava ativa.`);
-        this.clearChatArea(true); 
+    // If the active conversation is no longer in the list for the new tab, clear it.
+    // This check should happen *after* currentTab is updated and *before* renderCurrentTabConversations
+    // if renderCurrentTabConversations relies on activeConversationId for highlighting.
+    if (this.activeConversationId && !this.getConversationFromListById(this.activeConversationId, this.currentTab)) {
+        console.log(`[ChatUiUpdater] setActiveTab: Conversa ativa ${this.activeConversationId} não existe na nova aba ${this.currentTab}. Limpando área de chat.`);
+        this.clearChatArea(true);
+    } else if (this.activeConversationId) {
+        // If the active conversation *does* exist in the new tab, ensure it's highlighted when that tab renders.
+        // This is implicitly handled by renderCurrentTabConversations calling highlightActiveConversation.
+        console.log(`[ChatUiUpdater] setActiveTab: Conversa ativa ${this.activeConversationId} existe na nova aba ${this.currentTab}. Será destacada.`);
     }
+    
+    // Previously, clearChatArea was called if activeConversationId existed, regardless of whether it was in the new tab.
+    // The new logic above is more precise.
+    // if (this.activeConversationId) {
+    // console.log(`[ChatUiUpdater] setActiveTab: Limpando área de chat ao mudar para aba ${tabType} pois uma conversa estava ativa.`);
+    // this.clearChatArea(true);
+    // }
     this.renderCurrentTabConversations(); 
-  },
+  }, // End of setActiveTab
+
+  // Corrected: Removed duplicated/misplaced block that was here.
+  
   updateTypingIndicator(clientName, isTyping) { 
     const { typingIndicator } = window.ChatDomElements || {};
     if (!typingIndicator) return;
