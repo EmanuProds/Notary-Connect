@@ -1,0 +1,329 @@
+{
+  "general": {
+    "greeting_regex": "(?:^|\\W)(oi|ol[áa]|o[íi]a|bom dia|boa tarde|boa noite)(?:$|\\W)",
+    "greeting": "Olá, {client_name}! 👋 Sou o assistente virtual 🤖 do *Cartório Ofício Único de São Francisco de Itabapoana-RJ*.\nComo posso te ajudar hoje? (Ah, só consigo entender mensagens de texto, ok? Sem áudios, por favor! 😉)",
+    "greeting_suggestion": "Se já sabe o que precisa, é só digitar o serviço desejado! ✍️\nCaso queira explorar, digite *Menu* 📜 para ver nossos serviços.\nOu, se preferir falar com um de nossos especialistas, digite o nome (ex: *Joenis*, *Manuelle*, etc) 🙋‍♀️🙋‍♂️.",
+    "menu_regex": "(?:^|\\W)(menu)(?:$|\\W)",
+    "main_menu_prompt": "Para qual setor você gostaria de ser direcionado(a)? Escolha uma letra: 👇\n\n*A* - Balcão (Reconhecimentos, Autenticações, etc.) 🖋️\n*B* - Registros Civis de Pessoas Naturais *RCPN* (Nascimento, Óbito, Casamento, etc.) 👨‍👩‍👧‍👦\n*C* - Pessoas Jurídicas *RCPJ*, Títulos e Documentos *RTD*, Protestos (Intimações, Dívidas, etc.) 🏢📄🚫\n*D* - Registro Geral de Imóveis *RGI* (Compra, Venda, Buscas, etc.) 🏠🌳\n*E* - Escrituras *Notas* (Lavratura, Doações, Inventários, etc.) 📝",
+    "horario_regex": "hor[aá]rio",
+    "horario_atendimento": "Nosso horário de atendimento é: ⏰\n*Segunda à Sexta:* 9h às 18h.\n*Finais de Semana e Feriados:* 9h às 12h (somente para Registros de *Nascimento e Óbito*).",
+    "end_chat_message": "Ok! 👍 Atendimento humano finalizado. Estou de volta para te ajudar! 🤖\nDigite *Menu* 📜 para ver as opções dispoíveis ou me diga o *Nome* do serviço que precisa.",
+    "end_chat_regex": "atendimento finalizado|finalizar atendimento|encerrar atendimento|atendimento encerrado",
+    "unknown_message": "Hmm, não consegui entender sua mensagem... 🤔\n\nQue tal digitar *Menu* 📜 para ver as opções disponíveis? Ou tente descrever o serviço que procura (exemplo: *{example_service}*) ✍️.",
+    "transfer_message": "Só um momento, por favor! ⏳ *{agent_names}* já vai te atender.\nSe precisar voltar ao atendimento virtual 🤖, é só digitar *Encerrar atendimento*.",
+    "contact_card_message": "Para continuar seu atendimento sobre *{topic}*, por favor, envie uma mensagem diretamente para *{target_name}* através do cartão de contato abaixo. 👇",
+    "contact_card_error": "Ops! 😟 Não consegui encontrar o contato para te enviar. Por favor, peça ajuda a um(a) atendente digitando o nome dele(a).",
+    "general_error": "Desculpe, algo inesperado aconteceu por aqui... 😞 Nossa equipe já foi notificada.\nPor favor, tente novamente mais tarde ou digite *Menu* 📜.",
+    "human_attendant_unavailable": "Poxa! No momento, o atendimento humano não está disponível. 😔\nNosso horário de atendimento é:\n*Segunda à Sexta:* 9h às 18h ⏰\n*Finais de Semana e Feriados:* 9h às 12h (somente para Registros de Nascimento e Óbito) 👨‍👩‍👧‍👦\n\nPor favor, tente novamente durante nosso horário de funcionamento ou digite *Menu* 📜 para ver as opções de autoatendimento.",
+    "human_attendant_hours": {
+    },
+    "agent_inactive_timeout_message_to_client": "O atendimento com {attendant_name} foi encerrado devido à inatividade. Você voltará a ser atendido(a) pelo nosso assistente virtual. Digite *Menu* para ver as opções de serviços. 🤖",
+    "agent_inactive_timeout_message_to_agent_ui": "O chat com {client_name} ({chat_id}) foi automaticamente liberado devido à sua inatividade e retornado ao assistente virtual. Digite *Menu* para ver as opções de serviços. 🤖",
+    "bot_reassumes_after_inactivity_message": "Olá, {client_name}! Nosso assistente virtual está de volta para te ajudar. Digite *Menu* para ver as opções de serviços. 🤖",
+    "service_not_found_message": "Detalhes do serviço não encontrados.",
+    "no_services_in_sector_menu": "Desculpe, não encontrei serviços para este setor.",
+    "noServicesInSector": "Não há serviços disponíveis neste menu no momento. Um atendente irá ajudá-lo.",
+    "invalidOption": "Opção inválida. Por favor, tente novamente. 🤖",
+    "serviceInfoContinuation": "Posso ajudar com mais alguma informação, voltar ao menu anterior *M* ou falar com um atendente *A*? 🤖",
+    "serviceInfoContinuationWithService": "Sobre \"{serviceName}\": podemos ajudar com mais alguma informação? Quer voltar ao menu anterior (M) ou falar com um atendente (A)? 🤖",
+    "informationCollected": "Obrigado pelas informações! Seu pedido foi registrado. 🤖",
+    "anythingElse": "Posso ajudar com algo mais? *S* Sim ou *N* Não. 🤖",
+    "goodbye": "Entendido. Se precisar de algo mais, é só chamar! Até logo! 🤖",
+    "provide_info_error_no_service_id": "Ocorreu um erro ao processar as informações do serviço (serviço atual não definido).",
+    "provide_info_error_no_fields": "Não há informações adicionais a serem coletadas para este serviço ou ocorreu um erro de configuração.",
+    "provide_info_next_field_prompt": "Obrigado. Agora, por favor, informe {fieldName}:",
+    "provide_info_error_collecting": "Ocorreu um erro ao coletar informações.",
+    "menuFooterServices": "Digite o *número* ou *Nome* do serviço, ou *V* para Voltar. 🤖",
+    "fallback_message": "Não entendi. Digite *Menu*. 🤖",
+    "general_error_to_client": "Desculpe, ocorreu um erro. Tente *Menu*. 🤖",
+    "bot_unavailable_message": "Desculpe, o serviço de atendimento está temporariamente indisponível. 🤖",
+    "attendant_message_prefix_format": "*{attendantName}*\n",
+    "transferTimeout": "Desculpe, todos os nossos atendentes estão ocupados no momento. Por favor, tente novamente mais tarde ou digite *Menu* para ver outras opções. 🤖",
+    "yesKeywordsRegex": "sim|s|quero|gostaria|pode ser|podeser",
+    "noKeywordsRegex": "n[ãa]o|n|nada|obrigado",
+    "confirm_attendant_prompt": "Gostaria de falar com um atendente? *S* Sim ou *N* Não. 🤖",
+    "confirm_attendant_invalid_option_reprompt": "Opção inválida. Por favor, responda com *S* Sim ou *N* Não. 🤖"
+  },
+  "sectors": {
+    "balcao_rcpn": {
+      "name": "Balcão e RCPN",
+      "menu_options_regex": "^[a-e]$",
+      "menu_options_regex_balcao": "^([1-6])$",
+      "menu_options_regex_rcpn": "^(1[0-5])$",
+      "options": [
+         {
+          "id": "a",
+          "target_sector_id": "balcao_rcpn",
+          "response_message": "Ok! Entendido. 😉 Você foi direcionado(a) para o setor de *Balcão* 🖋️. Escolha uma opção ou digite o nome do serviço: 👇\n\n*1* - Abertura de firma\n*2* - Reconhecimento de firma\n*3* - Cópia autenticada\n*4* - Comunicado de venda de veículo\n*5* - Apostilamento de Haia\n*6* - Procurações"
+        },
+        {
+          "id": "b",
+          "target_sector_id": "balcao_rcpn",
+          "response_message": "Certo! Você foi direcionado(a) para o setor de *Registros Civis de Pessoas Naturais (RCPN)* 👨‍👩‍👧‍👦. 👍 Escolha uma opção ou digite o nome do serviço: 👇\n\n*10* - Registro de Nascimento e Óbito\n*11* - 2ª via de Certidões\n*12* - Buscas\n*13* - Casamento civil\n*14* - União estável\n*15* - Certidão de Tutela e Curatela\n\nDigite o número ou nome do serviço, ou *V* para Voltar."
+        },
+        {
+          "id": "c",
+          "target_sector_id": "rcpj_rtd_protestos",
+          "response_message": "Ok! Encaminhando para o setor de *RCPJ, RTD e Protestos* 🏢📄🚫."
+        },
+        {
+          "id": "d",
+          "target_sector_id": "rgi",
+          "response_message": "Ok! Encaminhando para o setor de *Registro Geral de Imóveis (RGI)* 🏠🌳."
+        },
+        {
+          "id": "e",
+          "target_sector_id": "notas",
+          "response_message": "Ok! Encaminhando para o setor de *Escrituras (Notas)* 📝."
+        },
+        {
+          "id": "firma_abertura",
+          "keywords_regex": "1|abertura de firma|abrir firma",
+          "response": "*Abertura de Firma:* ✍️\nÉ o ato de registrar sua assinatura em cartório, permitindo o reconhecimento futuro em documentos.\n\n*Documentos Necessários:*\n• RG ou CNH original (CNH dentro da validade)\n• CPF original\n(Obs: Documentos digitais oficiais precisam ser materializados primeiro. Custo da materialização: R$ ${{materializacao_documento}})\n\n*Valor da Abertura:* R$ ${{firma_abertura}}.",
+          "attendants": []
+        },
+        {
+          "id": "firma_reconhecimento",
+          "keywords_regex": "2$|reconhecimento de firma|reconhecimento",
+          "response": "*Reconhecimento de Firma:* ✅\n• *Por Semelhança:* (R$ ${{firma_reconhecimento_semelhanca}}) Verifica se a assinatura no documento é similar à registrada aqui.\n• *Por Autenticidade:* (R$ ${{firma_reconhecimento_autenticidade}}) Exige sua presença para assinar em nosso livro, oferecendo maior segurança.",
+          "attendants": []
+        },
+        {
+          "id": "copia_autenticada",
+          "keywords_regex": "3$|xerox autenticada|x[ée]rox autenticada|c[óo]pia autenticada|autenticar c[óo]pia|autentica[cç][aã]o(\\s+de\\s+documento)?",
+          "response": "*Cópia Autenticada:* 📄 (R$ ${{copia_autenticada}})\nGarante que a cópia é uma reprodução fiel do documento original apresentado.\n\n*Importante:*\n• É necessário apresentar o documento original para conferência.\n• Documentos com validação online (link/QR code) não são autenticados pelo cartório; a validação é responsabilidade do destinatário.",
+          "attendants": []
+        },
+        {
+          "id": "comunicado_venda_veiculo",
+          "keywords_regex": "4$|comunica[cç][aã]o de venda|comunicado de venda",
+          "response": "*Comunicado de Venda de Veículo:* 🚗\nExige reconhecimento de firma por autenticidade do vendedor e do comprador (ambos presenciais).\n\n*Custos:*\n• DUT Vendedor: R$ ${{comunicado_venda_vendedor}}\n• Autenticidade Comprador: R$ ${{comunicado_venda_comprador_autenticidade}}",
+          "attendants": []
+        },
+        {
+          "id": "apostilamento_haia",
+          "name": "Apostilamento de Haia 🌎",
+          "keywords_regex": "5$|apostilamento(\\s+de\\s+haia)?",
+          "response": "*Apostilamento de Haia* 🌎 (Custo atual: R$ ${{apostilamento_haia}})\nAutentica documentos públicos brasileiros para uso em países da Convenção da Haia (certidões, diplomas, contratos, etc.).\n\n*Atenção:*\n• Certifica a assinatura/função da autoridade emissora.\n• Se houver assinatura no documento a ser apostilado, será necessário reconhecer firma ou autenticá-lo previamente.\n• Compareça com o documento original para análise.\n• Prazo de entrega: 5 dias úteis após conclusão do pedido.",
+          "attendants": ["Luciene"]
+        },
+         {
+          "id": "procuracoes",
+          "name": "Procuração 📜",
+          "keywords_regex": "6$|procura[cç][aã]o|procurass[aã]o|procura[cç][oõ]es",
+          "response": "*Procuração* 📜\nÉ um documento que autoriza alguém (procurador) a agir em nome de outra pessoa (outorgante), ideal para quando você não pode estar presente ou deseja ser representado.\n\n*Observações:*\n• O valor varia conforme o caso.\n• Para opções específicas de procuração, consulte o setor de *Notas* (Opção *E* no menu principal).\n• Documentos necessários geralmente incluem RG com foto das partes e testemunhas (varia por tipo).",
+          "attendants": ["Joenis"]
+        },
+        {
+          "id": "rcpn_registro_nascimento_obito",
+          "keywords_regex": "10$|nascimento|registro de nascimento|registrar nascimento|[óo]bito|registro de [oó]bito|registrar [oó]bito",
+          "response": "*Registro de Nascimento ou Óbito:* 👶💀 (1ª via *GRATUITA*)\n\n*Nascimento:*\n• Prazo legal: 15 dias (após, são necessárias 2 testemunhas).\n• Documentos (originais/cópias): DNV (via amarela), RG dos pais, Cert. Casamento (se casados), Cert. Nascimento (se solteiros).\n• Pais menores de 16 anos: Necessitam de representação.\n\n*Óbito:*\n• Documentos (originais/cópias): DO (Declaração de Óbito), RG do declarante e do(a) falecido(a).",
+          "attendants": []
+        },
+        {
+          "id": "rcpn_2a_via_certidoes",
+          "name": "2ª via de Certidões 📄🔄",
+          "keywords_regex": "11$|2ª\\s+via|segunda\\s+via|atualizar\\s+(certid[aã]o|registro)",
+          "response": "*2ª Via de Certidões* 📄🔄\n• Certidões locais (antigos 2º, 3º, 4º Distritos SJB e SFI-RJ): R$ ${{rcpn_certidao_2a_via_local}}.\n• Certidões externas (outras cidades/estados): R$ ${{rcpn_certidao_2a_via_externa}}.\n\n*Dica:* Reúna informações do registro original (nome, data, livro, folha, termo). Se não tiver, solicite uma *busca*.",
+          "attendants": ["Luciene", "Joenis"]
+        },
+        {
+          "id": "rcpn_buscas",
+          "name": "Busca de Certidão 🔍",
+          "keywords_regex": "12$|busca(s)?|busca(r)?(\\s+de|\\s+uma?)?\\s+(certid[aã]o|registro)",
+          "response": "*Busca de Certidão* 🔍 (Nascimento, óbito, casamento)\nPara agilizar, tenha o máximo de informações: nome, data, local, pais/cônjuge, foto/cópia da original, etc.\n\n*Procedimento:*\n1. Pagamento de R$ ${{rcpn_busca}} por busca via PIX para: oficiounicosfi@gmail.com.\n2. Envie o comprovante e as informações da certidão.\n3. Iniciaremos a *busca*.",
+          "attendants": ["Luciene"]
+        },
+        {
+          "id": "rcpn_casamento_civil",
+          "name": "Casamento civil 💍",
+          "keywords_regex": "13$|casamento(\\s+civil)?|casar|kasar|cazar|kazar|cas[oó]rio|caz[oó]rio",
+          "response": "*Casamento Civil* 💍\nValor a partir de R$ ${{rcpn_casamento_civil_base}} (depende do regime de bens).\n\n*Documentos (originais e cópias):*\n• RG com foto (dos noivos)\n• Cert. Nascimento/Casamento original (dos noivos)\n• Comprovante de Residência original (dos noivos)\n\n*Testemunhas:* Duas, maiores de 18 anos, com RG original.",
+          "attendants": ["Joenis"]
+        },
+        {
+          "id": "rcpn_uniao_estavel",
+          "name": "União estável ❤️",
+          "keywords_regex": "14$|união\\s+est[áa]vel|uniao\\s+est[áa]vel",
+          "response": "*União Estável* ❤️ (Valor: R$ ${{rcpn_uniao_estavel}})\n\n*Documentos (originais e cópias):*\n• RG com foto (do casal)\n• Cert. Nascimento/Casamento original (do casal)\n• Comprovante de residência original (do casal)\n\n(Não são necessárias testemunhas para este ato.)",
+          "attendants": ["Joenis"]
+        },
+         {
+          "id": "rcpn_certidao_tutela_curatela",
+          "name": "Certidão de Tutela e Curatela 📄",
+          "keywords_regex": "15$|tutela|curatela|certid[aã]o de tutela|certid[aã]o de curatela",
+          "response": "*Certidão de Tutela e Curatela* 📄 (Valor: R$ ${{rcpn_certidao_tutela_curatela}})\nComprova se uma pessoa é tutelada ou curatelada, sendo importante para diversos fins legais.",
+          "attendants": ["Luciene", "Joenis"]
+        }
+      ]
+    },
+    "rcpj_rtd_protestos": {
+      "name": "RCPJ, RTD e Protestos",
+      "menu_prompt": "Escolha uma opção ou descreva o serviço que precisa: 👇\n\n*1* - *RCPJ* (Registro/Averbação) 🏢\n*2* - *RCPJ* (Certidão) 📄\n*3* - *RTD* (Registro de Documento) ✍️\n*4* - *RTD* (Notificação / Diligência) 📬\n*5* - *RTD* (Certidão) 📄\n*6* - *Protestos* (Certidão) 🚫\n*7* - *Protestos* (Cancelamento) ✅",
+      "menu_options_regex_rcpj_rtd_protestos": "^[1-7]$",
+      "options": [
+        {
+          "id": "rcpj_registro_averbacao",
+          "name": "RCPJ - Registro ou Averbação 🏢",
+          "keywords_regex": "1|rcpj|registro civil pessoa jur[ií]dica|associa[cç][aã]o|funda[cç][aã]o|registro\\s+(rcpj|civil\\s+de\\s+pessoa\\s+jur)|averba[cç][aã]o\\s+rcpj",
+          "response": "*RCPJ - Registro ou Averbação* 🏢\nRegistra atos constitutivos de sociedades simples, associações, fundações, org. religiosas, partidos, etc.\nA *averbação* atualiza informações nos registros já existentes.\n\n*Valor aproximado:* R$ ${{rcpj_registro_averbacao_base}}.",
+          "attendants": ["Manuelle", "Joenis"]
+        },
+        {
+          "id": "rcpj_certidao",
+          "keywords_regex": "2|certid[aã]o\\s+rcpj",
+          "name": "RCPJ - Certidão 📄",
+          "response": "*RCPJ - Certidão* 📄\nAtesta a existência e regularidade de uma entidade registrada.\n\n*Valor aproximado:* R$ ${{rcpj_certidao_base}}.",
+          "attendants": ["Manuelle", "Joenis"]
+        },
+        {
+          "id": "rtd_registro_documento",
+          "name": "RTD - Registro de Documento ✍️",
+          "keywords_regex": "3|rtd|t[ií]tulos e documentos|registrar documento|documento\\s+sem\\s+valor",
+          "response": "*RTD - Registro de Documento* ✍️\nRegistra documentos diversos (contratos, notificações, etc.) para garantir autenticidade, publicidade e conservação.\n\n*Registro de documento sem valor declarado:* R$ ${{rtd_registro_sem_valor_declarado}}.",
+          "attendants": ["Manuelle", "Joenis"]
+        },
+        {
+          "id": "rtd_notificacao_diligencia",
+          "name": "RTD - Notificação Extrajudicial/Diligência 📬",
+          "keywords_regex": "4|notifica[cç][aã]o extrajudicial|notifica[cç][aã]o\\s+rtd|dilig[êe]ncia\\s+rtd",
+          "response": "*RTD - Notificação Extrajudicial/Diligência* 📬\nA *Notificação Extrajudicial* dá conhecimento oficial do conteúdo de um documento a alguém.\nA *Diligência* é o ato de tentar entregar essa notificação.\n\n*Valor aproximado:* R$ ${{rtd_notificacao_diligencia_base}}.",
+          "attendants": ["Manuelle", "Joenis"]
+        },
+        {
+          "id": "rtd_certidao",
+          "name": "RTD - Certidão 📄",
+          "keywords_regex": "5|certid[aã]o\\s+(de\\s+)?(registro\\s+)?rtd",
+          "response": "*RTD - Certidão* 📄\nComprova o registro de um título ou documento.\n\n*Valor aproximado:* R$ ${{rtd_certidao_base}}.",
+          "attendants": ["Manuelle", "Joenis"]
+        },
+        {
+          "id": "protestos_certidao",
+          "name": "Protestos - Certidão ✅",
+          "keywords_regex": "6|protesto(s)?|certid[aã]o\\s+(de\\s+)?protesto|certid[aã]o negativa de protesto",
+          "response": "*Protestos - Certidão* 🚫\nInforma se existem dívidas protestadas em nome de um CPF ou CNPJ.\n\n*Valor aproximado:* R$ ${{protestos_certidao_base}}.",
+          "attendants": ["Manuelle", "Joenis"]
+        },
+        {
+          "id": "protestos_cancelamento",
+          "name": "Protestos - Cancelamento 🚫",
+          "keywords_regex": "7|cancelar protesto|cancelamento\\s+(de\\s+)?protesto",
+          "response": "*Protestos - Cancelamento* 🚫\nOcorre após a quitação da dívida, mediante apresentação da carta de anuência do credor ou uma ordem judicial.",
+          "attendants": ["Manuelle", "Joenis"]
+        }
+      ]
+    },
+    "rgi": {
+      "name": "Registro Geral de Imóveis (RGI)",
+      "menu_prompt": "Escolha uma opção ou descreva o serviço que precisa: 👇\n\n*1* - Certidão (Inteiro Teor / Ônus Reais) 📄\n*2* - Busca de Imóvel 🔍\n*3* - Certidão Negativa de Imóvel 🚫🏠\n*4* - Registro de Imóvel ✍️🏠\n*5* - Averbação na Matrícula ✅",
+      "menu_options_regex_rgi": "^[1-5]$",
+      "options": [
+        {
+          "id": "rgi_certidao",
+          "name": "Certidão (Inteiro Teor/Ônus Reais) 📄",
+          "keywords_regex": "1|certid[aã]o\\s+(de\\s+)?(im[óo]vel|inteiro teor|[oô]nus reais)",
+          "response": "*RGI - Certidão (Inteiro Teor/Ônus Reais)* 📄\n• *Inteiro Teor:* Reproduz fielmente a matrícula do imóvel.\n• *Ônus Reais:* Informa pendências (hipotecas, penhoras, etc.).\n\n*Valor aproximado:* R$ ${{rgi_certidao_base}}.",
+          "attendants": ["Jéssica"]
+        },
+        {
+          "id": "rgi_busca",
+          "name": "Busca de Imóvel 🔍",
+          "keywords_regex": "2|busca(r)?\\s+(de\\s+)?im[óo]vel|procurar\\s+im[óo]vel|busca\\s+de\\s+(im[óo]vel|terreno)",
+          "response": "*RGI - Busca de Imóvel* 🔍\nLocaliza registros com base no nome do proprietário, número de matrícula ou endereço.\n\n*Valor da busca:* R$ ${{rgi_busca_base}} (Se encontrada, a certidão é cobrada à parte).\n*PIX para busca:* rgioficiounico@gmail.com (envie o comprovante).",
+          "attendants": ["Jéssica"]
+        },
+        {
+          "id": "rgi_certidao_negativa",
+          "name": "Certidão Negativa de Imóvel 🚫🏠",
+          "keywords_regex": "3|certid[aã]o negativa de im[óo]vel",
+          "response": "*RGI - Certidão Negativa de Imóvel* 🚫🏠\nComprova que não há imóveis registrados em nome de determinada pessoa nesta comarca, ou que um imóvel específico não possui ônus.",
+          "attendants": ["Jéssica"]
+        },
+        {
+          "id": "rgi_registro_imovel",
+          "name": "Registro de Imóvel ✍️🏠",
+          "keywords_regex": "4|registr(o|ar)\\s+(de\\s+)?(im[óo]vel|terreno|casa|compra e venda|doa[cç][aã]o)|registro\\s+de\\s+(im[óo]vel|terreno|terra|casa)|registrar\\s+(im[óo]vel|terreno|terra|casa)",
+          "response": "*RGI - Registro de Imóvel* ✍️🏠\nFormaliza a transferência de propriedade (compra e venda, doação, etc.) na matrícula do imóvel.\n\n*Custos e Documentos:* Variam conforme o valor do imóvel e o tipo de ato. É necessário apresentar o título (escritura, contrato) e documentos relacionados.",
+          "attendants": ["Jéssica"]
+        },
+        {
+          "id": "rgi_averbacao_matricula",
+          "name": "Averbação na Matrícula ✅",
+          "keywords_regex": "5|averba[cç][aã]o|averbar\\s+(constru[cç][aã]o|casamento|div[óo]rcio)",
+          "response": "*RGI - Averbação na Matrícula* ✅\nAtualiza informações na matrícula do imóvel (ex: construção, demolição, casamento, divórcio, etc.).\n\n*Custos e Documentos:* Variam conforme o tipo de averbação. É necessário apresentar os documentos que comprovem a alteração.",
+          "attendants": ["Jéssica"]
+        }
+      ]
+    },
+    "notas": {
+      "name": "Notas",
+      "menu_prompt": "Escolha uma opção ou descreva o serviço que precisa: 👇\n\n*1* - Escrituras (Compra e Venda, Doação, etc.) ✍️🏠\n*2* - Escritura Declaratória 📄\n*3* - Procuração Pública (Geral) 📜\n  *3A* - Procuração Pública (Base)\n  *3B* - Procuração Pública (Bancos e Amplos Poderes)\n  *3C* - Procuração Pública (Imóveis ou DETRAN)\n*4* - Inventário Extrajudicial ⚖️\n*5* - Testamento ✍️📜\n*6* - Usucapião Extrajudicial ✅🏠",
+      "menu_options_regex_notas": "^([1-6]|3[aAcC])$",
+      "options": [
+        {
+          "id": "notas_escrituras",
+          "name": "Escrituras Públicas ✍️🏠" ,
+          "keywords_regex": "1|escritura(s)?(\\s+p[úu]blica)?|compra\\s+e\\s+venda|doa[cç][aã]o|permuta|pacto\\s+antenupcial",
+          "response": "*Escrituras Públicas* ✍️🏠\nLavramos diversas escrituras: Compra e Venda, Doação, Permuta, Pacto Antenupcial, etc.\n\n*Custos e Documentos:* Variam conforme o valor do bem e o tipo de ato.",
+          "attendants": ["Raiany", "Luciano"]
+        },
+        {
+          "id": "notas_escritura_declaratoria",
+          "name": "Escritura Declaratória 📄",
+          "keywords_regex": "2|escritura\\s+declarat[óo]ria|declara[cç][aã]o\\s+de\\s+(uni[aã]o\\s+est[áa]vel|depend[êe]ncia\\s+econ[ôo]mica)",
+          "response": "*Escritura Declaratória* 📄\nFormaliza declarações sobre fatos ou situações (ex: União Estável, Dependência Econômica).\n\n*Valor a partir de:* R$ ${{notas_escritura_declaratoria_base}}.",
+          "attendants": ["Joenis"]
+        },
+        {
+          "id": "notas_procuracao_publica_geral",
+          "name": "Procuração Pública (Geral) 📜",
+          "keywords_regex": "3|procura[cç][aã]o publica geral",
+          "response": "*Procuração Pública (Geral)* 📜\nAutoriza alguém a agir em seu nome para atos específicos ou gerais.\n\n*Tipos Específicos (digite o código):*\n  *3A* - Procuração Pública (Base)\n  *3B* - Procuração Pública (Bancos e Amplos Poderes)\n  *3C* - Procuração Pública (Imóveis ou DETRAN)\n\n*Custos:* Variam conforme os poderes. Necessário RG original do outorgante.",
+          "attendants": ["Joenis"]
+        },
+         {
+          "id": "notas_procuracao_base",
+          "name": "Procuração Pública (Base) 📜",
+          "keywords_regex": "4|procura[cç][aã]o base|procura[cç][aã]o simples",
+          "response": "*Procuração Pública (Base)* 📜\nUsada para poderes mais simples e específicos.\n\n*Valor:* R$ ${{notas_procuracao_base}}.",
+          "attendants": ["Joenis"]
+        },
+         {
+          "id": "notas_procuracao_bancos_amplos",
+          "name": "Procuração Pública (Bancos e Amplos Poderes) 📜",
+          "keywords_regex": "5|procura[cç][aã]o bancos|procura[cç][aã]o amplos poderes",
+          "response": "*Procuração Pública (Bancos e Amplos Poderes)* 🏦📜\nUsada para movimentar contas bancárias ou conceder poderes amplos para diversos atos.\n\n*Valor:* R$ ${{notas_procuracao_bancos_amplos}}.",
+          "attendants": ["Joenis"]
+        },
+         {
+          "id": "notas_procuracao_imoveis_detran",
+          "name": "Procuração Pública (Imóveis ou DETRAN) 📜",
+          "keywords_regex": "6|procura[cç][aã]o imoveis|procura[cç][aã]o detran",
+          "response": "*Procuração Pública (Imóveis ou DETRAN)* 🏠🚗📜\nUsada para compra/venda de imóveis, assuntos de veículos no DETRAN, etc.\n\n*Valor:* R$ ${{notas_procuracao_imoveis_detran}}.",
+          "attendants": ["Joenis"]
+        },
+        {
+          "id": "notas_inventario_extrajudicial",
+          "name": "Inventário Extrajudicial ⚖️",
+          "keywords_regex": "7|invent[áa]rio|partilha|heran[cç]a",
+          "response": "*Inventário Extrajudicial* ⚖️\nRealizado em cartório quando não há testamento e todos os herdeiros são maiores, capazes e estão de acordo.\n\n*Importante:* Necessária a presença de um advogado.\n*Custos:* Envolvem emolumentos e impostos (ITCMD).",
+          "attendants": ["Raiany", "Luciano"]
+        },
+        {
+          "id": "notas_testamento",
+          "name": "Testamento Público ✍️📜",
+          "keywords_regex": "5|testamento",
+          "response": "*Testamento Público* ✍️📜\nLavrado pelo tabelião, garante segurança e validade à sua última vontade.\n\n*Documentos:* Identidade e CPF. Consulte-nos sobre os custos.",
+          "attendants": ["Raiany", "Luciano"]
+        },
+        {
+          "id": "notas_usucapiao_extrajudicial",
+          "name": "Usucapião Extrajudicial ✅🏠",
+          "keywords_regex": "6|usucapi[aã]o|uso\\s+capi[aã]o|usu\\s+capi[aã]o",
+          "response": "*Usucapião Extrajudicial* ✅🏠\nPermite regularizar a posse de um imóvel diretamente no cartório, com assistência de advogado, se preenchidos os requisitos legais.",
+          "attendants": ["Raiany", "Luciano"]
+        }
+      ]
+    }
+  }
+}
