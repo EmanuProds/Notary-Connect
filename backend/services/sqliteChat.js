@@ -99,6 +99,31 @@ function runQuery(sql, params = []) {
   });
 }
 
+// Helper functions copied from sqliteAdmin.js
+async function columnExists(tableName, columnName) {
+    const columns = await allQuery(`PRAGMA table_info(${tableName})`);
+    return columns.some(col => col.name === columnName);
+}
+
+async function addColumnIfNotExists(tableName, columnName, columnDefinition) {
+    const exists = await columnExists(tableName, columnName);
+    if (!exists) {
+        try {
+            await runQuery(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`);
+            // Uses the 'log' function defined within sqliteChat.js scope
+            log(`Coluna '${columnName}' adicionada à tabela '${tableName}'.`, 'info');
+        } catch (error) {
+            if (!error.message.includes("duplicate column name")) {
+                 log(`Erro ao adicionar coluna '${columnName}' à tabela '${tableName}': ${error.message}`, 'error');
+                 throw error; 
+            } else {
+                 log(`Aviso: Tentativa de adicionar coluna duplicada '${columnName}' à tabela '${tableName}'. Ignorando.`, 'warn');
+            }
+        }
+    }
+}
+// End of helper functions
+
 async function createTablesIfNotExists() {
   const createClientsTable = `
     CREATE TABLE IF NOT EXISTS CLIENTS (
@@ -113,7 +138,8 @@ async function createTablesIfNotExists() {
       STATUS TEXT DEFAULT 'pending' NOT NULL, 
       SECTOR TEXT, TRANSFER_HISTORY TEXT, CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
       UPDATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP, CLOSED_AT DATETIME,
-      LAST_MESSAGE_TIMESTAMP DATETIME, UNREAD_MESSAGES INTEGER DEFAULT 0, 
+      LAST_MESSAGE_TIMESTAMP DATETIME, UNREAD_MESSAGES INTEGER DEFAULT 0,
+      LAST_FORWARDED_AT DATETIME, -- Nova coluna
       FOREIGN KEY (CLIENT_ID) REFERENCES CLIENTS(ID) ON DELETE CASCADE
     );`;
   const createMessagesTable = `
@@ -127,6 +153,7 @@ async function createTablesIfNotExists() {
 
   await runQuery(createClientsTable); log("Tabela CLIENTS verificada/criada.", "info");
   await runQuery(createConversationsTable); log("Tabela CONVERSATIONS verificada/criada.", "info");
+  await addColumnIfNotExists('CONVERSATIONS', 'LAST_FORWARDED_AT', 'DATETIME');
   await runQuery(createMessagesTable); log("Tabela MESSAGES verificada/criada.", "info");
 }
 
@@ -563,6 +590,43 @@ async function transferConversationToUser(conversationId, targetAgentUsername, f
     }
 }
 
+// --- Funções para Estatísticas do Dashboard ---
+
+async function countPendingConversations() {
+    const sql = "SELECT COUNT(*) as count FROM CONVERSATIONS WHERE STATUS = 'pending' AND USER_ID IS NULL"; // Apenas realmente pendentes para o bot/fila geral
+    try {
+        const result = await getQuery(sql);
+        return result ? result.count : 0;
+    } catch (error) {
+        log(`Erro ao contar conversas pendentes: ${error.message}`, "error");
+        throw error;
+    }
+}
+
+async function countHumanInProgressConversations() {
+    // Considera 'active' (atendente já interagindo) E 'pending_human' (encaminhado para humano, aguardando aceite ou primeira resposta do atendente)
+    const sql = "SELECT COUNT(*) as count FROM CONVERSATIONS WHERE (STATUS = 'active' AND USER_ID IS NOT NULL) OR STATUS = 'pending_human'";
+    try {
+        const result = await getQuery(sql);
+        return result ? result.count : 0;
+    } catch (error) {
+        log(`Erro ao contar conversas em atendimento humano: ${error.message}`, "error");
+        throw error;
+    }
+}
+
+async function countClosedConversationsToday() {
+    // Usa o campo CLOSED_AT para determinar os fechamentos de hoje
+    const sql = "SELECT COUNT(*) as count FROM CONVERSATIONS WHERE STATUS = 'closed' AND date(CLOSED_AT) = date('now', 'localtime')";
+    try {
+        const result = await getQuery(sql);
+        return result ? result.count : 0;
+    } catch (error) {
+        log(`Erro ao contar conversas encerradas hoje: ${error.message}`, "error");
+        throw error;
+    }
+}
+
 
 module.exports = {
   setLogger,
@@ -581,7 +645,11 @@ module.exports = {
   getConversationById,
   transferConversationToSector,
   transferConversationToUser,
-  reopenConversation, // Adicionando a nova função
+  reopenConversation,
+  // Novas funções de contagem para dashboard:
+  countPendingConversations,
+  countHumanInProgressConversations,
+  countClosedConversationsToday,
 };
 
 async function reopenConversation(conversationId, agentUsername, agentFullName) {

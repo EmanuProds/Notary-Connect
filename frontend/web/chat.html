@@ -7,26 +7,41 @@
     <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
     <link rel="icon" href="./img/icons/logo.svg" type="image/svg+xml">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts (Roboto) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <!-- Material Tailwind CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@material-tailwind/html@latest/styles/material-tailwind.css" />
+    
+    <!-- <script src="https://cdn.tailwindcss.com"></script> --> {/* Replaced by Material Tailwind */}
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> --> {/* Replaced Inter with Roboto */}
+    
+    <!-- Custom Theme CSS -->
+    <link rel="stylesheet" href="./css/custom-theme.css">
+    <!-- Original Chat Specific Styles -->
     <link rel="stylesheet" href="./css/chatStyles.css">
+
+    <!-- Removed inline Tailwind config script and basic html, body styles as they should be handled by Material Tailwind / custom-theme.css -->
+    <!-- 
     <script>
         // Tailwind CSS Configuration
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary': '#007bff', // Primary color for branding
-                        'primary-darker': '#0056b3', // Darker shade of primary for hover states
-                        'danger': '#dc3545',  // Danger color for actions like end chat
-                        'danger-darker': '#c82333', // Darker shade of danger for hover states
+                        'primary': '#007bff', 
+                        'primary-darker': '#0056b3', 
+                        'danger': '#dc3545',  
+                        'danger-darker': '#c82333', 
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Basic body and HTML styling to ensure full height and centering */
         html, body {
             height: 100%;
             margin: 0;
@@ -37,9 +52,10 @@
             align-items: center;
             justify-content: center;
         }
-    </style>
+    </style> 
+    -->
 </head>
-<body class="bg-gray-100 p-1 sm:p-2 md:p-4">
+<body class="bg-gray-100 p-1 sm:p-2 md:p-4"> {/* Body classes might be adjusted by custom-theme.css or Material Tailwind defaults */}
     <div class="container mx-auto flex h-full w-full max-w-screen-2xl shadow-lg rounded-lg overflow-hidden">
         <!-- Icon Bar -->
         <div class="icon-bar w-16 bg-primary text-white flex flex-col items-center py-4 space-y-4 flex-shrink-0">
@@ -124,6 +140,9 @@
     <div id="connectionStatus" class="connection-status fixed bottom-4 right-4 px-4 py-2 rounded-md text-sm font-medium shadow-md z-50">Conectando...</div>
     <div id="alertModal" class="alert-modal fixed top-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-md shadow-lg z-[100] text-sm font-medium" style="display: none;"><span id="alertModalMessage"></span></div>
 
+    <!-- Material Tailwind JS -->
+    <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/material-tailwind.js"></script>
+    <!-- Original Chat Scripts -->
     <script src="./js/chatUtils.js"></script>
     <script src="./js/chatDomElements.js"></script>
     <script src="./js/chatWebsocketService.js"></script>

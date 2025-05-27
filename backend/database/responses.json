@@ -1,3 +1,20 @@
+[
+  {
+    "response_key": "saudacao",
+    "response_name": "Boas-vindas Novo Usuário",
+    "triggers": "oi,ola,bom dia,boa tarde,boa noite",
+    "is_regex": false,
+    "response_text": "Olá {client_name}! Bem-vindo(a) ao nosso serviço de atendimento. Como posso ajudar?",
+    "active": true,
+    "priority": 1,
+    "typing_delay_ms": 500,
+    "response_delay_ms": 1000,
+    "sector_id": null,
+    "respond_on_holiday": true,
+    "forward_to_user_id": null,
+    "forward_to_sector_id": null
+  },
+
 {
   "general": {
     "greeting_regex": "(?:^|\\W)(oi|ol[áa]|o[íi]a|bom dia|boa tarde|boa noite)(?:$|\\W)",

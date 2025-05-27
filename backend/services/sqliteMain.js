@@ -246,6 +246,10 @@ async function initializeDefaultConfigs() {
         { key: "bot_out_of_hours_message", value: "Olá! Nosso horário de atendimento é de segunda a sexta, das 8h às 18h. Por favor, retorne durante nosso horário comercial.", type: "string", description: "Mensagem enviada fora do horário de funcionamento" },
         { key: "enable_sound_notifications", value: "true", type: "boolean", description: "Ativa/desativa notificações sonoras para novas mensagens"},
         { key: "notification_sound", value: "default", type: "string", description: "Som de notificação para novas mensagens (default, bell, chime)"},
+        { key: "HUMAN_ATTENDANCE_TIME_LIMIT_SECONDS", value: "300", type: "number", description: "Tempo em segundos que a IA aguarda antes de retomar um chat se o atendente humano não responder." },
+        { key: "HUMAN_ATTENDANCE_TIMEOUT_RESPONSE_TEXT", value: "O atendimento com o especialista foi encerrado por inatividade. Nosso assistente virtual está de volta para ajudar. Digite Menu para opções.", type: "string", description: "Mensagem enviada ao cliente quando o tempo de atendimento humano expira por inatividade do atendente." },
+        { key: "HUMAN_ATTENDANCE_FINISHED_RESPONSE_TEXT", value: "O atendimento com o especialista foi finalizado. Nosso assistente virtual está de volta para ajudar. Digite Menu para opções.", type: "string", description: "Mensagem enviada ao cliente quando o atendente finaliza o atendimento humano." },
+        { key: "CONTACT_CARD_NOT_FOUND_RESPONSE_TEXT", value: "Desculpe, não consegui encontrar o contato direto para este atendente. Ele(a) será notificado para entrar em contato com você.", type: "string", description: "Mensagem enviada ao cliente quando o número de contato direto de um atendente não é encontrado." }
     ];
     try {
         await runQuery("BEGIN TRANSACTION");

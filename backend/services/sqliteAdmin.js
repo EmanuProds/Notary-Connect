@@ -136,11 +136,16 @@ async function createTablesIfNotExists() {
   const createAutoResponsesTable = `
     CREATE TABLE IF NOT EXISTS AUTO_RESPONSES (
       ID INTEGER PRIMARY KEY AUTOINCREMENT, RESPONSE_KEY TEXT NOT NULL UNIQUE, RESPONSE_NAME TEXT NOT NULL,
-      PATTERN TEXT NOT NULL, RESPONSE_TEXT TEXT NOT NULL, ACTIVE INTEGER DEFAULT 1 NOT NULL,
+      TRIGGERS TEXT NOT NULL, RESPONSE_TEXT TEXT NOT NULL, ACTIVE INTEGER DEFAULT 1 NOT NULL,
       PRIORITY INTEGER DEFAULT 0 NOT NULL, START_TIME TEXT, END_TIME TEXT, 
       ALLOWED_DAYS TEXT DEFAULT '0,1,2,3,4,5,6', 
-      TYPING_DELAY_MS INTEGER DEFAULT 1000, RESPONSE_DELAY_MS INTEGER DEFAULT 500, 
-      CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP, UPDATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
+      TYPING_DELAY_MS INTEGER DEFAULT 1000, RESPONSE_DELAY_MS INTEGER DEFAULT 500,
+      SECTOR_ID INTEGER, RESPOND_ON_HOLIDAY BOOLEAN DEFAULT 0,
+      FORWARD_TO_USER_ID INTEGER, FORWARD_TO_SECTOR_ID INTEGER, IS_REGEX BOOLEAN DEFAULT 0,
+      CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP, UPDATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (SECTOR_ID) REFERENCES SECTORS(ID) ON DELETE SET NULL,
+      FOREIGN KEY (FORWARD_TO_USER_ID) REFERENCES USERS(ID) ON DELETE SET NULL,
+      FOREIGN KEY (FORWARD_TO_SECTOR_ID) REFERENCES SECTORS(ID) ON DELETE SET NULL
     );`;
   const createSectorsTable = `
     CREATE TABLE IF NOT EXISTS SECTORS (
@@ -151,17 +156,66 @@ async function createTablesIfNotExists() {
     CREATE TABLE IF NOT EXISTS SERVICES (
       ID INTEGER PRIMARY KEY AUTOINCREMENT, SERVICE_KEY TEXT NOT NULL UNIQUE, SERVICE_NAME TEXT NOT NULL,
       DESCRIPTION TEXT, PRICE REAL, SECTOR_ID INTEGER, ACTIVE INTEGER DEFAULT 1 NOT NULL,
-      FOREIGN KEY (SECTOR_ID) REFERENCES SECTORS(ID) ON DELETE SET NULL
+      FORWARD_TO_USER_ID INTEGER,
+      FOREIGN KEY (SECTOR_ID) REFERENCES SECTORS(ID) ON DELETE SET NULL,
+      FOREIGN KEY (FORWARD_TO_USER_ID) REFERENCES USERS(ID) ON DELETE SET NULL
+    );`;
+  const createHolidaysTable = `
+    CREATE TABLE IF NOT EXISTS HOLIDAYS (
+      ID INTEGER PRIMARY KEY AUTOINCREMENT, HOLIDAY_DATE DATE NOT NULL UNIQUE, DESCRIPTION TEXT
     );`;
 
   await runQuery(createUsersTable); log("Tabela USERS verificada/criada.", "info");
-  
+  // A coluna DIRECT_CONTACT_NUMBER já é adicionada implicitamente pela definição da tabela se ela não existir na primeira execução.
+  // Se for necessário garantir sua adição em tabelas USERS mais antigas, addColumnIfNotExists pode ser usado aqui também.
+  // await addColumnIfNotExists('USERS', 'DIRECT_CONTACT_NUMBER', 'TEXT'); // Confirmado que já existe na definição da tabela.
+
   await runQuery(createAutoResponsesTable); log("Tabela AUTO_RESPONSES verificada/criada.", "info");
+  
+  // Tratamento para a coluna PATTERN renomeada para TRIGGERS
+  const patternExists = await columnExists('AUTO_RESPONSES', 'PATTERN');
+  const triggersExists = await columnExists('AUTO_RESPONSES', 'TRIGGERS');
+
+  if (patternExists && !triggersExists) {
+    log("Coluna 'PATTERN' encontrada e 'TRIGGERS' não. Renomeando e migrando dados...", "info");
+    await addColumnIfNotExists('AUTO_RESPONSES', 'TRIGGERS', 'TEXT'); // Adiciona TRIGGERS se não existir (deve ser o caso aqui)
+    try {
+      await runQuery("UPDATE AUTO_RESPONSES SET TRIGGERS = PATTERN WHERE TRIGGERS IS NULL");
+      log("Dados de 'PATTERN' copiados para 'TRIGGERS'. A coluna 'PATTERN' pode ser removida manualmente mais tarde.", "warn");
+      // Idealmente, aqui se faria ALTER TABLE AUTO_RESPONSES DROP COLUMN PATTERN, mas sqlite não suporta DROP COLUMN diretamente em versões mais antigas.
+      // E mesmo em novas, é uma operação que pode ser pesada ou ter restrições.
+      // Por ora, a coluna PATTERN antiga fica, mas não será usada pelas novas funções.
+      // Novas inserções usarão TRIGGERS. A definição da tabela já tem TRIGGERS NOT NULL.
+      // Se TRIGGERS foi adicionada via addColumnIfNotExists, ela é NULLABLE. 
+      // Para garantir consistência, pode-se atualizar TRIGGERS para NOT NULL após a cópia, 
+      // mas isso requer cuidado se houver falha na cópia ou se a tabela for muito grande.
+      // Por simplicidade, manteremos TRIGGERS como TEXT (NOT NULL na criação da tabela, mas potencialmente NULLABLE se adicionada depois).
+      // As funções CRUD garantirão que TRIGGERS seja populado.
+    } catch (error) {
+        log(`Erro ao migrar dados de PATTERN para TRIGGERS: ${error.message}. 'PATTERN' não será removida. Verifique manualmente.`, "error");
+    }
+  } else if (!patternExists && !triggersExists) {
+    // Caso a tabela seja muito antiga e não tenha nem PATTERN nem TRIGGERS
+    await addColumnIfNotExists('AUTO_RESPONSES', 'TRIGGERS', 'TEXT NOT NULL DEFAULT \'\''); 
+    log("Coluna 'TRIGGERS' não encontrada, adicionada com valor padrão.", "info");
+  } else if (patternExists && triggersExists) {
+    log("Ambas colunas 'PATTERN' e 'TRIGGERS' existem. Assumindo que a migração já ocorreu ou 'TRIGGERS' é a coluna primária. 'PATTERN' pode precisar de limpeza manual.", "warn");
+  }
+
+
   await addColumnIfNotExists('AUTO_RESPONSES', 'TYPING_DELAY_MS', 'INTEGER DEFAULT 1000');
   await addColumnIfNotExists('AUTO_RESPONSES', 'RESPONSE_DELAY_MS', 'INTEGER DEFAULT 500');
+  await addColumnIfNotExists('AUTO_RESPONSES', 'SECTOR_ID', 'INTEGER REFERENCES SECTORS(ID) ON DELETE SET NULL');
+  await addColumnIfNotExists('AUTO_RESPONSES', 'RESPOND_ON_HOLIDAY', 'BOOLEAN DEFAULT 0');
+  await addColumnIfNotExists('AUTO_RESPONSES', 'FORWARD_TO_USER_ID', 'INTEGER REFERENCES USERS(ID) ON DELETE SET NULL');
+  await addColumnIfNotExists('AUTO_RESPONSES', 'FORWARD_TO_SECTOR_ID', 'INTEGER REFERENCES SECTORS(ID) ON DELETE SET NULL');
+  await addColumnIfNotExists('AUTO_RESPONSES', 'IS_REGEX', 'BOOLEAN DEFAULT 0');
   
   await runQuery(createSectorsTable); log("Tabela SECTORS verificada/criada.", "info");
   await runQuery(createServicesTable); log("Tabela SERVICES verificada/criada.", "info");
+  await addColumnIfNotExists('SERVICES', 'FORWARD_TO_USER_ID', 'INTEGER REFERENCES USERS(ID) ON DELETE SET NULL');
+
+  await runQuery(createHolidaysTable); log("Tabela HOLIDAYS verificada/criada.", "info");
 }
 
 // --- Funções de Usuários ---
@@ -248,31 +302,71 @@ async function deleteUser(id) {
 
 // --- Funções de Respostas Automáticas ---
 async function getAllAutoResponses() { 
-    const sql = "SELECT * FROM AUTO_RESPONSES ORDER BY PRIORITY DESC, RESPONSE_KEY ASC";
+    // Ensure TRIGGERS is selected, not PATTERN. If PATTERN still exists, it's ignored.
+    const sql = "SELECT ID, RESPONSE_KEY, RESPONSE_NAME, TRIGGERS, RESPONSE_TEXT, ACTIVE, PRIORITY, START_TIME, END_TIME, ALLOWED_DAYS, TYPING_DELAY_MS, RESPONSE_DELAY_MS, SECTOR_ID, RESPOND_ON_HOLIDAY, FORWARD_TO_USER_ID, FORWARD_TO_SECTOR_ID, IS_REGEX, CREATED_AT, UPDATED_AT FROM AUTO_RESPONSES ORDER BY PRIORITY DESC, RESPONSE_KEY ASC";
     try { return await allQuery(sql); } 
     catch (e) { log(`Erro getAllAutoResponses: ${e.message}`, "error"); throw e; }
 }
 async function getAutoResponseById(id) { 
-    const sql = "SELECT * FROM AUTO_RESPONSES WHERE ID = ?";
+    const sql = "SELECT ID, RESPONSE_KEY, RESPONSE_NAME, TRIGGERS, RESPONSE_TEXT, ACTIVE, PRIORITY, START_TIME, END_TIME, ALLOWED_DAYS, TYPING_DELAY_MS, RESPONSE_DELAY_MS, SECTOR_ID, RESPOND_ON_HOLIDAY, FORWARD_TO_USER_ID, FORWARD_TO_SECTOR_ID, IS_REGEX, CREATED_AT, UPDATED_AT FROM AUTO_RESPONSES WHERE ID = ?";
     try { return await getQuery(sql, [id]); } 
     catch (e) { log(`Erro getAutoResponseById ${id}: ${e.message}`, "error"); throw e; }
 }
 async function createAutoResponse(data) { 
-    const { response_key, response_name, pattern, response_text, active = 1, priority = 0, start_time, end_time, allowed_days = "0,1,2,3,4,5,6", typing_delay_ms = 1000, response_delay_ms = 500 } = data;
-    const sql = `INSERT INTO AUTO_RESPONSES (RESPONSE_KEY, RESPONSE_NAME, PATTERN, RESPONSE_TEXT, ACTIVE, PRIORITY, START_TIME, END_TIME, ALLOWED_DAYS, TYPING_DELAY_MS, RESPONSE_DELAY_MS) VALUES (?,?,?,?,?,?,?,?,?,?,?)`;
-    try { return await runQuery(sql, [response_key, response_name, pattern, response_text, active ? 1:0, priority, start_time || null, end_time || null, allowed_days, typing_delay_ms, response_delay_ms]); } 
+    const { response_key, response_name, triggers, response_text, active = 1, priority = 0, start_time, end_time, allowed_days = "0,1,2,3,4,5,6", typing_delay_ms = 1000, response_delay_ms = 500, sector_id, respond_on_holiday = 0, forward_to_user_id, forward_to_sector_id, is_regex = 0 } = data;
+    const sql = `INSERT INTO AUTO_RESPONSES (RESPONSE_KEY, RESPONSE_NAME, TRIGGERS, RESPONSE_TEXT, ACTIVE, PRIORITY, START_TIME, END_TIME, ALLOWED_DAYS, TYPING_DELAY_MS, RESPONSE_DELAY_MS, SECTOR_ID, RESPOND_ON_HOLIDAY, FORWARD_TO_USER_ID, FORWARD_TO_SECTOR_ID, IS_REGEX) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+    try { return await runQuery(sql, [response_key, response_name, triggers, response_text, active ? 1:0, priority, start_time || null, end_time || null, allowed_days, typing_delay_ms, response_delay_ms, sector_id || null, respond_on_holiday ? 1:0, forward_to_user_id || null, forward_to_sector_id || null, is_regex ? 1:0]); } 
     catch (e) { log(`Erro createAutoResponse: ${e.message}`, "error"); throw e; }
 }
 async function updateAutoResponse(id, data) { 
-    const { response_key, response_name, pattern, response_text, active, priority, start_time, end_time, allowed_days, typing_delay_ms, response_delay_ms } = data;
-    const sql = `UPDATE AUTO_RESPONSES SET RESPONSE_KEY=?, RESPONSE_NAME=?, PATTERN=?, RESPONSE_TEXT=?, ACTIVE=?, PRIORITY=?, START_TIME=?, END_TIME=?, ALLOWED_DAYS=?, TYPING_DELAY_MS=?, RESPONSE_DELAY_MS=?, UPDATED_AT=CURRENT_TIMESTAMP WHERE ID=?`;
-    try { return await runQuery(sql, [response_key, response_name, pattern, response_text, active ? 1:0, priority, start_time || null, end_time || null, allowed_days, typing_delay_ms, response_delay_ms, id]); } 
+    const { response_key, response_name, triggers, response_text, active, priority, start_time, end_time, allowed_days, typing_delay_ms, response_delay_ms, sector_id, respond_on_holiday, forward_to_user_id, forward_to_sector_id, is_regex } = data;
+    const sql = `UPDATE AUTO_RESPONSES SET RESPONSE_KEY=?, RESPONSE_NAME=?, TRIGGERS=?, RESPONSE_TEXT=?, ACTIVE=?, PRIORITY=?, START_TIME=?, END_TIME=?, ALLOWED_DAYS=?, TYPING_DELAY_MS=?, RESPONSE_DELAY_MS=?, SECTOR_ID=?, RESPOND_ON_HOLIDAY=?, FORWARD_TO_USER_ID=?, FORWARD_TO_SECTOR_ID=?, IS_REGEX=?, UPDATED_AT=CURRENT_TIMESTAMP WHERE ID=?`;
+    try { return await runQuery(sql, [response_key, response_name, triggers, response_text, active ? 1:0, priority, start_time || null, end_time || null, allowed_days, typing_delay_ms, response_delay_ms, sector_id || null, respond_on_holiday ? 1:0, forward_to_user_id || null, forward_to_sector_id || null, is_regex ? 1:0, id]); } 
     catch (e) { log(`Erro updateAutoResponse ${id}: ${e.message}`, "error"); throw e; }
 }
 async function deleteAutoResponse(id) { 
     const sql = "DELETE FROM AUTO_RESPONSES WHERE ID = ?";
     try { return await runQuery(sql, [id]); } 
     catch (e) { log(`Erro deleteAutoResponse ${id}: ${e.message}`, "error"); throw e; }
+}
+async function getAutoResponseByKey(response_key) {
+    const sql = "SELECT * FROM AUTO_RESPONSES WHERE RESPONSE_KEY = ?";
+    try { return await getQuery(sql, [response_key]); }
+    catch (e) { log(`Erro getAutoResponseByKey ${response_key}: ${e.message}`, "error"); throw e; }
+}
+
+// --- Funções de Feriados (HOLIDAYS) ---
+async function createHoliday(data) {
+    const { holiday_date, description } = data;
+    const sql = "INSERT INTO HOLIDAYS (HOLIDAY_DATE, DESCRIPTION) VALUES (?, ?)";
+    try { return await runQuery(sql, [holiday_date, description]); }
+    catch (e) { log(`Erro createHoliday: ${e.message}`, "error"); throw e; }
+}
+async function getAllHolidays() {
+    const sql = "SELECT * FROM HOLIDAYS ORDER BY HOLIDAY_DATE ASC";
+    try { return await allQuery(sql); }
+    catch (e) { log(`Erro getAllHolidays: ${e.message}`, "error"); throw e; }
+}
+async function getHolidayById(id) {
+    const sql = "SELECT * FROM HOLIDAYS WHERE ID = ?";
+    try { return await getQuery(sql, [id]); }
+    catch (e) { log(`Erro getHolidayById ${id}: ${e.message}`, "error"); throw e; }
+}
+async function getHolidayByDate(date) {
+    const sql = "SELECT * FROM HOLIDAYS WHERE HOLIDAY_DATE = ?";
+    try { return await getQuery(sql, [date]); }
+    catch (e) { log(`Erro getHolidayByDate ${date}: ${e.message}`, "error"); throw e; }
+}
+async function updateHoliday(id, data) {
+    const { holiday_date, description } = data;
+    const sql = "UPDATE HOLIDAYS SET HOLIDAY_DATE = ?, DESCRIPTION = ? WHERE ID = ?";
+    try { return await runQuery(sql, [holiday_date, description, id]); }
+    catch (e) { log(`Erro updateHoliday ${id}: ${e.message}`, "error"); throw e; }
+}
+async function deleteHoliday(id) {
+    const sql = "DELETE FROM HOLIDAYS WHERE ID = ?";
+    try { return await runQuery(sql, [id]); }
+    catch (e) { log(`Erro deleteHoliday ${id}: ${e.message}`, "error"); throw e; }
 }
 
 // --- Funções de Setores e Serviços ---
@@ -281,11 +375,27 @@ async function getAllSectors() {
     try { return await allQuery(sql); } 
     catch (e) { log(`Erro getAllSectors: ${e.message}`, "error"); throw e; }
 }
+async function getSectorById(id) { // Added for completeness, might be useful
+    const sql = "SELECT * FROM SECTORS WHERE ID = ?";
+    try { return await getQuery(sql, [id]); }
+    catch (e) { log(`Erro getSectorById ${id}: ${e.message}`, "error"); throw e; }
+}
 async function createSector(data) { 
     const { sector_key, sector_name, description, active = 1 } = data;
     const sql = "INSERT INTO SECTORS (SECTOR_KEY, SECTOR_NAME, DESCRIPTION, ACTIVE) VALUES (?,?,?,?)";
     try { return await runQuery(sql, [sector_key, sector_name, description, active ? 1:0]); } 
     catch (e) { log(`Erro createSector: ${e.message}`, "error"); throw e; }
+}
+async function updateSector(id, data) { // Added for completeness
+    const { sector_key, sector_name, description, active } = data;
+    const sql = "UPDATE SECTORS SET SECTOR_KEY=?, SECTOR_NAME=?, DESCRIPTION=?, ACTIVE=? WHERE ID=?";
+    try { return await runQuery(sql, [sector_key, sector_name, description, active ? 1:0, id]); }
+    catch (e) { log(`Erro updateSector ${id}: ${e.message}`, "error"); throw e; }
+}
+async function deleteSector(id) { // Added for completeness
+    const sql = "DELETE FROM SECTORS WHERE ID = ?";
+    try { return await runQuery(sql, [id]); }
+    catch (e) { log(`Erro deleteSector ${id}: ${e.message}`, "error"); throw e; }
 }
 async function getSectorByKey(key) { 
     const sql = "SELECT * FROM SECTORS WHERE SECTOR_KEY = ?";
@@ -297,12 +407,101 @@ async function getAllServices() {
     try { return await allQuery(sql); }
     catch (e) { log(`Erro getAllServices: ${e.message}`, "error"); throw e; }
 }
+async function getServiceById(id) { // Added for completeness
+    const sql = "SELECT s.*, sec.SECTOR_NAME FROM SERVICES s LEFT JOIN SECTORS sec ON s.SECTOR_ID = sec.ID WHERE s.ID = ?";
+    try { return await getQuery(sql, [id]); }
+    catch (e) { log(`Erro getServiceById ${id}: ${e.message}`, "error"); throw e; }
+}
 async function createService(data) {
-    const { service_key, service_name, description, price, sector_id, active = 1 } = data;
-    const sql = "INSERT INTO SERVICES (SERVICE_KEY, SERVICE_NAME, DESCRIPTION, PRICE, SECTOR_ID, ACTIVE) VALUES (?,?,?,?,?,?)";
-    try { return await runQuery(sql, [service_key, service_name, description, price, sector_id, active ? 1:0]); }
+    const { service_key, service_name, description, price, sector_id, active = 1, forward_to_user_id } = data;
+    const sql = "INSERT INTO SERVICES (SERVICE_KEY, SERVICE_NAME, DESCRIPTION, PRICE, SECTOR_ID, ACTIVE, FORWARD_TO_USER_ID) VALUES (?,?,?,?,?,?,?)";
+    try { return await runQuery(sql, [service_key, service_name, description, price, sector_id, active ? 1:0, forward_to_user_id || null]); }
     catch (e) { log(`Erro createService: ${e.message}`, "error"); throw e; }
 }
+async function updateService(id, data) {
+    const { service_key, service_name, description, price, sector_id, active, forward_to_user_id } = data;
+    const sql = "UPDATE SERVICES SET SERVICE_KEY=?, SERVICE_NAME=?, DESCRIPTION=?, PRICE=?, SECTOR_ID=?, ACTIVE=?, FORWARD_TO_USER_ID=? WHERE ID=?";
+    try { return await runQuery(sql, [service_key, service_name, description, price, sector_id, active ? 1:0, forward_to_user_id || null, id]); }
+    catch (e) { log(`Erro updateService ${id}: ${e.message}`, "error"); throw e; }
+}
+async function deleteService(id) { // Added for completeness
+    const sql = "DELETE FROM SERVICES WHERE ID = ?";
+    try { return await runQuery(sql, [id]); }
+    catch (e) { log(`Erro deleteService ${id}: ${e.message}`, "error"); throw e; }
+}
+
+async function importAutoResponsesBatch(responsesArray) {
+    let createdCount = 0;
+    let updatedCount = 0;
+    let errorCount = 0;
+    const errorDetails = [];
+
+    for (const responseObj of responsesArray) {
+        const { 
+            response_key, triggers, response_text, response_name,
+            active, priority, start_time, end_time, allowed_days,
+            typing_delay_ms, response_delay_ms,
+            sector_id, respond_on_holiday, forward_to_user_id, forward_to_sector_id, is_regex
+        } = responseObj;
+
+        if (!response_key || !triggers || !response_text || !response_name) {
+            errorCount++;
+            errorDetails.push({ 
+                response_key: response_key || "N/A", 
+                error: "Campos obrigatórios (response_key, triggers, response_text, response_name) ausentes." 
+            });
+            continue;
+        }
+
+        // Ensure defaults are applied for all fields as per createAutoResponse and updateAutoResponse
+        const dataToSave = {
+            response_key,
+            response_name,
+            triggers,
+            response_text,
+            active: active !== undefined ? (active ? 1 : 0) : 1, // Default to true/1
+            priority: priority !== undefined ? priority : 0,
+            start_time: start_time || null,
+            end_time: end_time || null,
+            allowed_days: allowed_days || "0,1,2,3,4,5,6",
+            typing_delay_ms: typing_delay_ms !== undefined ? typing_delay_ms : 1000,
+            response_delay_ms: response_delay_ms !== undefined ? response_delay_ms : 500,
+            sector_id: sector_id || null,
+            respond_on_holiday: respond_on_holiday !== undefined ? (respond_on_holiday ? 1 : 0) : 0, // Default to false/0
+            forward_to_user_id: forward_to_user_id || null,
+            forward_to_sector_id: forward_to_sector_id || null,
+            is_regex: is_regex !== undefined ? (is_regex ? 1 : 0) : 0, // Default to false/0
+        };
+
+        try {
+            const existingResponse = await getAutoResponseByKey(response_key);
+            if (existingResponse) {
+                // Ensure all fields are passed to updateAutoResponse, including those that might be undefined in responseObj
+                // but have defaults or existing values. The updateAutoResponse function expects all relevant fields.
+                const updatePayload = { ...existingResponse, ...dataToSave };
+                await updateAutoResponse(existingResponse.ID, updatePayload);
+                updatedCount++;
+            } else {
+                await createAutoResponse(dataToSave); // createAutoResponse handles defaults for undefined optional fields
+                createdCount++;
+            }
+        } catch (e) {
+            errorCount++;
+            errorDetails.push({ response_key: response_key, error: e.message });
+            log(`Erro ao importar resposta automática chave ${response_key}: ${e.message}`, "error");
+        }
+    }
+
+    return {
+        success: errorCount === 0, // Indicate overall success if no errors
+        created: createdCount,
+        updated: updatedCount,
+        errors: errorCount,
+        errorDetails: errorDetails,
+        message: `Importação concluída. Criadas: ${createdCount}, Atualizadas: ${updatedCount}, Erros: ${errorCount}.`
+    };
+}
+
 
 module.exports = {
   setLogger,
@@ -310,6 +509,9 @@ module.exports = {
   close,
   createTablesIfNotExists,
   getUserByUsername, getUserById, initializeDefaultUsers, getAllUsers, createUser, updateUser, deleteUser,
-  getAllAutoResponses, getAutoResponseById, createAutoResponse, updateAutoResponse, deleteAutoResponse,
-  getAllSectors, createSector, getSectorByKey, getAllServices, createService,
+  getAllAutoResponses, getAutoResponseById, getAutoResponseByKey, createAutoResponse, updateAutoResponse, deleteAutoResponse,
+  importAutoResponsesBatch, // Added importAutoResponsesBatch
+  createHoliday, getAllHolidays, getHolidayById, getHolidayByDate, updateHoliday, deleteHoliday,
+  getAllSectors, getSectorById, createSector, updateSector, deleteSector, getSectorByKey, 
+  getAllServices, getServiceById, createService, updateService, deleteService,
 };

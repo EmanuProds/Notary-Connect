@@ -4,34 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carregando Notary Connect...</title>
+    <!-- Google Fonts (Roboto) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <!-- Material Tailwind CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@material-tailwind/html@latest/styles/material-tailwind.css" />
+    <!-- Custom Theme CSS -->
+    <link rel="stylesheet" href="./css/custom-theme.css">
+    <!-- Original Splash Specific Styles -->
     <link rel="stylesheet" href="./css/splashStyles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"> --> {/* Replaced Inter with Roboto */}
 </head>
-<body>
-    <div class="splash-outer-container">
-        <div class="splash-content-box">
-            <div class="logo-name-container">
-                <div class="logo-and-name">
-                    <img id="project-logo" src="./img/icons/logo.svg" alt="Logo do Projeto" class="project-logo-svg">
-                    <h1 id="project-name" class="project-name-text">Carregando Nome...</h1>
+<body class="flex items-center justify-center min-h-screen" style="background-color: var(--md-sys-color-background);">
+    <div class="container mx-auto p-4 text-center">
+        <div class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-lg p-8">
+            
+            <div class="mb-6">
+                <img id="project-logo" src="./img/icons/logo.svg" alt="Logo do Projeto" class="mx-auto h-20 w-auto" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div class=\'w-20 h-20 bg-gray-300 flex items-center justify-center text-xs text-gray-500 rounded-md mb-4 mx-auto\'>Logo</div>')">
+                <h1 id="project-name" class="mt-4 text-2xl font-semibold" style="color: var(--md-sys-color-on-surface);">Carregando Nome...</h1>
+            </div>
+
+            <div class="status-and-progress-container mb-6">
+                <p id="loading-status" class="text-sm mb-2" style="color: var(--md-sys-color-on-surface-variant);">Inicializando...</p>
+                <div class="progress-bar-wrapper w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                    <div id="progress-bar" class="h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%; background-color: var(--md-sys-color-primary);"></div>
                 </div>
             </div>
 
-            <div class="copyright-version-container">
-                <div class="copyright-line">
-                    <p class="copyright-text">Perains On Tecnologia ©</p>
-                    <span id="current-year" class="current-year-text"></span> </div>
+            <div id="splashErrorMessage" class="mt-4 text-sm" style="color: var(--md-sys-color-error); min-height: 1.25rem;">
+                {/* Error messages will appear here */}
+            </div>
+
+            <footer class="mt-8 text-xs" style="color: var(--md-sys-color-outline);">
+                <p class="copyright-text">Perains On Tecnologia &copy; <span id="current-year" class="current-year-text"></span></p>
                 <p id="app-version" class="app-version-text">Versão ...</p>
-            </div>
+            </footer>
 
-            <div class="status-and-progress-container">
-                <p id="loading-status" class="loading-status-text">Inicializando...</p>
-                <div class="progress-bar-wrapper">
-                    <div id="progress-bar" class="progress-bar"></div>
-                </div>
-            </div>
         </div>
     </div>
+    <!-- Material Tailwind JS -->
+    <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/material-tailwind.js"></script>
+    <!-- Original Splash Script -->
     <script src="./js/splashScript.js"></script>
 </body>
 </html>

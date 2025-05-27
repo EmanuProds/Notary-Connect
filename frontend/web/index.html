@@ -1,127 +1,169 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light"> <head>
+<html lang="pt-BR" data-theme="light">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notary Connect - Menu Principal</title>
+    <title>Notary Connect</title>
     <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="./css/indexStyles.css"> 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts (Roboto) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <!-- Font Awesome (Keep if still used, or remove if Material Icons cover all needs) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <!-- Material Tailwind CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@material-tailwind/html@latest/styles/material-tailwind.css" />
+    <!-- Custom Theme CSS -->
+    <link rel="stylesheet" href="./css/custom-theme.css">
+    <!-- New Index Specific Styles (Optional, if needed beyond custom-theme and MTW utilities) -->
+    <link rel="stylesheet" href="./css/newIndexStyles.css">
+    <!-- QR Code Generator Library -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <style>
+        body {
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
+            margin: 0; /* Reset default margin */
+            font-family: 'Roboto', sans-serif;
+        }
+        .active-sidenav-item { /* Style applied by JS */
+            /* background-color: var(--md-sys-color-primary-container) !important; */ /* JS applies this directly */
+            /* color: var(--md-sys-color-on-primary-container) !important; */ /* JS applies this to spans */
+            font-weight: 500; /* Example: make active item font bolder */
+        }
+        .sidenav-item span.material-icons {
+             color: var(--md-sys-color-on-surface-variant); /* Default icon color */
+        }
+        .sidenav-item span:last-child {
+            color: var(--md-sys-color-on-surface-variant); /* Default text color */
+        }
+         /* Ensure icons in active items also get the active color if not directly targeted by JS */
+        .active-sidenav-item span.material-icons,
+        .active-sidenav-item span:last-child {
+            /* color: var(--md-sys-color-on-primary-container) !important; */ /* JS applies this directly */
+        }
+    </style>
 </head>
-<body>
-    <div class="menu-container">
-        <header class="menu-header">
-            <div class="tabs">
-                <button class="tab-button active" data-tab="menu">
-                    <img src="./img/icons/house.svg" alt="Início" class="icon-tab">
-                    <span>Início</span>
-                </button>
-                <button class="tab-button" data-tab="updates">
-                    <img src="./img/icons/arrow-clockwise.svg" alt="Atualizações" class="icon-tab">
-                    <span>Atualizações</span>
-                </button>
-                <button class="tab-button" data-tab="about">
-                    <img src="./img/icons/info.svg" alt="Sobre" class="icon-tab">
-                    <span>Sobre</span>
-                </button>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidenav -->
+    <aside class="w-64 h-full fixed top-0 left-0 z-40 transition-transform -translate-x-full sm:translate-x-0" 
+           aria-label="Sidenav" id="app-sidenav" 
+           style="background-color: var(--md-sys-color-surface); border-right: 1px solid var(--md-sys-color-outline);">
+        <div class="h-full px-3 py-4 overflow-y-auto">
+            <div class="flex items-center ps-2.5 mb-5">
+                <img src="./img/icons/logo.svg" class="h-8 me-3 sm:h-7" alt="Notary Connect Logo" 
+                     onerror="this.alt='NC Logo'; this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div class=\'w-7 h-7 bg-gray-300 flex items-center justify-center text-xs text-gray-500 rounded-sm\'>NC</div>')" />
+                <span class="self-center text-xl font-semibold whitespace-nowrap" style="color: var(--md-sys-color-on-surface);">Notary Connect</span>
             </div>
-            <div class="header-actions">
-                <button id="themeToggleButton" class="theme-toggle-button" title="Alternar Tema">
-                    <img src="./img/icons/moon.svg" alt="Tema Escuro" id="themeIcon" class="icon-header-action">
-                </button>
+            <ul class="space-y-2 font-medium">
+                <li>
+                    <a href="#" id="nav-painel" class="sidenav-item flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" style="color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons">dashboard</span>
+                        <span class="ms-3">Painel</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-ia" class="sidenav-item flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" style="color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons">smart_toy</span>
+                        <span class="ms-3">IA de atendimento</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-respostas" class="sidenav-item flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" style="color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons">rule</span>
+                        <span class="ms-3">Respostas Automáticas</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-servicos" class="sidenav-item flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" style="color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons">miscellaneous_services</span>
+                        <span class="ms-3">Serviços</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-usuarios" class="sidenav-item flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" style="color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons">group</span>
+                        <span class="ms-3">Usuários</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" id="nav-setores" class="sidenav-item flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" style="color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons">lan</span>
+                        <span class="ms-3">Setores</span>
+                    </a>
+                </li>
+                 <li>
+                    <a href="#" id="nav-configuracoes" class="sidenav-item flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" style="color: var(--md-sys-color-on-surface-variant);">
+                        <span class="material-icons">settings</span>
+                        <span class="ms-3">Configurações</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 sm:ml-64"> {/* sm:ml-64 for when sidenav is visible */}
+        <!-- App Bar -->
+        <header class="sticky top-0 z-30 w-full px-2 py-2 sm:px-4 shadow" style="background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <button data-drawer-target="app-sidenav" data-drawer-toggle="app-sidenav" aria-controls="app-sidenav"
+                            class="p-2 mr-2 text-white rounded-lg sm:hidden hover:bg-blue-700 focus:ring-2 focus:ring-blue-300">
+                        <span class="material-icons">menu</span>
+                    </button>
+                    <h2 id="section-title" class="text-xl font-semibold">Painel</h2>
+                </div>
+                <div class="flex items-center">
+                    {/* Placeholder for User/Logout */}
+                    <button class="p-2 text-white rounded-lg hover:bg-blue-700">
+                        <span class="material-icons">account_circle</span>
+                    </button>
+                </div>
             </div>
         </header>
 
-        <main class="menu-content">
-            <div class="tab-content active" id="tab-menu">
-                <section class="updates-carousel-section">
-                    <h2>Atualizações do Sistema</h2>
-                    <div class="carousel">
-                        <div class="carousel-inner">
-                            <div class="carousel-slide active">
-                                <img src="https://placehold.co/800x300/3584e4/ffffff?text=Nova+Interface&font=inter" alt="[Imagem de Nova Interface]" onerror="this.alt='[Imagem de Nova Interface]'; this.src='https://placehold.co/800x300/3584e4/ffffff?text=Erro+ao+carregar+imagem';">
-                                <div class="carousel-caption">
-                                    <h3>Nova Interface!</h3>
-                                    <p>Agora você pode alternar entre o sistema de atendimento e a central de administração.</p>
-                                </div>
-                            </div>
-                            <div class="carousel-slide">
-                                <img src="https://placehold.co/800x300/6a0dad/ffffff?text=Melhorias+de+Performance&font=inter" alt="[Imagem de Melhorias de Performance]" onerror="this.alt='[Imagem de Melhorias de Performance]'; this.src='https://placehold.co/800x300/6a0dad/ffffff?text=Erro+ao+carregar+imagem';">
-                                <div class="carousel-caption">
-                                    <h3>Melhorias de Performance</h3>
-                                    <p>O sistema está mais rápido e responsivo.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="carousel-navigation">
-                            <button class="carousel-prev">
-                                <img src="./img/icons/caret-left.svg" alt="Anterior" class="icon-carousel-nav">
-                            </button>
-                            <button class="carousel-next">
-                                <img src="./img/icons/caret-right.svg" alt="Próximo" class="icon-carousel-nav">
-                            </button>
-                        </div>
-                        <div class="carousel-indicators">
-                        </div>
-                    </div>
-                </section>
-
-                <section class="action-buttons-section">
-                    <button class="action-button" id="goToChatButton">
-                        <img src="./img/icons/chats-teardrop.svg" alt="Ícone de chat" class="icon-action-button">
-                        <div class="action-button-text-content">
-                            <span>Sistema de Atendimento</span>
-                            <small>Conecte-se para atender os clientes.</small>
-                        </div>
-                    </button>
-                    <button class="action-button" id="goToAdminButton">
-                        <img src="./img/icons/gear-six.svg" alt="Ícone de administração" class="icon-action-button">
-                        <div class="action-button-text-content">
-                            <span>Administração do Sistema</span>
-                            <small>Gerencie usuários, setores e configurações.</small>
-                        </div>
-                    </button>
-                </section>
-            </div>
-
-            <div class="tab-content" id="tab-updates">
-                <h2>Atualizações Detalhadas</h2>
-                <div class="update-list">
-                    <div class="update-item">
-                        <h3>Versão 1.0.1 (22/05/2025)</h3>
-                        <p>- Adicionada integração com a API libadwaita/gtk4.</p>
-                        <p>- Corrigido bug na autenticação de sessão.</p>
-                        <p>- Melhoria na interface de gestão de conversas com clientes.</p>
-                    </div>
-                    <div class="update-item">
-                        <h3>Versão 1.0.0 (19/05/2025)</h3>
-                        <p>- Otimizações de performance no carregamento de conversas.</p>
-                        <p>- Pequenas correções de UI.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-content" id="tab-about">
-                <h2>Sobre o Notary Connect</h2>
-                <div class="about-content">
-                    <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="about-logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:80px;height:80px;background:#ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;border-radius:4px;margin-bottom:16px;\'>Logo</div>')">
-                    <p><strong>Notary Connect</strong> <span id="appVersionAbout">Versão N/D</span></p>
-                    <p>Sistema de Atendimento Digital e Gestão para Cartórios.</p>
-                    <p>Desenvolvido para comunicação e processos de serviços para Cartórios via WhatsApp.</p>
-                    <p>Perains On Tecnologia &copy; <span id="currentYearAbout">2025</span>. Todos os direitos reservados.</p>
-                    <div class="about-links">
-                        <button id="openLogsButton">
-                            <img src="./img/icons/file-text.svg" alt="Ícone de logs" class="icon-about-link">
-                            Ver Logs
-                        </button>
-                        <button id="checkUpdatesButton">
-                            <img src="./img/icons/cloud-arrow-down.svg" alt="Ícone de atualizações" class="icon-about-link">
-                            Verificar Atualizações
-                        </button>
-                    </div>
-                </div>
+        <!-- Content -->
+        <main class="p-4 h-[calc(100vh-var(--app-bar-height,64px))] overflow-y-auto" 
+              style="background-color: var(--md-sys-color-background);"> 
+              {/* --app-bar-height can be set via JS or fixed if known */}
+            <div id="content-area">
+                <h1>Painel</h1>
+                <p>Bem-vindo ao painel de Notary Connect.</p>
             </div>
         </main>
     </div>
-    <script src="./js/indexScript.js"></script> 
+
+    <!-- Material Tailwind JS -->
+    <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/material-tailwind.js"></script>
+    <!-- New Index Script -->
+    <script src="./js/newIndexScript.js"></script>
+    <!-- Script for Material Tailwind drawer (sidenav toggle on small screens) -->
+    <script>
+        // Initialize Material Tailwind components, especially Drawers if used for responsive Sidenav
+        // This might be needed if the data-drawer-toggle doesn't work automatically
+        // For now, assuming Material Tailwind JS handles its components.
+        // If the Sidenav toggle doesn't work, uncomment and adapt:
+        /*
+        const sidenav = document.getElementById('app-sidenav');
+        const sidenavToggle = document.querySelector('[data-drawer-toggle="app-sidenav"]');
+        if (sidenav && sidenavToggle) {
+            const drawer = new mdc.drawer.MDCDrawer(sidenav); // This uses MDC, MTW might have a different init
+            sidenavToggle.addEventListener('click', () => {
+                // Need to find the MTW way to toggle a drawer if it's not automatic
+                // For example, it might involve adding/removing classes or calling a component method.
+                // The classes 'translate-x-0' and '-translate-x-full' are often used.
+                sidenav.classList.toggle('-translate-x-full');
+                sidenav.classList.toggle('translate-x-0');
+            });
+        }
+        */
+        // Set app bar height for content area calculation
+        const appBar = document.querySelector('header');
+        if (appBar) {
+            document.documentElement.style.setProperty('--app-bar-height', `${appBar.offsetHeight}px`);
+        }
+    </script>
 </body>
 </html>

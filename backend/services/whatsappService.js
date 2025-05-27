@@ -64,84 +64,350 @@ async function sendTypingMessageWithDelay(chat, text, typingDelayMs, responseDel
     }
 }
 
+// Helper function to check if today is a holiday
+function isTodayHoliday(holidays) {
+    if (!holidays || holidays.length === 0) return false;
+    const today = new Date();
+    const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return holidays.some(h => h.HOLIDAY_DATE === todayFormatted);
+}
+
+// Helper function to handle forwarding logic
+async function handleForwarding(chat, conversation, autoResp, clientJid, clientName, originalMessage) {
+    globalSendLog(`[BotLogic_Forward] Iniciando encaminhamento para ConvID ${conversation.ID} baseado na AutoResp ID ${autoResp.ID}`, 'info');
+    const { sqliteChat, websocketService } = globalDbServices; // Assuming globalDbServices contains chat and websocket services
+
+    let targetUserId = autoResp.FORWARD_TO_USER_ID || null;
+    let targetSectorId = autoResp.FORWARD_TO_SECTOR_ID || null;
+    let targetSectorName = null; // Will be fetched if targetSectorId is present
+
+    const updateData = {
+        USER_ID: targetUserId,
+        USER_USERNAME: null, // Will be set if targetUserId is present and user is found
+        SECTOR_ID: targetSectorId, // Store sector ID
+        SECTOR: null, // Store sector name
+        STATUS: 'pending_human',
+        LAST_FORWARDED_AT: new Date().toISOString()
+    };
+
+    if (targetUserId) {
+        const user = await globalDbServices.admin.getUserById(targetUserId);
+        if (user) {
+            updateData.USER_USERNAME = user.USERNAME; // Store username for direct assignment
+            // If user has a primary sector, it might be useful to store it too, or ensure SECTOR field is consistent
+            if (user.SECTOR && user.SECTOR.length > 0) {
+                 const primarySectorKey = user.SECTOR[0];
+                 const sectorDetails = await globalDbServices.admin.getSectorByKey(primarySectorKey);
+                 if (sectorDetails) updateData.SECTOR = sectorDetails.SECTOR_NAME;
+            }
+             globalSendLog(`[BotLogic_Forward] Encaminhando para Usuário: ${user.USERNAME} (ID: ${targetUserId})`, 'debug');
+        } else {
+            globalSendLog(`[BotLogic_Forward] Usuário de encaminhamento ID ${targetUserId} não encontrado. Encaminhamento falhou.`, 'error');
+            // Optionally, send a message to client or log an admin notification
+            return false; // Indicate forwarding failed
+        }
+    } else if (targetSectorId) {
+        const sector = await globalDbServices.admin.getSectorById(targetSectorId); // Assumes getSectorById exists
+        if (sector) {
+            updateData.SECTOR = sector.SECTOR_NAME; // Store sector name
+            targetSectorName = sector.SECTOR_NAME;
+            globalSendLog(`[BotLogic_Forward] Encaminhando para Setor: ${sector.SECTOR_NAME} (ID: ${targetSectorId})`, 'debug');
+        } else {
+            globalSendLog(`[BotLogic_Forward] Setor de encaminhamento ID ${targetSectorId} não encontrado. Encaminhamento falhou.`, 'error');
+            return false; // Indicate forwarding failed
+        }
+    } else {
+        globalSendLog(`[BotLogic_Forward] Nem FORWARD_TO_USER_ID nem FORWARD_TO_SECTOR_ID definidos para AutoResp ID ${autoResp.ID}. Não é um encaminhamento.`, 'debug');
+        return false; // Not a forwarding scenario based on these fields
+    }
+    
+    try {
+        await sqliteChat.runQuery( // Directly use runQuery for targeted update
+            `UPDATE CONVERSATIONS SET USER_ID = ?, USER_USERNAME = ?, SECTOR = ?, STATUS = ?, LAST_FORWARDED_AT = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?`,
+            [updateData.USER_ID, updateData.USER_USERNAME, updateData.SECTOR, updateData.STATUS, updateData.LAST_FORWARDED_AT, conversation.ID]
+        );
+        globalSendLog(`[BotLogic_Forward] Conversa ${conversation.ID} atualizada no DB para encaminhamento.`, 'info');
+
+        let responseText = autoResp.RESPONSE_TEXT || "Entendido. Vou te transferir para o atendimento adequado.";
+        responseText = responseText.replace(/{client_name}/gi, clientName.split(" ")[0]);
+        await sendTypingMessageWithDelay(chat, responseText, autoResp.TYPING_DELAY_MS || 1000, autoResp.RESPONSE_DELAY_MS || 500, conversation.ID, clientJid);
+        
+        const updatedConversation = await sqliteChat.getConversationById(conversation.ID);
+        if (websocketService && updatedConversation) {
+            if (targetUserId && updateData.USER_USERNAME) { // Forward to specific user
+                 websocketService.notifySpecificUser(updateData.USER_USERNAME, {
+                    type: 'conversation_assigned',
+                    payload: updatedConversation
+                });
+                globalSendLog(`[BotLogic_Forward] Notificação WebSocket enviada para atendente específico ${updateData.USER_USERNAME}.`, 'info');
+            } else if (targetSectorId && targetSectorName) { // Forward to sector (pending for attendants in that sector)
+                 websocketService.broadcastToAttendants({ // Or a more targeted broadcast if possible
+                    type: 'pending_conversation',
+                    payload: updatedConversation 
+                });
+                globalSendLog(`[BotLogic_Forward] Notificação WebSocket (pending_conversation) enviada para atendentes do setor ${targetSectorName}.`, 'info');
+            }
+        }
+        return true; // Forwarding handled
+    } catch (error) {
+        globalSendLog(`[BotLogic_Forward] Erro ao atualizar conversa ou notificar para encaminhamento (ConvID ${conversation.ID}): ${error.message}`, 'error');
+        return false; // Forwarding failed
+    }
+}
+
+
+// Helper function for contact card request
+async function handleContactCardRequest(chat, conversation, autoResp, clientJid, clientName, clientMessageContent, contactCardNotFoundText) {
+    globalSendLog(`[BotLogic_ContactCard] Iniciando solicitação de cartão de contato. Msg: "${clientMessageContent}"`, 'info');
+    
+    // Assuming TRIGGERS for contact card is a regex that captures the attendant's name.
+    // Example regex: /^(?:quero falar com|falar com|contato de)\s+([a-zA-Z\sÀ-ú]+)/i
+    // This regex needs to be defined in the AUTO_RESPONSE.TRIGGERS field and IS_REGEX must be true.
+    let attendantNameMatch;
+    try {
+        // Iterate through triggers if multiple are provided, though for this specific case, one regex is typical.
+        const triggers = autoResp.TRIGGERS.split(/\n|,/); // Split by newline or comma
+        for (const trigger of triggers) {
+            if (autoResp.IS_REGEX) {
+                const regex = new RegExp(trigger.trim(), 'i');
+                attendantNameMatch = regex.exec(clientMessageContent);
+                if (attendantNameMatch && attendantNameMatch[1]) break; // Found a match
+            }
+        }
+    } catch (e) {
+        globalSendLog(`[BotLogic_ContactCard] Erro ao processar regex para cartão de contato: ${e.message}. Trigger: ${autoResp.TRIGGERS}`, 'error');
+        await sendTypingMessageWithDelay(chat, "Desculpe, tive um problema ao processar sua solicitação.", 1000, 500, conversation.ID, clientJid);
+        return true; // Handled (with an error message)
+    }
+
+    if (!attendantNameMatch || !attendantNameMatch[1]) {
+        globalSendLog(`[BotLogic_ContactCard] Nome do atendente não capturado pela regex. Regex: ${autoResp.TRIGGERS}, Msg: "${clientMessageContent}"`, 'warn');
+        // Send the autoResp.RESPONSE_TEXT which might be "Não entendi qual contato você deseja" or similar.
+        let responseText = autoResp.RESPONSE_TEXT.replace(/{client_name}/gi, clientName.split(" ")[0]);
+        await sendTypingMessageWithDelay(chat, responseText, autoResp.TYPING_DELAY_MS, autoResp.RESPONSE_DELAY_MS, conversation.ID, clientJid);
+        return true;
+    }
+    
+    const requestedName = attendantNameMatch[1].trim();
+    globalSendLog(`[BotLogic_ContactCard] Nome do atendente solicitado: "${requestedName}"`, 'debug');
+
+    try {
+        // Attempt to find user by full name or username (case-insensitive partial match for name)
+        const users = await globalDbServices.admin.getAllUsers();
+        const foundUser = users.find(u => 
+            (u.NAME && u.NAME.toLowerCase().includes(requestedName.toLowerCase())) || 
+            (u.USERNAME && u.USERNAME.toLowerCase() === requestedName.toLowerCase())
+        );
+
+        if (foundUser && foundUser.DIRECT_CONTACT_NUMBER) {
+            globalSendLog(`[BotLogic_ContactCard] Atendente "${foundUser.NAME}" encontrado com contato direto: ${foundUser.DIRECT_CONTACT_NUMBER}`, 'info');
+            // First, send the pre-defined response text from the auto-response (e.g., "Vou te passar o contato...")
+            let initialResponseText = autoResp.RESPONSE_TEXT.replace(/{client_name}/gi, clientName.split(" ")[0]);
+            await sendTypingMessageWithDelay(chat, initialResponseText, autoResp.TYPING_DELAY_MS, autoResp.RESPONSE_DELAY_MS, conversation.ID, clientJid);
+            
+            // Then, send the contact card or contact text
+            // For vCard: const vCard = `BEGIN:VCARD\nVERSION:3.0\nN:${foundUser.NAME}\nFN:${foundUser.NAME}\nTEL;TYPE=CELL:${foundUser.DIRECT_CONTACT_NUMBER}\nEND:VCARD`;
+            // await client.sendMessage(clientJid, vCard); // Requires client instance
+            // Sending as text for now as per instruction if vCard is complex
+            const contactMessage = `Você pode contatar ${foundUser.NAME} diretamente no número: ${foundUser.DIRECT_CONTACT_NUMBER}`;
+            await sendTypingMessageWithDelay(chat, contactMessage, 500, 200, conversation.ID, clientJid); // Shorter delay for the actual contact
+        } else {
+            globalSendLog(`[BotLogic_ContactCard] Atendente "${requestedName}" não encontrado ou sem número direto.`, 'warn');
+            await sendTypingMessageWithDelay(chat, contactCardNotFoundText.replace(/{client_name}/gi, clientName.split(" ")[0]), autoResp.TYPING_DELAY_MS, autoResp.RESPONSE_DELAY_MS, conversation.ID, clientJid);
+        }
+        return true; // Request handled
+    } catch (error) {
+        globalSendLog(`[BotLogic_ContactCard] Erro ao buscar atendente ou enviar cartão de contato: ${error.message}`, 'error');
+        await sendTypingMessageWithDelay(chat, "Desculpe, ocorreu um erro ao buscar as informações de contato.", 1000, 500, conversation.ID, clientJid);
+        return true; // Handled (with an error message)
+    }
+}
+
+
 async function processBotResponse(msg, conversation, clientMessageContent) {
-    globalSendLog(`[BotLogic] processBotResponse: Iniciando para mensagem: "${clientMessageContent}" na conversa ID ${conversation.ID}`, 'debug');
-    if (!globalDbServices || !globalDbServices.main || !globalDbServices.admin || !client || connectionStatus !== 'CONNECTED') {
+    globalSendLog(`[BotLogic] processBotResponse: Iniciando para mensagem: "${clientMessageContent}" na conversa ID ${conversation.ID}, Status: ${conversation.STATUS}`, 'debug');
+    if (!globalDbServices || !globalDbServices.main || !globalDbServices.admin || !globalDbServices.chat || !client || connectionStatus !== 'CONNECTED') {
         globalSendLog('[BotLogic] Robô não pode processar: Serviços DB/WhatsApp não disponíveis ou WhatsApp não conectado.', 'warn');
+        return false;
+    }
+    
+    // Se a conversa não estiver 'pending' ou não tiver USER_ID, o robô não deve atuar (a menos que seja uma lógica específica de retomada)
+    if (conversation.STATUS !== 'pending' && conversation.USER_ID) {
+        // Adicionar verificação de tempo limite para atendimento humano aqui, se necessário.
+        // Por agora, se tem atendente e não está pendente, o bot não interfere.
+        globalSendLog(`[BotLogic] Conversa ${conversation.ID} já está com atendente (USER_ID: ${conversation.USER_ID}, STATUS: ${conversation.STATUS}). Robô não atuará.`, 'debug');
         return false;
     }
 
     try {
+        // Carregar configurações e feriados
         const configBotActiveResult = await globalDbServices.main.getConfigByKey('bot_active');
         const isBotGloballyActive = configBotActiveResult && configBotActiveResult.CONFIG_VALUE === true;
-        globalSendLog(`[BotLogic] Status global do Robô (bot_active): ${isBotGloballyActive}.`, 'debug');
-
         if (!isBotGloballyActive) {
-            globalSendLog('[BotLogic] Robô está desativado nas configurações globais.', 'info');
+            globalSendLog('[BotLogic] Robô está desativado globalmente.', 'info');
             return false;
         }
-        
+
+        const holidays = await globalDbServices.admin.getAllHolidays();
+        const contactCardNotFoundTextConfig = await globalDbServices.main.getConfigByKey('CONTACT_CARD_NOT_FOUND_RESPONSE_TEXT');
+        const contactCardNotFoundText = contactCardNotFoundTextConfig ? contactCardNotFoundTextConfig.CONFIG_VALUE : "Desculpe, não consegui encontrar o contato direto para este atendente.";
+        // Outras configs como HUMAN_ATTENDANCE_TIME_LIMIT_SECONDS serão usadas em outra lógica (monitoramento de timeout)
+
         const autoResponses = await globalDbServices.admin.getAllAutoResponses();
         if (!autoResponses || autoResponses.length === 0) {
-            globalSendLog('[BotLogic] Nenhuma resposta automática configurada no banco.', 'debug');
+            globalSendLog('[BotLogic] Nenhuma resposta automática configurada.', 'debug');
             return false;
         }
-        globalSendLog(`[BotLogic] ${autoResponses.length} respostas automáticas carregadas. Verificando correspondências...`, 'debug');
+        globalSendLog(`[BotLogic] ${autoResponses.length} respostas automáticas carregadas. Feriados carregados: ${holidays.length}.`, 'debug');
 
         const clientJid = msg.from;
         const chat = await msg.getChat();
         if (!chat) {
-            globalSendLog(`[BotLogic] Não foi possível obter o objeto 'chat' para ${clientJid}. Abortando.`, 'error');
+            globalSendLog(`[BotLogic] Não foi possível obter 'chat' para ${clientJid}. Abortando.`, 'error');
             return false;
         }
+        
+        const contact = await msg.getContact();
+        const clientName = contact.pushname || contact.name || clientJid.split('@')[0];
 
         autoResponses.sort((a, b) => (b.PRIORITY || 0) - (a.PRIORITY || 0));
 
         for (const autoResp of autoResponses) {
-            globalSendLog(`[BotLogic] Verificando Resposta ID ${autoResp.ID}: "${autoResp.RESPONSE_NAME}", Padrão: "${autoResp.PATTERN}", Ativa: ${autoResp.ACTIVE}, Prioridade: ${autoResp.PRIORITY}`, 'debug');
+            globalSendLog(`[BotLogic] Verificando Resposta ID ${autoResp.ID}: "${autoResp.RESPONSE_NAME}", Ativa: ${autoResp.ACTIVE}, Prioridade: ${autoResp.PRIORITY}, Triggers: "${autoResp.TRIGGERS}"`, 'debug');
             if (!autoResp.ACTIVE) {
-                globalSendLog(`[BotLogic] Resposta ID ${autoResp.ID} está inativa. Pulando.`, 'debug');
+                globalSendLog(`[BotLogic] Resposta ID ${autoResp.ID} inativa.`, 'debug');
                 continue;
             }
 
+            // Lógica de Feriados
+            if (autoResp.RESPOND_ON_HOLIDAY === 0 || autoResp.RESPOND_ON_HOLIDAY === false) { // Explicitamente não responder
+                if (isTodayHoliday(holidays)) {
+                    globalSendLog(`[BotLogic] Hoje é feriado e Resposta ID ${autoResp.ID} (${autoResp.RESPONSE_NAME}) está configurada para NÃO responder em feriados. Pulando.`, 'info');
+                    continue;
+                }
+            }
+
             let matched = false;
+            let matchDetails = null; // Store regex match results if any
+
+            if (!autoResp.TRIGGERS || autoResp.TRIGGERS.trim() === "") {
+                globalSendLog(`[BotLogic] Resposta ID ${autoResp.ID} não possui TRIGGERS definidos. Pulando.`, 'warn');
+                continue;
+            }
+
             try {
-                const patterns = autoResp.PATTERN.split(',').map(p => p.trim().toLowerCase()).filter(p => p);
+                const triggersArray = autoResp.TRIGGERS.split(/\n|,/).map(t => t.trim()).filter(t => t); // Split by newline or comma, then trim and filter empty
                 const lowerClientMessage = clientMessageContent.toLowerCase();
-                
-                if (patterns.some(p => lowerClientMessage.includes(p))) {
-                    matched = true;
-                    globalSendLog(`[BotLogic] Match por palavra-chave simples: Padrão "${patterns.find(p => lowerClientMessage.includes(p))}" em "${lowerClientMessage}" para Resposta ID ${autoResp.ID}`, 'debug');
-                } else {
-                    try {
-                        const regex = new RegExp(autoResp.PATTERN, 'i');
-                         if (regex.test(clientMessageContent)) {
+
+                for (const trigger of triggersArray) {
+                    if (autoResp.IS_REGEX) {
+                        const regex = new RegExp(trigger, 'i'); // 'i' for case-insensitive
+                        matchDetails = regex.exec(clientMessageContent);
+                        if (matchDetails) {
                             matched = true;
-                            globalSendLog(`[BotLogic] Match por Regex: Padrão "${autoResp.PATTERN}" em "${clientMessageContent}" para Resposta ID ${autoResp.ID}`, 'debug');
+                            globalSendLog(`[BotLogic] Match por Regex: Padrão "${trigger}" em "${clientMessageContent}" para Resposta ID ${autoResp.ID}`, 'debug');
+                            break; 
                         }
-                    } catch (e) {
-                        globalSendLog(`[BotLogic] Padrão "${autoResp.PATTERN}" não é Regex válido (Erro Regex: ${e.message}). Match simples não ocorreu.`, 'debug');
+                    } else {
+                        if (lowerClientMessage.includes(trigger.toLowerCase())) {
+                            matched = true;
+                            globalSendLog(`[BotLogic] Match por palavra-chave: Padrão "${trigger.toLowerCase()}" em "${lowerClientMessage}" para Resposta ID ${autoResp.ID}`, 'debug');
+                            break;
+                        }
                     }
                 }
             } catch (e) {
-                globalSendLog(`[BotLogic] Erro ao processar padrão para resposta ID ${autoResp.ID} ("${autoResp.PATTERN}"): ${e.message}`, 'error');
+                globalSendLog(`[BotLogic] Erro ao processar triggers para resposta ID ${autoResp.ID} ("${autoResp.TRIGGERS}"): ${e.message}`, 'error');
                 continue; 
             }
 
             if (matched) {
-                globalSendLog(`[BotLogic] MENSAGEM CORRESPONDEU! Cliente: "${clientMessageContent}", Resposta: "${autoResp.RESPONSE_NAME}", Padrão: "${autoResp.PATTERN}".`, 'info');
+                globalSendLog(`[BotLogic] MENSAGEM CORRESPONDEU! Cliente: "${clientMessageContent}", Resposta: "${autoResp.RESPONSE_NAME}" (ID: ${autoResp.ID})`, 'info');
                 
+                // ** Placeholder para lógica de tipo de resposta (contato, serviço, etc.) **
+                // Esta é uma simplificação. Uma forma mais robusta seria ter um campo 'RESPONSE_TYPE' na tabela AUTO_RESPONSES
+                // ou usar RESPONSE_KEY para determinar a ação.
+                if (autoResp.RESPONSE_KEY && autoResp.RESPONSE_KEY.startsWith("REQ_CONTACT_")) { // Example convention
+                    return await handleContactCardRequest(chat, conversation, autoResp, clientJid, clientName, clientMessageContent, contactCardNotFoundText);
+                }
+                // Adicionar lógica para REQ_SERVICE_ aqui se necessário, ou se o encaminhamento já cobre.
+
+                // Lógica de Encaminhamento (AUTO_RESPONSE.FORWARD_TO_USER_ID ou AUTO_RESPONSE.FORWARD_TO_SECTOR_ID)
+                if (autoResp.FORWARD_TO_USER_ID || autoResp.FORWARD_TO_SECTOR_ID) {
+                    const forwarded = await handleForwarding(chat, conversation, autoResp, clientJid, clientName, msg);
+                    if (forwarded) return true; // Encaminhamento bem-sucedido, finaliza processamento.
+                    // Se encaminhamento falhou, pode ser que a auto-resposta ainda deva ser enviada (abaixo) ou não.
+                    // Por ora, se o encaminhamento era a intenção e falhou, não enviamos a RESPONSE_TEXT genérica.
+                    globalSendLog(`[BotLogic] Encaminhamento para AutoResp ID ${autoResp.ID} falhou ou não foi aplicável.`, 'warn');
+                    return false; // Considera que a ação principal (encaminhamento) falhou
+                }
+                
+                // Se não encaminhou e não é um tipo especial, envia RESPONSE_TEXT normal
                 let responseText = autoResp.RESPONSE_TEXT;
-                const contact = await msg.getContact();
-                const clientName = contact.pushname || contact.name || clientJid.split('@')[0];
                 responseText = responseText.replace(/{client_name}/gi, clientName.split(" ")[0]); 
 
-                const typingDelay = parseInt(autoResp.TYPING_DELAY_MS, 10);
-                const sendDelay = parseInt(autoResp.RESPONSE_DELAY_MS, 10);
+                const typingDelay = parseInt(autoResp.TYPING_DELAY_MS || 1000, 10);
+                const sendDelay = parseInt(autoResp.RESPONSE_DELAY_MS || 500, 10);
                 
-                globalSendLog(`[BotLogic] Enviando resposta: "${responseText.substring(0,50)}..." com typingDelay: ${typingDelay}ms, sendDelay: ${sendDelay}ms`, 'debug');
+                globalSendLog(`[BotLogic] Enviando resposta padrão: "${responseText.substring(0,50)}..."`, 'debug');
                 await sendTypingMessageWithDelay(chat, responseText, typingDelay, sendDelay, conversation.ID, clientJid);
-                return true;
+                
+                // Lógica de encaminhamento por seleção de serviço (Ponto 7)
+                // Acionada se a RESPONSE_KEY da AUTO_RESPONSE original começar com "SERVICE_"
+                // Esta lógica é executada *após* a RESPONSE_TEXT da AUTO_RESPONSE original ter sido enviada.
+                if (autoResp.RESPONSE_KEY && autoResp.RESPONSE_KEY.startsWith("SERVICE_")) {
+                    const serviceKey = autoResp.RESPONSE_KEY; 
+                    globalSendLog(`[BotLogic_ServiceFwd] Identificada AUTO_RESPONSE (${autoResp.ID}) para serviço: ${serviceKey}. Verificando detalhes do serviço...`, 'info');
+                    
+                    const serviceDetails = await globalDbServices.admin.getServiceByKey(serviceKey);
+
+                    if (serviceDetails) {
+                        globalSendLog(`[BotLogic_ServiceFwd] Detalhes do serviço ${serviceKey} recuperados: UserID=${serviceDetails.FORWARD_TO_USER_ID}, SectorID=${serviceDetails.SECTOR_ID}`, 'debug');
+                        
+                        let serviceForwardConfig = null;
+
+                        if (serviceDetails.FORWARD_TO_USER_ID) {
+                            serviceForwardConfig = {
+                                ID: `SERVICE_FWD_USER-${serviceDetails.ID}`, // ID informativo
+                                FORWARD_TO_USER_ID: serviceDetails.FORWARD_TO_USER_ID,
+                                FORWARD_TO_SECTOR_ID: null, // Garante que não haja ambiguidade
+                                RESPONSE_TEXT: `Para tratar do serviço "${serviceDetails.SERVICE_NAME}", estou te encaminhando para o especialista responsável.`,
+                                TYPING_DELAY_MS: 500, 
+                                RESPONSE_DELAY_MS: 200 
+                            };
+                            globalSendLog(`[BotLogic_ServiceFwd] Serviço ${serviceKey} será encaminhado para USUÁRIO ID: ${serviceDetails.FORWARD_TO_USER_ID}.`, 'info');
+                        } else if (serviceDetails.SECTOR_ID) {
+                            serviceForwardConfig = {
+                                ID: `SERVICE_FWD_SECTOR-${serviceDetails.ID}`, // ID informativo
+                                FORWARD_TO_USER_ID: null, // Garante que não haja ambiguidade
+                                FORWARD_TO_SECTOR_ID: serviceDetails.SECTOR_ID,
+                                RESPONSE_TEXT: `Para tratar do serviço "${serviceDetails.SERVICE_NAME}", estou te encaminhando para o setor responsável.`,
+                                TYPING_DELAY_MS: 500, 
+                                RESPONSE_DELAY_MS: 200 
+                            };
+                            globalSendLog(`[BotLogic_ServiceFwd] Serviço ${serviceKey} será encaminhado para SETOR ID: ${serviceDetails.SECTOR_ID}.`, 'info');
+                        } else {
+                            globalSendLog(`[BotLogic_ServiceFwd] Serviço ${serviceKey} (ID: ${serviceDetails.ID}) não possui FORWARD_TO_USER_ID nem SECTOR_ID configurados. Nenhum encaminhamento adicional será feito.`, 'info');
+                        }
+
+                        if (serviceForwardConfig) {
+                            const forwarded = await handleForwarding(chat, conversation, serviceForwardConfig, clientJid, clientName, msg);
+                            if (forwarded) {
+                                globalSendLog(`[BotLogic_ServiceFwd] Encaminhamento para serviço ${serviceKey} bem-sucedido.`, 'info');
+                                return true; // Finaliza o processamento desta mensagem.
+                            } else {
+                                globalSendLog(`[BotLogic_ServiceFwd] Falha no encaminhamento para serviço ${serviceKey}.`, 'warn');
+                                // Mesmo que o encaminhamento pós-serviço falhe, a resposta original da autoResp já foi enviada.
+                                // Pode-se optar por retornar true ou false aqui dependendo do comportamento desejado.
+                                // Retornar true, pois a auto_response principal foi enviada.
+                                return true; 
+                            }
+                        }
+                    } else {
+                        globalSendLog(`[BotLogic_ServiceFwd] Detalhes do serviço para a chave ${serviceKey} não encontrados. Nenhum encaminhamento adicional será feito.`, 'warn');
+                    }
+                }
+                return true; // Resposta original da autoResp foi enviada, e qualquer encaminhamento de serviço subsequente foi tratado.
             }
         }
         globalSendLog(`[BotLogic] Nenhuma resposta automática acionada para: "${clientMessageContent}"`, 'debug');
@@ -703,4 +969,164 @@ module.exports = {
     togglePauseBot,
     fullLogoutAndCleanup,
     sessionId: sessionIdExported,
+    checkHumanAttendanceTimeouts, // Added
+    handleHumanAttendanceFinish,  // Added
 };
+
+async function checkHumanAttendanceTimeouts() {
+    globalSendLog('[TimeoutChecker] Iniciando verificação de timeouts de atendimento humano...', 'info');
+    if (!globalDbServices || !globalDbServices.main || !globalDbServices.chat || !client || connectionStatus !== 'CONNECTED') {
+        globalSendLog('[TimeoutChecker] Não é possível verificar timeouts: Serviços DB/WhatsApp não disponíveis ou WhatsApp não conectado.', 'warn');
+        return;
+    }
+
+    try {
+        const limitConfig = await globalDbServices.main.getConfigByKey('HUMAN_ATTENDANCE_TIME_LIMIT_SECONDS');
+        const timeoutSeconds = limitConfig ? parseInt(limitConfig.CONFIG_VALUE, 10) : 300; // Default 5 minutos
+        if (isNaN(timeoutSeconds) || timeoutSeconds <= 0) {
+            globalSendLog(`[TimeoutChecker] HUMAN_ATTENDANCE_TIME_LIMIT_SECONDS inválido (${limitConfig?.CONFIG_VALUE}). Usando padrão de 300s.`, 'warn');
+            // timeoutSeconds = 300; // Already defaulted
+        }
+
+        const timeoutMsgConfig = await globalDbServices.main.getConfigByKey('HUMAN_ATTENDANCE_TIMEOUT_RESPONSE_TEXT');
+        const timeoutResponseText = timeoutMsgConfig ? timeoutMsgConfig.CONFIG_VALUE : "O atendimento anterior foi encerrado por inatividade. Nosso assistente virtual está de volta para ajudar.";
+
+        // Buscar conversas ativas com atendente humano
+        // Status 'active' e USER_ID não nulo indicam atendimento humano em progresso
+        const activeHumanConversations = await globalDbServices.chat.allQuery(
+            "SELECT * FROM CONVERSATIONS WHERE STATUS = 'active' AND USER_ID IS NOT NULL"
+        );
+        
+        globalSendLog(`[TimeoutChecker] ${activeHumanConversations.length} conversas em atendimento humano encontradas.`, 'debug');
+
+        for (const conversation of activeHumanConversations) {
+            // Para cada conversa, buscar a última mensagem do AGENTE
+            const lastAgentMessage = await globalDbServices.chat.getQuery(
+                "SELECT TIMESTAMP FROM MESSAGES WHERE CONVERSATION_ID = ? AND SENDER_TYPE = 'AGENT' ORDER BY TIMESTAMP DESC LIMIT 1",
+                [conversation.ID]
+            );
+
+            let lastMessageTimestamp;
+            if (lastAgentMessage && lastAgentMessage.TIMESTAMP) {
+                lastMessageTimestamp = new Date(lastAgentMessage.TIMESTAMP);
+            } else {
+                // Se não houver mensagem do agente, usar o LAST_FORWARDED_AT como referência,
+                // ou o UPDATED_AT da conversa se LAST_FORWARDED_AT não estiver disponível.
+                lastMessageTimestamp = new Date(conversation.LAST_FORWARDED_AT || conversation.UPDATED_AT);
+                globalSendLog(`[TimeoutChecker] ConvID ${conversation.ID}: Nenhuma mensagem de agente encontrada. Usando LAST_FORWARDED_AT ou UPDATED_AT (${lastMessageTimestamp.toISOString()}) como referência.`, 'debug');
+            }
+            
+            const now = new Date();
+            const secondsSinceLastAction = (now.getTime() - lastMessageTimestamp.getTime()) / 1000;
+
+            globalSendLog(`[TimeoutChecker] ConvID ${conversation.ID}: Última ação do agente: ${lastMessageTimestamp.toISOString()}. Segundos desde então: ${secondsSinceLastAction.toFixed(0)}. Limite: ${timeoutSeconds}s.`, 'debug');
+
+            if (secondsSinceLastAction > timeoutSeconds) {
+                globalSendLog(`[TimeoutChecker] TIMEOUT! ConvID ${conversation.ID} (Cliente: ${conversation.CLIENT_JID}, Atendente: ${conversation.USER_USERNAME}) excedeu o limite de ${timeoutSeconds}s.`, 'info');
+                
+                try {
+                    const chat = await client.getChatById(conversation.CLIENT_JID);
+                    if (chat) {
+                        await sendTypingMessageWithDelay(chat, timeoutResponseText, 500, 200, conversation.ID, conversation.CLIENT_JID);
+                        globalSendLog(`[TimeoutChecker] Mensagem de timeout enviada para cliente ${conversation.CLIENT_JID}.`, 'info');
+                    } else {
+                        globalSendLog(`[TimeoutChecker] Não foi possível obter o chat para ${conversation.CLIENT_JID} para enviar msg de timeout.`, 'error');
+                    }
+
+                    // Atualizar conversa no DB: remover atendente e mudar status para 'pending'
+                    await globalDbServices.chat.runQuery(
+                        "UPDATE CONVERSATIONS SET USER_ID = NULL, USER_USERNAME = NULL, STATUS = 'pending', UPDATED_AT = CURRENT_TIMESTAMP, LAST_FORWARDED_AT = NULL WHERE ID = ?",
+                        [conversation.ID]
+                    );
+                    globalSendLog(`[TimeoutChecker] ConvID ${conversation.ID} atualizada no DB: atendente removido, status para 'pending'.`, 'info');
+
+                    if (globalWebsocketService) {
+                        const updatedConvDetails = await globalDbServices.chat.getConversationById(conversation.ID);
+                        globalWebsocketService.broadcastToAttendants({ // Notifica todos que a conversa voltou para pendente
+                            type: 'pending_conversation',
+                            payload: updatedConvDetails
+                        });
+                        if (conversation.USER_USERNAME) { // Notifica o atendente específico que a conversa foi removida
+                             globalWebsocketService.notifySpecificUser(conversation.USER_USERNAME, {
+                                type: 'conversation_timeout_removed', // Novo tipo de evento para UI do atendente
+                                payload: { conversationId: conversation.ID, reason: 'timeout' }
+                            });
+                        }
+                        globalSendLog(`[TimeoutChecker] Notificações WebSocket enviadas para ConvID ${conversation.ID}.`, 'info');
+                    }
+                } catch (error) {
+                    globalSendLog(`[TimeoutChecker] Erro ao processar timeout para ConvID ${conversation.ID}: ${error.message}`, 'error');
+                }
+            }
+        }
+    } catch (error) {
+        globalSendLog(`[TimeoutChecker] Erro CRÍTICO durante a verificação de timeouts: ${error.message}`, 'error');
+    } finally {
+        globalSendLog('[TimeoutChecker] Verificação de timeouts de atendimento humano concluída.', 'info');
+    }
+}
+
+async function handleHumanAttendanceFinish(conversationId, finishingAgentUsername) {
+    globalSendLog(`[HumanFinish] Atendente ${finishingAgentUsername} está finalizando ConvID ${conversationId}.`, 'info');
+    if (!globalDbServices || !globalDbServices.main || !globalDbServices.chat || !client || connectionStatus !== 'CONNECTED') {
+        globalSendLog('[HumanFinish] Não é possível finalizar: Serviços DB/WhatsApp não disponíveis ou WhatsApp não conectado.', 'warn');
+        return { success: false, message: "Serviços indisponíveis ou WhatsApp desconectado." };
+    }
+
+    try {
+        const conversation = await globalDbServices.chat.getConversationById(conversationId);
+        if (!conversation) {
+            globalSendLog(`[HumanFinish] Conversa ID ${conversationId} não encontrada.`, 'error');
+            return { success: false, message: "Conversa não encontrada." };
+        }
+
+        if (conversation.STATUS !== 'active' || !conversation.USER_ID) {
+            globalSendLog(`[HumanFinish] ConvID ${conversationId} não está em atendimento ativo ou não tem atendente. Status: ${conversation.STATUS}, UserID: ${conversation.USER_ID}.`, 'warn');
+            return { success: false, message: "Conversa não está em atendimento humano ativo." };
+        }
+        
+        // Opcional: Verificar se finishingAgentUsername corresponde a conversation.USER_USERNAME
+        if (conversation.USER_USERNAME !== finishingAgentUsername) {
+            globalSendLog(`[HumanFinish] Atendente ${finishingAgentUsername} tentando finalizar ConvID ${conversationId}, mas ela pertence a ${conversation.USER_USERNAME}.`, 'warn');
+            // Dependendo da política, pode-se permitir que qualquer admin finalize, ou apenas o dono.
+            // Por ora, vamos permitir, mas logar.
+        }
+
+        const finishMsgConfig = await globalDbServices.main.getConfigByKey('HUMAN_ATTENDANCE_FINISHED_RESPONSE_TEXT');
+        const finishResponseText = finishMsgConfig ? finishMsgConfig.CONFIG_VALUE : "O atendimento anterior foi finalizado. Nosso assistente virtual está de volta para ajudar.";
+        
+        const chat = await client.getChatById(conversation.CLIENT_JID);
+        if (chat) {
+            await sendTypingMessageWithDelay(chat, finishResponseText, 500, 200, conversation.ID, conversation.CLIENT_JID);
+            globalSendLog(`[HumanFinish] Mensagem de finalização enviada para cliente ${conversation.CLIENT_JID}.`, 'info');
+        } else {
+            globalSendLog(`[HumanFinish] Não foi possível obter o chat para ${conversation.CLIENT_JID} para enviar msg de finalização.`, 'error');
+        }
+
+        // Atualizar conversa no DB: remover atendente e mudar status para 'pending'
+        await globalDbServices.chat.runQuery(
+            "UPDATE CONVERSATIONS SET USER_ID = NULL, USER_USERNAME = NULL, STATUS = 'pending', UPDATED_AT = CURRENT_TIMESTAMP, LAST_FORWARDED_AT = NULL WHERE ID = ?",
+            [conversation.ID]
+        );
+        globalSendLog(`[HumanFinish] ConvID ${conversationId} atualizada no DB: atendente removido, status para 'pending'.`, 'info');
+
+        if (globalWebsocketService) {
+            const updatedConvDetails = await globalDbServices.chat.getConversationById(conversation.ID);
+            globalWebsocketService.broadcastToAttendants({ // Notifica todos que a conversa voltou para pendente
+                type: 'pending_conversation',
+                payload: updatedConvDetails
+            });
+             if (conversation.USER_USERNAME) { // Notifica o atendente que finalizou (ou o dono original)
+                 globalWebsocketService.notifySpecificUser(conversation.USER_USERNAME, {
+                    type: 'conversation_finished_removed', // Novo tipo de evento para UI do atendente
+                    payload: { conversationId: conversation.ID, reason: 'manual_finish' }
+                });
+            }
+            globalSendLog(`[HumanFinish] Notificações WebSocket enviadas para ConvID ${conversation.ID}.`, 'info');
+        }
+        return { success: true, message: "Atendimento finalizado com sucesso." };
+    } catch (error) {
+        globalSendLog(`[HumanFinish] Erro ao finalizar atendimento para ConvID ${conversationId}: ${error.message}`, 'error');
+        return { success: false, message: `Erro ao finalizar: ${error.message}` };
+    }
+}

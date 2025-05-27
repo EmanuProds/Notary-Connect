@@ -1,63 +1,99 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light"> 
+<html lang="pt-BR" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notary Connect - Login</title>
-    <link rel="stylesheet" href="./css/loginStyles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Google Fonts (Roboto) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <!-- Material Tailwind CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@material-tailwind/html@latest/styles/material-tailwind.css" />
+    <!-- Custom Theme CSS -->
+    <link rel="stylesheet" href="./css/custom-theme.css">
+    <!-- Original Login Specific Styles -->
+    <link rel="stylesheet" href="./css/loginStyles.css"> {/* May need adjustments later */}
     <link rel="icon" href="./img/icons/favicon.ico" type="image/x-icon">
 </head>
-<body>
-    <div class="login-page-container"> <div class="login-container">
-            <header class="login-header">
-                <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="logo" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div style=\'width:64px;height:64px;background:#ccc;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;border-radius:4px;margin-bottom:12px;\'>Logo</div>')">
-                <h1>Notary Connect</h1>
-                <p id="loginPageSubtitle" class="login-page-subtitle">Acesse sua conta</p> 
-            </header>
+<body class="bg-surface flex items-center justify-center min-h-screen p-4">
+    <div class="container mx-auto">
+        <div class="w-full max-w-md mx-auto">
+            <!-- Card Principal -->
+            <div class="relative flex flex-col rounded-xl bg-white bg-clip-border text-gray-700 shadow-md p-8">
+                <header class="login-header text-center mb-6">
+                    <img src="./img/icons/logo.svg" alt="Logo Notary Connect" class="logo mx-auto h-16 w-auto mb-4" onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('afterbegin', '<div class=\'w-16 h-16 bg-gray-300 flex items-center justify-center text-xs text-gray-500 rounded-md mb-4 mx-auto\'>Logo</div>')">
+                    <h1 class="text-2xl font-semibold" style="color: var(--md-sys-color-on-surface);">Notary Connect</h1>
+                    <p id="loginPageSubtitle" class="text-sm text-gray-600" style="color: var(--md-sys-color-on-surface-variant);">Acesse sua conta</p> 
+                </header>
 
-            <form id="loginForm" class="login-form">
-                <div class="input-wrapper">
-                    <label for="username">Usuário</label>
-                    <div class="input-group">
-                        <span class="input-icon">
-                            <img src="./img/icons/user.svg" alt="Usuário" class="input-svg-icon">
-                        </span>
-                        <input type="text" id="username" name="username" placeholder="Digite seu usuário" required autocomplete="username">
+                <form id="loginForm" class="mt-2">
+                    <!-- Campo Usuário -->
+                    <div class="mb-6">
+                        <div class="relative h-11 w-full min-w-[200px]">
+                            <input type="text" id="username" name="username" required autocomplete="username"
+                                   class="peer h-full w-full rounded-md border border-blue-gray-200 border-t-transparent !border-t-blue-gray-200 bg-transparent px-3 py-3 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:border-primary focus:border-t-transparent focus:!border-t-primary focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
+                                   placeholder=" " />
+                            <label for="username"
+                                   class="before:content[' '] after:content[' '] pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none !overflow-visible truncate text-[11px] font-normal leading-tight text-blue-gray-500 transition-all before:pointer-events-none before:mt-[6.5px] before:mr-1 before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-t before:border-l before:border-blue-gray-200 before:transition-all after:pointer-events-none after:mt-[6.5px] after:ml-1 after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-t after:border-r after:border-blue-gray-200 after:transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[4.1] peer-placeholder-shown:text-blue-gray-500 peer-placeholder-shown:before:border-transparent peer-placeholder-shown:after:border-transparent peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-primary peer-focus:before:border-t-2 peer-focus:before:border-l-2 peer-focus:before:!border-primary peer-focus:after:border-t-2 peer-focus:after:border-r-2 peer-focus:after:!border-primary peer-disabled:text-transparent peer-disabled:before:border-transparent peer-disabled:after:border-transparent peer-disabled:peer-placeholder-shown:text-blue-gray-500">
+                                Usuário
+                            </label>
+                        </div>
                     </div>
-                </div>
 
-                <div class="input-wrapper">
-                    <label for="password">Senha</label>
-                    <div class="input-group password-group">
-                        <span class="input-icon">
-                             <img src="./img/icons/lock.svg" alt="Senha" class="input-svg-icon lock-icon">
-                        </span>
-                        <input type="password" id="password" name="password" placeholder="Digite sua senha" required autocomplete="current-password">
-                        <button type="button" id="togglePassword" class="toggle-password-button" aria-label="Mostrar/Ocultar senha">
-                            <img class="eye-icon" src="./img/icons/eye.svg" alt="Mostrar senha">
-                            <img class="eye-slash-icon" src="./img/icons/eye-slash.svg" alt="Ocultar senha" style="display: none;">
+                    <!-- Campo Senha -->
+                    <div class="mb-4">
+                        <div class="relative h-11 w-full min-w-[200px]">
+                            <input type="password" id="password" name="password" required autocomplete="current-password"
+                                   class="peer h-full w-full rounded-md border border-blue-gray-200 border-t-transparent !border-t-blue-gray-200 bg-transparent px-3 py-3 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:border-primary focus:border-t-transparent focus:!border-t-primary focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50"
+                                   placeholder=" " />
+                            <label for="password"
+                                   class="before:content[' '] after:content[' '] pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none !overflow-visible truncate text-[11px] font-normal leading-tight text-blue-gray-500 transition-all before:pointer-events-none before:mt-[6.5px] before:mr-1 before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-t before:border-l before:border-blue-gray-200 before:transition-all after:pointer-events-none after:mt-[6.5px] after:ml-1 after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-t after:border-r after:border-blue-gray-200 after:transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[4.1] peer-placeholder-shown:text-blue-gray-500 peer-placeholder-shown:before:border-transparent peer-placeholder-shown:after:border-transparent peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-primary peer-focus:before:border-t-2 peer-focus:before:border-l-2 peer-focus:before:!border-primary peer-focus:after:border-t-2 peer-focus:after:border-r-2 peer-focus:after:!border-primary peer-disabled:text-transparent peer-disabled:before:border-transparent peer-disabled:after:border-transparent peer-disabled:peer-placeholder-shown:text-blue-gray-500">
+                                Senha
+                            </label>
+                            <!-- togglePassword button needs to be integrated with MTW input if possible, or positioned absolutely -->
+                            <button type="button" id="togglePassword" class="absolute top-1/2 right-3 transform -translate-y-1/2 toggle-password-button" aria-label="Mostrar/Ocultar senha">
+                                <img class="eye-icon h-5 w-5 text-blue-gray-500" src="./img/icons/eye.svg" alt="Mostrar senha">
+                                <img class="eye-slash-icon h-5 w-5 text-blue-gray-500" src="./img/icons/eye-slash.svg" alt="Ocultar senha" style="display: none;">
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Mensagem de Erro -->
+                    <div id="errorMessage" class="mb-4 text-center text-sm" style="color: var(--md-sys-color-error);">
+                        {/* Error messages will appear here */}
+                    </div>
+
+                    <!-- Botão Entrar -->
+                    <div class="mt-6">
+                        <button type="submit" 
+                                class="w-full align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg text-white shadow-md focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none"
+                                style="background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);">
+                          Entrar
                         </button>
                     </div>
-                </div>
-
-                <div id="errorMessage" class="error-message">
+                     <!-- Botão Voltar -->
+                    <div class="mt-4">
+                        <button type="button" id="backToMenuBtn"
+                                class="w-full align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-blue-gray-200 text-blue-gray-500 hover:opacity-75 focus:ring focus:ring-blue-gray-50 active:opacity-[0.85]">
+                          Voltar
+                        </button>
                     </div>
+                </form>
 
-                <button type="submit" class="btn btn-primary">
-                    Entrar
-                </button>
-                <button type="button" id="backToMenuBtn" class="btn btn-secondary"> Voltar
-                </button>
-            </form>
-
-            <footer class="login-footer">
-                <p>Perains On Tecnologia &copy; <span id="currentYear">2025</span></p>
-                <p class="app-version-login">Versão <span id="appVersionLogin">Carregando...</span></p> 
-            </footer>
+                <footer class="login-footer text-center mt-8">
+                    <p class="text-xs text-gray-600" style="color: var(--md-sys-color-on-surface-variant);">Perains On Tecnologia &copy; <span id="currentYear">2025</span></p>
+                    <p class="app-version-login text-xs text-gray-500" style="color: var(--md-sys-color-outline);">Versão <span id="appVersionLogin">Carregando...</span></p> 
+                </footer>
+            </div>
         </div>
     </div>
 
+    <!-- Material Tailwind JS -->
+    <script src="https://unpkg.com/@material-tailwind/html@latest/scripts/material-tailwind.js"></script>
+    <!-- Original Login Script -->
     <script src="./js/loginScript.js"></script>
 </body>
 </html>

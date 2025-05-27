@@ -1,0 +1,48 @@
+/* custom-theme.css */
+:root {
+  /* Paleta Azul Material Design 3 - Exemplo (Tons de Azul Primário) */
+  --md-sys-color-primary: #00629E; /* Cor primária principal */
+  --md-sys-color-on-primary: #FFFFFF; /* Texto/ícones sobre a cor primária */
+  --md-sys-color-primary-container: #D0E4FF; /* Container da cor primária (fundo mais claro) */
+  --md-sys-color-on-primary-container: #001D34; /* Texto/ícones sobre o container da cor primária */
+
+  /* Cores Secundárias (Exemplo - podem ser ajustadas conforme necessidade) */
+  --md-sys-color-secondary: #526070;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #D5E4F7;
+  --md-sys-color-on-secondary-container: #0F1D2A;
+
+  /* Cores Terciárias (Exemplo) */
+  --md-sys-color-tertiary: #68587A;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #EFDBFF;
+  --md-sys-color-on-tertiary-container: #231533;
+
+  /* Cores de Erro (Exemplo) */
+  --md-sys-color-error: #BA1A1A;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #FFDAD6;
+  --md-sys-color-on-error-container: #410002;
+
+  /* Cores de Fundo e Superfície (Exemplo) */
+  --md-sys-color-background: #FCFCFF;
+  --md-sys-color-on-background: #1A1C1E;
+  --md-sys-color-surface: #FCFCFF; /* Usado para cards, menus, etc. */
+  --md-sys-color-on-surface: #1A1C1E;
+  --md-sys-color-surface-variant: #DFE3EB; /* Superfície com leve variação */
+  --md-sys-color-on-surface-variant: #42474E;
+  --md-sys-color-outline: #73777F; /* Para bordas e divisores */
+}
+
+/* Aplicação de Exemplo - Botão Primário (Material Tailwind pode ter suas próprias classes para isso) */
+/* Esta é uma forma de *forçar* o estilo se as classes do MTW não pegarem as variáveis automaticamente */
+/* .btn-primary {
+  background-color: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+} */
+
+body {
+  font-family: 'Roboto', sans-serif; /* Fonte padrão do Material Design */
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+}
